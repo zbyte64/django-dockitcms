@@ -1,0 +1,31 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{block.super}}
+<script type="text/javascript">
+<!--
+(function($) {
+    $(document).ready(function() {
+        $('#id_view_class').change(function() {
+            var $this = $(this)
+            var form = $('#view_class_'+$this.val()).clone().attr('id', 'id_view_config');
+            if (form.length) {
+                $('#id_view_config').replaceWith(form);
+            }
+        });
+    });
+})(django.jQuery);
+-->
+</script>
+{% endblock %}
+
+{% block object-tools %}
+
+<div id="view_class"" style="display:none">
+{% for key, view_class in adminform.form.registry.iteritems %}
+<table id="view_class_{{key}}">{{view_class.get_templated_form.as_table}}</table>
+{% endfor %}
+</div>
+{{block.super}}
+{% endblock %}

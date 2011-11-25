@@ -57,6 +57,7 @@ class CMSURLResolver(RegexURLResolver):
 
 class BaseViewPointClass(object):
     form_class = None
+    label = None
     
     def register_view_point(self, view_point_doc):
         pass
@@ -64,6 +65,12 @@ class BaseViewPointClass(object):
     
     def get_urls(self, view_point_doc):
         return patterns('')
+    
+    def get_templated_form(self):
+        return self.get_form_class()()
+    
+    def get_form_class(self):
+        return self.form_class
     
     def dispatch(self, request, view_point_doc):
         urls = self.get_urls(view_point_doc)
