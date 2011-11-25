@@ -1,7 +1,8 @@
 import dockit
-from dockit.backends import get_document_backend
-from dockit.schema import create_document
+from dockit.schema import create_document, get_schema
 from fieldmaker.resource import field_registry
+
+from common import REGISTERED_VIEW_POINTS
 
 class SchemaDefinition(dockit.Document):
     title = dockit.CharField()
@@ -35,7 +36,6 @@ class Collection(dockit.Document):
     
     def register_collection(self):
         from common import dockit_field_for_form_field
-        backend = get_document_backend()
         name = str(self.title) #TODO make sure it is a safe name
         form_fields = self.schema_definition.get_schema_fields()
         fields = dict()
@@ -43,7 +43,14 @@ class Collection(dockit.Document):
             field = dockit_field_for_form_field(form_field)
             fields[key] = field
         document = create_document(name, fields, module='dockitcms.models')
-        backend.register_document(document)
+        return document
+    
+    def get_document(self):
+        key = 'dockitcms.%s' % self.title.lower()
+        try:
+            return get_schema(key)
+        except KeyError:
+            return self.register_collection()
     
     def __unicode__(self):
         if self.title:
@@ -52,10 +59,14 @@ class Collection(dockit.Document):
             return self.__repr__()
 
 class ViewPoint(dockit.Document):
-    url = dockit.CharField() #TODO middleware to hand this off
+    url = dockit.CharField()
     collection = dockit.ReferenceField(Collection)
     view_class = dockit.TextField()
-    view_config = dockit.DictField()
+    view_config = dockit.DictField(blank=True)
+    
+    def dispatch(self, request):
+        view_instance = REGISTERED_VIEW_POINTS[self.view_class]
+        return view_instance.dispatch(request, self)
     
     def __unicode__(self):
         if self.url:

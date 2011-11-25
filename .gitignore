@@ -6,4 +6,4 @@ test_environment/src
 test_environment/include
 test_environment/dockit
 test_environment/fieldmaker
-test_envoronment/sqlite.db
+test_environment/sqlite.db
