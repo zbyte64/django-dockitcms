@@ -1,0 +1,71 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{block.super}}
+<script type="text/javascript">
+(function($) {
+    $(document).ready(function() {
+        get_field_def = function(key) {
+            return $("#id-field-defs > ."+key);
+        }
+        get_widget_def = function(key) {
+            return $("#id-widget-defs > ."+key);
+        }
+        
+        update_entry_specification = function(entry, cls, suffix, lookup_func) {
+            var $this = $(entry)
+            var key = $this.val();
+            if (!key) return;
+            var prefix = $this.attr('name').split('-');
+            prefix.pop();
+            prefix.push(suffix)
+            prefix = prefix.join('-');
+
+            var field_form = lookup_func(key).clone().addClass(cls);
+            var field_spec = $this.parents('table:first').find('.'+cls);
+            field_form.find(':input').each(function() {
+                var field_name = $(this).attr('name');
+                $(this).attr('name', field_name.replace(/.*\-/, prefix+'-'));
+                $(this).attr('id', 'id_'+$(this).attr('name'));
+            });
+            field_form.attr('data-prefix', prefix);
+            field_spec.replaceWith(field_form)
+            
+            if (field_form.hasClass('dynamic-set')) {
+                field_form.each(register_dynamic_set);
+            }
+            field_form.find('.empty-form').attr('id', prefix+'-empty');
+            
+        }
+        
+        $('.vFieldSelectorField').live('change', function() {
+            update_entry_specification(this, 'vFieldSpecField', 'field_spec', get_field_def)
+        });
+        $('.vWidgetSelectorField').live('change', function() {
+            update_entry_specification(this, 'vWidgetSpecField', 'widget_spec', get_widget_def)
+        });
+    });
+})(django.jQuery);
+</script>
+{% endblock %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li><a href="preview/" class="previewlink">{% trans "Preview" %}</a></li>
+{% endblock %}
+
+{% block form_top %}
+{{block.super}}
+<div style="display:none" id="id-field-defs">
+{% for entry in adminform.form.field_forms.itervalues %}
+{{entry}}
+{% endfor %}
+</div>
+
+<div style="display:none" id="id-widget-defs">
+{% for entry in adminform.form.widget_forms.itervalues %}
+{{entry}}
+{% endfor %}
+</div>
+{% endblock %}

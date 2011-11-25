@@ -1,0 +1,9 @@
+*.py[cdo]
+*~
+test_environment/bin
+test_environment/lib
+test_environment/src
+test_environment/include
+test_environment/dockit
+test_environment/fieldmaker
+test_envoronment/sqlite.db
