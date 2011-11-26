@@ -1,5 +1,6 @@
 import dockit
 from dockit.schema import create_document, get_schema
+
 from fieldmaker.resource import field_registry
 
 from common import REGISTERED_VIEW_POINTS
@@ -51,6 +52,11 @@ class Collection(dockit.Document):
             return get_schema(key)
         except KeyError:
             return self.register_collection()
+    
+    def get_admin_instance(self):
+        from dockit.admin import DocumentAdmin
+        from django.contrib.admin import site
+        return DocumentAdmin(self.get_document(), site)
     
     def __unicode__(self):
         if self.title:

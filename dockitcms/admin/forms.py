@@ -1,15 +1,13 @@
-from django.contrib import admin
 from django import forms
 
 from fieldmaker.spec_widget import ListFormField, MetaFormMixin, FormField
 from fieldmaker.admin.forms import FieldEntryForm
 from fieldmaker.resource import field_registry
 
-from dockit.admin.documentadmin import DocumentAdmin
 from dockit.forms import DocumentForm
 
-from models import SchemaDefinition, Collection, ViewPoint
-from common import REGISTERED_VIEW_POINTS
+from dockitcms.models import SchemaDefinition, ViewPoint
+from dockitcms.common import REGISTERED_VIEW_POINTS
 
 class AdminSchemaDefinitionForm(DocumentForm, MetaFormMixin):
     data = ListFormField(form=FieldEntryForm)
@@ -69,17 +67,3 @@ class AdminViewPointForm(DocumentForm):
     class Meta:
         document = ViewPoint
 
-class SchemaDefinitionAdmin(DocumentAdmin):
-    form_class = AdminSchemaDefinitionForm
-
-admin.site.register([SchemaDefinition], SchemaDefinitionAdmin)
-
-class CollectionAdmin(DocumentAdmin):
-    pass
-
-admin.site.register([Collection], CollectionAdmin)
-
-class ViewPointAdmin(DocumentAdmin):
-    form_class = AdminViewPointForm
-
-admin.site.register([ViewPoint], ViewPointAdmin)
