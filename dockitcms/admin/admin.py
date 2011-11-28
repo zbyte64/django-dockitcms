@@ -16,6 +16,7 @@ admin.site.register([SchemaDefinition], SchemaDefinitionAdmin)
 
 class CollectionAdmin(DocumentAdmin):
     manage_collection = ManageCollectionView
+    list_display = ['title', 'admin_manage_link']
     
     def get_extra_urls(self):
         def wrap(view, cacheable=False):
@@ -25,7 +26,8 @@ class CollectionAdmin(DocumentAdmin):
         init = {'admin':self, 'admin_site':self.admin_site}
         return patterns('',
             url(r'^(?P<pk>.+)/manage/',
-                wrap(self.manage_collection.as_view(**init)),),
+                wrap(self.manage_collection.as_view(**init)),
+                name=(self.app_name+'_manage')),
         )
 
 admin.site.register([Collection], CollectionAdmin)

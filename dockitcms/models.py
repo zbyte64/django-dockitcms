@@ -53,10 +53,12 @@ class Collection(dockit.Document):
         except KeyError:
             return self.register_collection()
     
-    def get_admin_instance(self):
-        from dockit.admin import DocumentAdmin
-        from django.contrib.admin import site
-        return DocumentAdmin(self.get_document(), site)
+    def admin_manage_link(self):
+        from django.core.urlresolvers import reverse
+        url = reverse('admin:dockitcms-collection_manage', args=[self.pk])
+        return u'<a href="%s">Manage</a>' % url
+    admin_manage_link.short_description = 'Manage'
+    admin_manage_link.allow_tags = True
     
     def __unicode__(self):
         if self.title:
