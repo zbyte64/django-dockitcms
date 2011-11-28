@@ -28,6 +28,7 @@ class SchemaDefinition(dockit.Document):
 
 class Collection(dockit.Document):
     title = dockit.CharField()
+    key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(SchemaDefinition)
     
     def save(self, *args, **kwargs):
@@ -35,19 +36,22 @@ class Collection(dockit.Document):
         self.register_collection()
         return ret
     
+    def get_collection_name(self):
+        return 'dockitcms.virtual.%s' % self.key
+    
     def register_collection(self):
         from common import dockit_field_for_form_field
-        name = str(self.title) #TODO make sure it is a safe name
+        name = str(self.key)
         form_fields = self.schema_definition.get_schema_fields()
         fields = dict()
         for key, form_field in form_fields.iteritems():
             field = dockit_field_for_form_field(form_field)
             fields[key] = field
-        document = create_document(name, fields, module='dockitcms.models')
+        document = create_document(name, fields, module='dockitcms.models', collection=self.get_collection_name())
         return document
     
     def get_document(self):
-        key = 'dockitcms.%s' % self.title.lower()
+        key = self.get_collection_name()
         try:
             return get_schema(key)
         except KeyError:
