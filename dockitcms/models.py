@@ -32,6 +32,7 @@ class Collection(dockit.Document):
     title = dockit.CharField()
     key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(SchemaDefinition)
+    object_label = dockit.CharField(blank=True)
     #TODO add field for describing the label
     
     def save(self, *args, **kwargs):
@@ -51,6 +52,17 @@ class Collection(dockit.Document):
             field = dockit_field_for_form_field(form_field)
             fields[key] = field
         document = create_document(name, fields, module='dockitcms.models', collection=self.get_collection_name())
+        
+        def __unicode__(instance):
+            if not self.object_label:
+                return repr(instance)
+            try:
+                return self.object_label % instance
+            except (KeyError, TypeError):
+                return repr(instance)
+        
+        document.__unicode__ = __unicode__
+        
         return document
     
     def get_document(self):

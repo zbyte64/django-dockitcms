@@ -121,6 +121,7 @@ INSTALLED_APPS = (
     'dockit',
     'dockit.backends.djangodocument',
     'dockitcms',
+    'fieldmaker',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

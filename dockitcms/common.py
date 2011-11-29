@@ -8,7 +8,7 @@ from django.core.urlresolvers import RegexURLResolver
 
 FORM_FIELD_TO_DOCKIT_FIELD = [
     (forms.BooleanField, dockit.BooleanField),
-    (forms.CharField, dockit.CharField),
+    #(forms.CharField, dockit.CharField),
     (forms.DateField, dockit.DateField),
     (forms.DateTimeField, dockit.DateTimeField),
     (forms.DecimalField, dockit.DecimalField),
@@ -20,6 +20,7 @@ FORM_FIELD_TO_DOCKIT_FIELD = [
     #(forms.GenericIPAddressField, dockit.GenericIPAddressField),
     (forms.SlugField, dockit.SlugField),
     (forms.TimeField, dockit.TimeField),
+    (forms.ModelChoiceField, dockit.ModelReferenceField),
 ]
 
 REGISTERED_VIEW_POINTS = dict()
@@ -30,6 +31,10 @@ def register_view_point_class(key, cls):
 def dockit_field_for_form_field(form_field):
     df_kwargs = {'blank': not form_field.required,
                  'help_text': form_field.help_text,}
+    if isinstance(form_field, forms.CharField):
+        if isinstance(form_field.widget, forms.TextInput):
+            return dockit.CharField(**df_kwargs)
+        return dockit.TextField(**df_kwargs)
     for ff, df in FORM_FIELD_TO_DOCKIT_FIELD:
         if isinstance(form_field, ff):
             return df(**df_kwargs)
