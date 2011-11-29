@@ -4,6 +4,16 @@ from dockit.admin.documentadmin import DocumentAdmin
 from dockitcms.models import Collection
 from dockitcms.common import CMSURLResolver
 
+class VirtualDocumentAdmin(DocumentAdmin):
+    def __init__(self, document, admin_site, base_url):
+        DocumentAdmin.__init__(self, document, admin_site)
+        self.base_url = base_url
+        self.resolver = CMSURLResolver(r'^'+base_url, self.get_urls())
+    
+    def reverse(self, name, *args, **kwargs):
+        ret = self.resolver.reverse(name, *args, **kwargs)
+        return self.base_url + ret
+
 class ManageCollectionView(View):
     admin = None
     admin_site = None
@@ -12,15 +22,13 @@ class ManageCollectionView(View):
         self.args = args
         self.kwargs = kwargs
         admin = self.get_document_admin()
-        base_url = self.admin.reverse(self.admin.app_name+'_manage', *args, **kwargs)
-        resolver = CMSURLResolver(r'^'+base_url, admin.get_urls())
-        view_match = resolver.resolve(request.path)
+        view_match = admin.resolver.resolve(request.path)
         return view_match.func(request, *view_match.args, **view_match.kwargs)
     
     def get_document_admin(self):
         collection = self.get_collection()
-        #TODO pass in a wrapped admin_site that handles reverse
-        return DocumentAdmin(collection.get_document(), self.admin_site)
+        base_url = self.admin.reverse(self.admin.app_name+'_manage', *self.args, **self.kwargs)
+        return VirtualDocumentAdmin(collection.get_document(), self.admin_site, base_url)
     
     def get_collection(self):
         return Collection.objects.get(self.kwargs['pk'])

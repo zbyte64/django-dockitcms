@@ -1,6 +1,8 @@
 import dockit
 from dockit.schema import create_document, get_schema
 
+from django.utils.datastructures import SortedDict
+
 from fieldmaker.resource import field_registry
 
 from common import REGISTERED_VIEW_POINTS
@@ -30,6 +32,7 @@ class Collection(dockit.Document):
     title = dockit.CharField()
     key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(SchemaDefinition)
+    #TODO add field for describing the label
     
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
@@ -43,7 +46,7 @@ class Collection(dockit.Document):
         from common import dockit_field_for_form_field
         name = str(self.key)
         form_fields = self.schema_definition.get_schema_fields()
-        fields = dict()
+        fields = SortedDict()
         for key, form_field in form_fields.iteritems():
             field = dockit_field_for_form_field(form_field)
             fields[key] = field
