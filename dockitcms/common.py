@@ -35,6 +35,8 @@ def dockit_field_for_form_field(form_field):
         if isinstance(form_field.widget, forms.TextInput):
             return dockit.CharField(**df_kwargs)
         return dockit.TextField(**df_kwargs)
+    if isinstance(form_field, forms.ModelChoiceField):
+        df_kwargs['model'] = form_field.queryset.model
     for ff, df in FORM_FIELD_TO_DOCKIT_FIELD:
         if isinstance(form_field, ff):
             return df(**df_kwargs)
