@@ -2,6 +2,7 @@ import dockit
 from dockit.schema import create_document, get_schema
 
 from django.utils.datastructures import SortedDict
+from django.utils.translation import ugettext_lazy as _
 
 from fieldmaker.resource import field_registry
 
@@ -75,8 +76,8 @@ class Collection(dockit.Document):
     def admin_manage_link(self):
         from django.core.urlresolvers import reverse
         url = reverse('admin:dockitcms-collection_manage', args=[self.pk])
-        return u'<a href="%s">Manage</a>' % url
-    admin_manage_link.short_description = 'Manage'
+        return u'<a href="%s">%s</a>' % (url, _('Manage'))
+    admin_manage_link.short_description = _('Manage')
     admin_manage_link.allow_tags = True
     
     def __unicode__(self):
@@ -91,6 +92,9 @@ class ViewPoint(dockit.Document):
     view_class = dockit.TextField()
     view_config = dockit.DictField(blank=True)
     
+    def get_absolute_url(self):
+        return self.url
+    
     def dispatch(self, request):
         view_instance = REGISTERED_VIEW_POINTS[self.view_class]
         return view_instance.dispatch(request, self)
@@ -100,3 +104,4 @@ class ViewPoint(dockit.Document):
             return self.url
         else:
             return self.__repr__()
+

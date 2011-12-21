@@ -1,5 +1,5 @@
 <ul>
 {% for object in object_list %}
-<li>{{object}}</li>
+<li><a href="{{object.get_absolute_url}}">{{object}}</a></li>
 {% endfor %}
 </ul>

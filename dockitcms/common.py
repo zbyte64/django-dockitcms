@@ -79,9 +79,16 @@ class BaseViewPointClass(object):
     def get_form_class(self):
         return self.form_class
     
-    def dispatch(self, request, view_point_doc):
+    def get_resolver(self, view_point_doc):
         urls = self.get_urls(view_point_doc)
-        resolver = CMSURLResolver(r'^'+view_point_doc.url, urls)
+        return CMSURLResolver(r'^'+view_point_doc.url, urls)
+    
+    def dispatch(self, request, view_point_doc):
+        resolver = self.get_resolver(view_point_doc)
         view_match = resolver.resolve(request.path)
         return view_match.func(request, *view_match.args, **view_match.kwargs)
+    
+    def reverse(self, view_point_doc, name, *args, **kwargs):
+        resolver = self.get_resolver(view_point_doc)
+        return resolver.reverse(name, *args, **kwargs)
 
