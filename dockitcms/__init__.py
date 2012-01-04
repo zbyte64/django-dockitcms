@@ -1,1 +1,1 @@
-import view_points
+import viewpoints
