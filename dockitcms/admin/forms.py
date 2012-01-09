@@ -2,7 +2,7 @@ from django import forms
 
 from fieldmaker.spec_widget import ListFormField, MetaFormMixin, FormField
 from fieldmaker.admin.forms import FieldEntryForm
-from fieldmaker.resource import field_registry
+from fieldmaker.resource import registry
 
 from dockit.forms import DocumentForm
 
@@ -16,11 +16,14 @@ class AdminSchemaDefinitionForm(DocumentForm, MetaFormMixin):
         DocumentForm.__init__(self, *args, **kwargs)
         self.field_forms = dict()
         self.widget_forms = dict()
-        for key, entry in field_registry.fields.iteritems():
+        for key, entry in self.get_form_spec().fields.iteritems():
             self.field_forms[key] = entry.render_for_admin(key)
-        for key, entry in field_registry.widgets.iteritems():
+        for key, entry in self.get_form_spec().widgets.iteritems():
             self.widget_forms[key] = entry.render_for_admin(key)
         self.post_form_init()
+    
+    def get_form_spec(self):
+        return registry.form_specifications['base.1']
     
     class Meta:
         document = SchemaDefinition
