@@ -66,6 +66,10 @@ class BaseViewPointClass(object):
     form_class = None
     label = None
     
+    def get_document(self, view_point_doc):
+        doc_cls = view_point_doc.collection.get_document()
+        return doc_cls
+    
     def register_view_point(self, view_point_doc):
         pass
         #here it would ensure all neceassry indexes are created

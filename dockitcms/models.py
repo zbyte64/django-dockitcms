@@ -63,7 +63,7 @@ class Collection(dockit.Document):
                 return repr(instance)
         
         document.__unicode__ = __unicode__
-        
+        #TODO call register_view_point on all view points related to this
         return document
     
     def get_document(self):
@@ -86,6 +86,7 @@ class Collection(dockit.Document):
         else:
             return self.__repr__()
 
+#TODO maybe this should be nested in collection
 class ViewPoint(dockit.Document):
     url = dockit.CharField()
     collection = dockit.ReferenceField(Collection)
