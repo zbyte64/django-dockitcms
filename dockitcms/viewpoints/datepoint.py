@@ -8,15 +8,17 @@ from django.views.generic.dates import DayMixin, MonthMixin, YearMixin, DateMixi
 from dockitcms.common import BaseViewPointClass, register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin
 
-from dockit.views import ListView
-
+from dockit.views import ListView, DetailView
 
 class DateListViewPointForm(ListViewPointForm):
     date_field = forms.CharField(help_text=_('Dotpoint notation to the date field'))
     day_format = forms.CharField(initial='%d')
     month_format = forms.CharField(initial='%b')
     year_format = forms.CharField(initial='%Y')
-    allow_future = forms.BooleanField(require=False)
+    allow_future = forms.BooleanField(required=False)
+
+class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
+    pass
 
 class BaseDateListView(ConfigurableTemplateResponseMixin, DateMixin, ListView):
     """
@@ -96,7 +98,8 @@ class BaseDateListView(ConfigurableTemplateResponseMixin, DateMixin, ListView):
         return context
 
 class DatePointListView(BaseDateListView):
-    pass
+    def get_lookup_kwargs(self):
+        return {}
 
 class YearDatePointListView(YearMixin, BaseDateListView):
     def get_lookup_kwargs(self):
@@ -117,6 +120,7 @@ class DayDatePointListView(MonthDatePointListView, DayMixin):
 class DateListViewPointClass(BaseViewPointClass):
     form_class = DateListViewPointForm
     list_view_class = DatePointListView
+    detail_view_class = PointDetailView
     label = _('Date View')
     
     def register_view_point(self, view_point_doc):
@@ -137,17 +141,11 @@ class DateListViewPointClass(BaseViewPointClass):
         return patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,
+                                      allow_future=params.get('allow_future', False),
+                                      date_field=params['date_field'],
                                       configuration=list_configuration,
                                       paginate_by=params.get('paginate_by', None)),
                 name='index',
-            ),
-            url(r'^(?P<year>[\d]+)/$', 
-                YearDatePointListView.as_view(document=document,
-                                              allow_future=params.get('allow_future', False),
-                                              date_field=params['date_field'],
-                                              year_format=params['year_format'],
-                                              configuration=list_configuration,),
-                name='year',
             ),
             url(r'^(?P<year>[\d]+)/$', 
                 YearDatePointListView.as_view(document=document,

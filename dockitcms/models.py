@@ -63,15 +63,20 @@ class Collection(dockit.Document):
                 return repr(instance)
         
         document.__unicode__ = __unicode__
-        #TODO call register_view_point on all view points related to this
         return document
+    
+    def register_view_points(self):
+        for view_point in ViewPoint.objects.filter.collection(self):
+            view_point.get_view_instance().register_view_point(view_point)
     
     def get_document(self):
         key = self.get_collection_name()
         try:
             return get_schema(key)
         except KeyError:
-            return self.register_collection()
+            doc = self.register_collection()
+            self.register_view_points()
+            return doc
     
     def admin_manage_link(self):
         from django.core.urlresolvers import reverse
@@ -96,6 +101,9 @@ class ViewPoint(dockit.Document):
     def get_absolute_url(self):
         return self.url
     
+    def get_view_instance(self):
+        return REGISTERED_VIEW_POINTS[self.view_class]
+    
     def dispatch(self, request):
         view_instance = REGISTERED_VIEW_POINTS[self.view_class]
         return view_instance.dispatch(request, self)
@@ -105,4 +113,6 @@ class ViewPoint(dockit.Document):
             return self.url
         else:
             return self.__repr__()
+
+ViewPoint.objects.enable_index("equals", "collection", {'field':'collection'})
 

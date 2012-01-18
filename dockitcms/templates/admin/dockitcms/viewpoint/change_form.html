@@ -10,6 +10,11 @@
         $('#id_view_class').change(function() {
             var $this = $(this)
             var form = $('#view_class_'+$this.val()).clone().attr('id', 'id_view_config');
+            form.find(':input').each(function() {
+                var a_name = $(this).attr('name');
+                a_name = 'view_config-' + a_name
+                $(this).attr('name', a_name);
+            });
             if (form.length) {
                 $('#id_view_config').replaceWith(form);
             }
