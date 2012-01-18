@@ -66,33 +66,33 @@ class BaseViewPointClass(object):
     form_class = None
     label = None
     
-    def get_document(self, view_point_doc):
-        doc_cls = view_point_doc.collection.get_document()
+    def get_document(self, collection, view_point_doc):
+        doc_cls = collection.get_document()
         return doc_cls
     
-    def register_view_point(self, view_point_doc):
+    def register_view_point(self, collection, view_point_doc):
         pass
         #here it would ensure all neceassry indexes are created
     
-    def get_urls(self, view_point_doc):
+    def get_urls(self, collection, view_point_doc):
         return patterns('')
     
-    def get_templated_form(self):
+    def get_templated_form(self, collection):
         return self.get_form_class()()
     
-    def get_form_class(self):
+    def get_form_class(self, collection):
         return self.form_class
     
-    def get_resolver(self, view_point_doc):
-        urls = self.get_urls(view_point_doc)
+    def get_resolver(self, collection, view_point_doc):
+        urls = self.get_urls(collection, view_point_doc)
         return CMSURLResolver(r'^'+view_point_doc.url, urls)
     
-    def dispatch(self, request, view_point_doc):
-        resolver = self.get_resolver(view_point_doc)
+    def dispatch(self, request, collection, view_point_doc):
+        resolver = self.get_resolver(collection, view_point_doc)
         view_match = resolver.resolve(request.path)
         return view_match.func(request, *view_match.args, **view_match.kwargs)
     
-    def reverse(self, view_point_doc, name, *args, **kwargs):
-        resolver = self.get_resolver(view_point_doc)
+    def reverse(self, collection, view_point_doc, name, *args, **kwargs):
+        resolver = self.get_resolver(collection, view_point_doc)
         return resolver.reverse(name, *args, **kwargs)
 

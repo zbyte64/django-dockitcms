@@ -1,4 +1,4 @@
-{% extends "admin/change_form.html" %}
+{% extends "admin/fragment_change_form.html" %}
 {% load i18n %}
 
 {% block extrahead %}
@@ -25,7 +25,7 @@
 </script>
 {% endblock %}
 
-{% block object-tools %}
+{% block content %}
 
 <div id="view_class"" style="display:none">
 {% for key, view_class in adminform.form.registry.iteritems %}

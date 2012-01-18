@@ -123,8 +123,8 @@ class DateListViewPointClass(BaseViewPointClass):
     detail_view_class = PointDetailView
     label = _('Date View')
     
-    def register_view_point(self, view_point_doc):
-        document = self.get_document(view_point_doc)
+    def register_view_point(self, collection, view_point_doc):
+        document = self.get_document(collection, view_point_doc)
         field = view_point_doc.view_config['date_field']
         document.objects.enable_index("date", field, {'field':field})
     
@@ -134,8 +134,8 @@ class DateListViewPointClass(BaseViewPointClass):
             config[key] = params.get('%s_%s' % (prefix, key), None)
         return config
     
-    def get_urls(self, view_point_doc):
-        document = self.get_document(view_point_doc)
+    def get_urls(self, collection, view_point_doc):
+        document = self.get_document(collection, view_point_doc)
         params = view_point_doc.view_config
         list_configuration = self._configuration_from_prefix(params, 'list')
         return patterns('',

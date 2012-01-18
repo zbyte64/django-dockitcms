@@ -68,12 +68,12 @@ class ListViewPointClass(BaseViewPointClass):
     detail_view_class = PointDetailView
     label = _('List View')
     
-    def get_document(self, view_point_doc):
-        doc_cls = view_point_doc.collection.get_document()
+    def get_document(self, collection, view_point_doc):
+        doc_cls = collection.get_document()
         view_point = self
         class WrappedDoc(doc_cls):
             def get_absolute_url(self):
-                return view_point.reverse(view_point_doc, 'detail', self.pk)
+                return view_point.reverse(collection, view_point_doc, 'detail', self.pk)
             
             class Meta:
                 proxy = True
@@ -86,8 +86,8 @@ class ListViewPointClass(BaseViewPointClass):
             config[key] = params.get('%s_%s' % (prefix, key), None)
         return config
     
-    def get_urls(self, view_point_doc):
-        document = self.get_document(view_point_doc)
+    def get_urls(self, collection, view_point_doc):
+        document = self.get_document(collection, view_point_doc)
         params = view_point_doc.view_config
         return patterns('',
             url(r'^$', 

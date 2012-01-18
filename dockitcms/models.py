@@ -29,16 +29,39 @@ class SchemaDefinition(dockit.Document):
         else:
             return self.__repr__()
 
+class ViewPoint(dockit.Schema):
+    url = dockit.CharField()
+    view_class = dockit.TextField()
+    view_config = dockit.DictField(blank=True)
+    
+    def get_absolute_url(self):
+        return self.url
+    
+    def get_view_instance(self):
+        return REGISTERED_VIEW_POINTS[self.view_class]
+    
+    def dispatch(self, request, collection):
+        view_instance = REGISTERED_VIEW_POINTS[self.view_class]
+        return view_instance.dispatch(request, collection, self)
+    
+    def __unicode__(self):
+        if self.url:
+            return self.url
+        else:
+            return self.__repr__()
+
 class Collection(dockit.Document):
     title = dockit.CharField()
     key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(SchemaDefinition)
     object_label = dockit.CharField(blank=True)
+    view_points = dockit.ListField(ViewPoint, blank=True)
     #TODO add field for describing the label
     
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
         self.register_collection()
+        self.register_view_points()
         return ret
     
     def get_collection_name(self):
@@ -66,8 +89,8 @@ class Collection(dockit.Document):
         return document
     
     def register_view_points(self):
-        for view_point in ViewPoint.objects.filter.collection(self):
-            view_point.get_view_instance().register_view_point(view_point)
+        for view_point in self.view_points:
+            view_point.get_view_instance().register_view_point(self, view_point)
     
     def get_document(self):
         key = self.get_collection_name()
@@ -90,29 +113,4 @@ class Collection(dockit.Document):
             return self.title
         else:
             return self.__repr__()
-
-#TODO maybe this should be nested in collection
-class ViewPoint(dockit.Document):
-    url = dockit.CharField()
-    collection = dockit.ReferenceField(Collection)
-    view_class = dockit.TextField()
-    view_config = dockit.DictField(blank=True)
-    
-    def get_absolute_url(self):
-        return self.url
-    
-    def get_view_instance(self):
-        return REGISTERED_VIEW_POINTS[self.view_class]
-    
-    def dispatch(self, request):
-        view_instance = REGISTERED_VIEW_POINTS[self.view_class]
-        return view_instance.dispatch(request, self)
-    
-    def __unicode__(self):
-        if self.url:
-            return self.url
-        else:
-            return self.__repr__()
-
-ViewPoint.objects.enable_index("equals", "collection", {'field':'collection'})
 

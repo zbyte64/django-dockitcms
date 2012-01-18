@@ -6,7 +6,7 @@ from fieldmaker.resource import registry
 
 from dockit.forms import DocumentForm
 
-from dockitcms.models import SchemaDefinition, ViewPoint
+from dockitcms.models import SchemaDefinition, ViewPoint, Collection
 from dockitcms.common import REGISTERED_VIEW_POINTS
 
 class AdminSchemaDefinitionForm(DocumentForm, MetaFormMixin):
@@ -68,5 +68,6 @@ class AdminViewPointForm(DocumentForm):
     
     
     class Meta:
-        document = ViewPoint
+        document = Collection
+        dotpath = 'view_points.*'
 

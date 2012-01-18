@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.urlresolvers import get_script_prefix
 from django.template.response import TemplateResponse
 
-from models import ViewPoint
+from models import Collection
 
 class DockitCMSMiddleware(object):
     ignore_script_prefix = False
@@ -22,17 +22,18 @@ class DockitCMSMiddleware(object):
             chomped_url = chomped_url[len(prefix)-1:]
         try:
             #TODO find a more efficient way to do this
-            for view_point in ViewPoint.objects.all():
-                if chomped_url.startswith(view_point.url):
-                    try:
-                        response = view_point.dispatch(request)
-                    except Http404:
-                        pass
-                    else:
-                        break
-            if isinstance(response, TemplateResponse):
-                response.render()
-            return response
+            for collection in Collection.objects.all():
+                for view_point in collection.view_points:
+                    if chomped_url.startswith(view_point.url):
+                        try:
+                            response = view_point.dispatch(request, collection)
+                        except Http404:
+                            pass
+                        else:
+                            break
+                if isinstance(response, TemplateResponse):
+                    response.render()
+                return response
         # Return the original response if any errors happened. Because this
         # is a middleware, we can't assume the errors will be caught elsewhere.
         except Http404:
