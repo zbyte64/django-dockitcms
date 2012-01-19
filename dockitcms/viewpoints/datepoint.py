@@ -5,13 +5,15 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.dates import DayMixin, MonthMixin, YearMixin, DateMixin
 
-from dockitcms.common import BaseViewPointClass, register_view_point_class
+from dockitcms.common import register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin
+
+from common import BaseViewPointClass
 
 from dockit.views import ListView, DetailView
 
 class DateListViewPointForm(ListViewPointForm):
-    date_field = forms.CharField(help_text=_('Dotpoint notation to the date field'))
+    date_field = forms.CharField(help_text=_('Dotpoint notation to the date field')) #TODO turn into a choice field
     day_format = forms.CharField(initial='%d')
     month_format = forms.CharField(initial='%b')
     year_format = forms.CharField(initial='%Y')

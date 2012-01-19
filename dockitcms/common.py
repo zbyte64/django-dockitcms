@@ -2,9 +2,8 @@ import dockit
 
 import re
 
-from django import forms
-from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import RegexURLResolver
+from django import forms
 
 FORM_FIELD_TO_DOCKIT_FIELD = [
     (forms.BooleanField, dockit.BooleanField),
@@ -61,38 +60,3 @@ class CMSURLResolver(RegexURLResolver):
     
     def __repr__(self):
         return '<%s (%s:%s) %s>' % (self.__class__.__name__, self.app_name, self.namespace, self.regex.pattern)
-
-class BaseViewPointClass(object):
-    form_class = None
-    label = None
-    
-    def get_document(self, collection, view_point_doc):
-        doc_cls = collection.get_document()
-        return doc_cls
-    
-    def register_view_point(self, collection, view_point_doc):
-        pass
-        #here it would ensure all neceassry indexes are created
-    
-    def get_urls(self, collection, view_point_doc):
-        return patterns('')
-    
-    def get_templated_form(self, collection):
-        return self.get_form_class()()
-    
-    def get_form_class(self, collection):
-        return self.form_class
-    
-    def get_resolver(self, collection, view_point_doc):
-        urls = self.get_urls(collection, view_point_doc)
-        return CMSURLResolver(r'^'+view_point_doc.url, urls)
-    
-    def dispatch(self, request, collection, view_point_doc):
-        resolver = self.get_resolver(collection, view_point_doc)
-        view_match = resolver.resolve(request.path)
-        return view_match.func(request, *view_match.args, **view_match.kwargs)
-    
-    def reverse(self, collection, view_point_doc, name, *args, **kwargs):
-        resolver = self.get_resolver(collection, view_point_doc)
-        return resolver.reverse(name, *args, **kwargs)
-

@@ -9,6 +9,15 @@ from dockit.forms import DocumentForm
 from dockitcms.models import SchemaDefinition, ViewPoint, Collection
 from dockitcms.common import REGISTERED_VIEW_POINTS
 
+class ViewConfigFormField(FormField):
+    def __init__(self, **kwargs):
+        self.collection = kwargs.pop('collection')
+        super(ViewConfigFormField, self).__init__(**kwargs)
+    
+    def create_field_form(self, name, form):
+        prefix = form.add_prefix(name)
+        return self.form_cls(data=form.data or None, prefix=prefix, initial=form.initial.get(name), collection=self.collection)
+
 class AdminSchemaDefinitionForm(DocumentForm, MetaFormMixin):
     data = ListFormField(form=FieldEntryForm)
     
@@ -35,8 +44,13 @@ class AdminViewPointForm(DocumentForm):
         
         view_form = self._get_form_class('view')
         if view_form:
-            self.fields['view_config'] = FormField(form=view_form)
+            self.fields['view_config'] = ViewConfigFormField(form=view_form, collection=self.instance)
             self.fields['view_config'].post_form_init('view_config', self)
+        
+        self.view_config_forms = dict()
+        for key, view_class in self.registry.iteritems():
+            form = view_class.get_templated_form(collection=self.instance)
+            self.view_config_forms[key] = form
     
     @property
     def registry(self):
@@ -54,7 +68,7 @@ class AdminViewPointForm(DocumentForm):
         if not selected_type:
             return None
         entry = self.registry[selected_type]
-        return entry.get_form_class()
+        return entry.get_form_class(collection=self.instance)
     
     def _get_media(self):
         """
@@ -62,7 +76,7 @@ class AdminViewPointForm(DocumentForm):
         """
         media = super(AdminViewPointForm, self)._get_media()
         for entry in self.registry.itervalues():
-            media += entry.get_templated_form().media
+            media += entry.get_templated_form(collection=self.instance).media
         return media
     media = property(_get_media)
     

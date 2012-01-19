@@ -55,13 +55,13 @@ class Collection(dockit.Document):
     key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(SchemaDefinition)
     object_label = dockit.CharField(blank=True)
-    view_points = dockit.ListField(ViewPoint, blank=True)
+    view_points = dockit.ListField(dockit.SchemaField(ViewPoint), blank=True)
     #TODO add field for describing the label
     
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
         self.register_collection()
-        self.register_view_points()
+        #self.register_view_points()
         return ret
     
     def get_collection_name(self):

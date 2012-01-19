@@ -28,8 +28,8 @@
 {% block content %}
 
 <div id="view_class"" style="display:none">
-{% for key, view_class in adminform.form.registry.iteritems %}
-<table id="view_class_{{key}}">{{view_class.get_templated_form.as_table}}</table>
+{% for key, form in adminform.form.view_config_forms.iteritems %}
+<table id="view_class_{{key}}">{{form.as_table}}</table>
 {% endfor %}
 </div>
 {{block.super}}

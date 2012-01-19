@@ -1,5 +1,7 @@
-from dockitcms.common import BaseViewPointClass, register_view_point_class
-from dockitcms.utils import ConfigurableTemplateResponseMixin
+from dockitcms.common import register_view_point_class
+from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_detail_scaffold, generate_object_list_scaffold
+
+from common import BaseViewPointClass, BaseViewPointForm
 
 from dockit.views import ListView, DetailView
 
@@ -15,7 +17,7 @@ TEMPLATE_SOURCE_CHOICES = [
 ]
 
 
-class ListViewPointForm(forms.Form):
+class ListViewPointForm(BaseViewPointForm):
     list_template_source = forms.ChoiceField(choices=TEMPLATE_SOURCE_CHOICES)
     list_template_name = forms.CharField(initial='dockitcms/list.html', required=False)
     list_template_html = forms.CharField(widget=forms.Textarea, required=False)
@@ -23,6 +25,12 @@ class ListViewPointForm(forms.Form):
     detail_template_name = forms.CharField(initial='dockitcms/detail.html', required=False)
     detail_template_html = forms.CharField(widget=forms.Textarea, required=False)
     paginate_by = forms.IntegerField(required=False)
+    
+    def __init__(self, **kwargs):
+        super(ListViewPointForm, self).__init__(**kwargs)
+        document = self.collection.get_document()
+        self.initial['list_template_html'] = generate_object_list_scaffold(document)
+        self.initial['detail_template_html'] = generate_object_detail_scaffold(document)
     
     def _clean_template_html(self, content):
         if not content:
