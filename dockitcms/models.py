@@ -61,7 +61,7 @@ class Collection(dockit.Document):
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
         self.register_collection()
-        #self.register_view_points()
+        self.register_view_points()
         return ret
     
     def get_collection_name(self):
