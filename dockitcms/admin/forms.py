@@ -1,15 +1,11 @@
 from django import forms
 
-from fieldmaker.spec_widget import ListFormField, MetaFormMixin, FormField
-from fieldmaker.admin.forms import FieldEntryForm
-from fieldmaker.resource import registry
-
 from dockit.forms import DocumentForm
 
-from dockitcms.models import SchemaDefinition, ViewPoint, Collection
+from dockitcms.models import Collection
 from dockitcms.common import REGISTERED_VIEW_POINTS
 
-class ViewConfigFormField(FormField):
+class ViewConfigFormField(forms.Form):#FormField):
     def __init__(self, **kwargs):
         self.collection = kwargs.pop('collection')
         super(ViewConfigFormField, self).__init__(**kwargs)
@@ -17,25 +13,6 @@ class ViewConfigFormField(FormField):
     def create_field_form(self, name, form):
         prefix = form.add_prefix(name)
         return self.form_cls(data=form.data or None, prefix=prefix, initial=form.initial.get(name), collection=self.collection)
-
-class AdminSchemaDefinitionForm(DocumentForm, MetaFormMixin):
-    data = ListFormField(form=FieldEntryForm)
-    
-    def __init__(self, *args, **kwargs):
-        DocumentForm.__init__(self, *args, **kwargs)
-        self.field_forms = dict()
-        self.widget_forms = dict()
-        for key, entry in self.get_form_spec().fields.iteritems():
-            self.field_forms[key] = entry.render_for_admin(key)
-        for key, entry in self.get_form_spec().widgets.iteritems():
-            self.widget_forms[key] = entry.render_for_admin(key)
-        self.post_form_init()
-    
-    def get_form_spec(self):
-        return registry.form_specifications['base.1']
-    
-    class Meta:
-        document = SchemaDefinition
 
 class AdminViewPointForm(DocumentForm):
     def __init__(self, *args, **kwargs):

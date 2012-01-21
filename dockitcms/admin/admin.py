@@ -5,15 +5,10 @@ from django.utils.functional import update_wrapper
 from dockit.admin.documentadmin import DocumentAdmin
 from dockit.admin.views import SingleObjectFragmentView
 
-from dockitcms.models import SchemaDefinition, Collection
+from dockitcms.models import Collection
 
-from forms import AdminSchemaDefinitionForm, AdminViewPointForm
+from forms import AdminViewPointForm
 from views import ManageCollectionView
-
-class SchemaDefinitionAdmin(DocumentAdmin):
-    form_class = AdminSchemaDefinitionForm
-
-admin.site.register([SchemaDefinition], SchemaDefinitionAdmin)
 
 class ViewPointInline(SingleObjectFragmentView):
     form_class = AdminViewPointForm
@@ -38,7 +33,3 @@ class CollectionAdmin(DocumentAdmin):
 
 admin.site.register([Collection], CollectionAdmin)
 
-#class ViewPointAdmin(DocumentAdmin):
-#    form_class = AdminViewPointForm
-#
-#admin.site.register([ViewPoint], ViewPointAdmin)

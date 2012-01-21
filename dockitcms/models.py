@@ -1,33 +1,11 @@
 import dockit
 from dockit.schema import create_document, get_schema
 
-from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext_lazy as _
-
-from fieldmaker.resource import field_registry
 
 from common import REGISTERED_VIEW_POINTS
 
-class SchemaDefinition(dockit.Document):
-    title = dockit.CharField()
-    data = dockit.ListField()
-    
-    def get_form_specification(self):
-        return field_registry.form_specifications['base.1']
-    
-    def get_schema_form(self):
-        form_spec = self.get_form_specification()
-        return form_spec.create_form(self.data)
-    
-    def get_schema_fields(self):
-        form_spec = self.get_form_specification()
-        return form_spec.get_fields(self.data)
-    
-    def __unicode__(self):
-        if self.title:
-            return self.title
-        else:
-            return self.__repr__()
+from schemamaker.models import DocumentDesign
 
 class ViewPoint(dockit.Schema):
     url = dockit.CharField()
@@ -53,7 +31,7 @@ class ViewPoint(dockit.Schema):
 class Collection(dockit.Document):
     title = dockit.CharField()
     key = dockit.SlugField(unique=True)
-    schema_definition = dockit.ReferenceField(SchemaDefinition)
+    schema_definition = dockit.ReferenceField(DocumentDesign)
     object_label = dockit.CharField(blank=True)
     view_points = dockit.ListField(dockit.SchemaField(ViewPoint), blank=True)
     #TODO add field for describing the label
@@ -68,13 +46,8 @@ class Collection(dockit.Document):
         return 'dockitcms.virtual.%s' % self.key
     
     def register_collection(self):
-        from common import dockit_field_for_form_field
         name = str(self.key)
-        form_fields = self.schema_definition.get_schema_fields()
-        fields = SortedDict()
-        for key, form_field in form_fields.iteritems():
-            field = dockit_field_for_form_field(form_field)
-            fields[key] = field
+        fields = self.schema_definition.get_fields()
         document = create_document(name, fields, module='dockitcms.models', collection=self.get_collection_name())
         
         def __unicode__(instance):
@@ -90,6 +63,7 @@ class Collection(dockit.Document):
     
     def register_view_points(self):
         for view_point in self.view_points:
+            assert isinstance(view_point, ViewPoint)
             view_point.get_view_instance().register_view_point(self, view_point)
     
     def get_document(self):
