@@ -99,7 +99,7 @@ class ListViewPointClass(BaseViewPointClass):
     
     def get_urls(self, collection, view_point_doc):
         document = self.get_document(collection, view_point_doc)
-        params = view_point_doc.view_config
+        params = view_point_doc.to_primitive(view_point_doc)
         return patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,

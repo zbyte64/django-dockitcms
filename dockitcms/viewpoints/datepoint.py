@@ -139,7 +139,7 @@ class DateListViewPointClass(BaseViewPointClass):
     
     def get_urls(self, collection, view_point_doc):
         document = self.get_document(collection, view_point_doc)
-        params = view_point_doc.view_config
+        params = view_point_doc.to_primitive(view_point_doc)
         list_configuration = self._configuration_from_prefix(params, 'list')
         return patterns('',
             url(r'^$', 
