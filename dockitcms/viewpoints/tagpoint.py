@@ -1,4 +1,4 @@
-from listpoint import ListViewPointForm
+from listpoint import ListViewPoint
 
 from django import forms
 from django.conf.urls.defaults import patterns, url
@@ -7,17 +7,18 @@ from django.utils.translation import ugettext_lazy as _
 from dockitcms.common import BaseViewPointClass, register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin
 
+import dockit
 from dockit.views import ListView
 
 
-class TagListViewPointForm(ListViewPointForm):
-    tag_field = forms.CharField(help_text=_('Dotpoint notation to the tag field'))
+class TagListViewPointForm(ListViewPoint):
+    tag_field = dockit.CharField(help_text=_('Dotpoint notation to the tag field'))
 
 class TagPointListView(ConfigurableTemplateResponseMixin, ListView):
     pass
 
 class TagListViewPointClass(BaseViewPointClass):
-    form_class = TagListViewPointForm
+    schema = TagListViewPoint
     tag_list_view_class = TagPointListView
     label = _('Tag View')
     

@@ -1,8 +1,10 @@
 from dockitcms.common import register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_detail_scaffold, generate_object_list_scaffold
+from dockitcms.models import ViewPoint
 
-from common import BaseViewPointClass, BaseViewPointForm
+from common import BaseViewPointClass
 
+import dockit
 from dockit.views import ListView, DetailView
 
 from django.conf.urls.defaults import patterns, url
@@ -17,20 +19,20 @@ TEMPLATE_SOURCE_CHOICES = [
 ]
 
 
-class ListViewPointForm(BaseViewPointForm):
-    list_template_source = forms.ChoiceField(choices=TEMPLATE_SOURCE_CHOICES)
-    list_template_name = forms.CharField(initial='dockitcms/list.html', required=False)
-    list_template_html = forms.CharField(widget=forms.Textarea, required=False)
-    detail_template_source = forms.ChoiceField(choices=TEMPLATE_SOURCE_CHOICES)
-    detail_template_name = forms.CharField(initial='dockitcms/detail.html', required=False)
-    detail_template_html = forms.CharField(widget=forms.Textarea, required=False)
-    paginate_by = forms.IntegerField(required=False)
+class ListViewPoint(ViewPoint):
+    list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
+    list_template_html = dockit.TextField(blank=True)
+    detail_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    detail_template_name = dockit.CharField(default='dockitcms/detail.html', blank=True)
+    detail_template_html = dockit.TextField(blank=True)
+    paginate_by = dockit.IntegerField(blank=True, null=True)
     
-    def __init__(self, **kwargs):
-        super(ListViewPointForm, self).__init__(**kwargs)
-        document = self.collection.get_document()
-        self.initial['list_template_html'] = generate_object_list_scaffold(document)
-        self.initial['detail_template_html'] = generate_object_detail_scaffold(document)
+    #def __init__(self, **kwargs):
+    #    super(ListViewPointForm, self).__init__(**kwargs)
+    #    document = self.collection.get_document()
+    #    self.initial['list_template_html'] = generate_object_list_scaffold(document)
+    #    self.initial['detail_template_html'] = generate_object_detail_scaffold(document)
     
     def _clean_template_html(self, content):
         if not content:
@@ -41,6 +43,7 @@ class ListViewPointForm(BaseViewPointForm):
             raise forms.ValidationError(unicode(e))
         return content
     
+    #TODO add model level validation
     def clean_list_template_html(self):
         return self._clean_template_html(self.cleaned_data.get('list_template_html'))
     
@@ -71,7 +74,7 @@ class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     pass
 
 class ListViewPointClass(BaseViewPointClass):
-    form_class = ListViewPointForm
+    schema = ListViewPoint
     list_view_class = PointListView
     detail_view_class = PointDetailView
     label = _('List View')

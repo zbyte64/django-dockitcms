@@ -3,21 +3,17 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
 from dockit.admin.documentadmin import DocumentAdmin
-from dockit.admin.views import SingleObjectFragmentView
 
 from dockitcms.models import Collection
 
-from forms import AdminViewPointForm
-from views import ManageCollectionView
-
-class ViewPointInline(SingleObjectFragmentView):
-    form_class = AdminViewPointForm
-    template_name = 'admin/dockitcms/viewpoint/change_form.html'
+from views import ManageCollectionView, ViewPointProxyFragmentView, CreateDocumentDesignView, UpdateDocumentDesignView
 
 class CollectionAdmin(DocumentAdmin):
+    create = CreateDocumentDesignView
+    update = UpdateDocumentDesignView
+    default_fragment = ViewPointProxyFragmentView
     manage_collection = ManageCollectionView
     list_display = ['title', 'admin_manage_link']
-    inline_views = [('^view_points\.[\d]+$', ViewPointInline)]
     
     def get_extra_urls(self):
         def wrap(view, cacheable=False):

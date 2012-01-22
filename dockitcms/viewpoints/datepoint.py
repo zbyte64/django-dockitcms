@@ -1,4 +1,4 @@
-from listpoint import ListViewPointForm
+from listpoint import ListViewPoint
 
 from django import forms
 from django.conf.urls.defaults import patterns, url
@@ -10,14 +10,15 @@ from dockitcms.utils import ConfigurableTemplateResponseMixin
 
 from common import BaseViewPointClass
 
+import dockit
 from dockit.views import ListView, DetailView
 
-class DateListViewPointForm(ListViewPointForm):
-    date_field = forms.CharField(help_text=_('Dotpoint notation to the date field')) #TODO turn into a choice field
-    day_format = forms.CharField(initial='%d')
-    month_format = forms.CharField(initial='%b')
-    year_format = forms.CharField(initial='%Y')
-    allow_future = forms.BooleanField(required=False)
+class DateListViewPoint(ListViewPoint):
+    date_field = dockit.CharField(help_text=_('Dotpoint notation to the date field')) #TODO turn into a choice field
+    day_format = dockit.CharField(default='%d')
+    month_format = dockit.CharField(default='%b')
+    year_format = dockit.CharField(default='%Y')
+    allow_future = dockit.BooleanField(default=False)
 
 class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     pass
@@ -120,7 +121,7 @@ class DayDatePointListView(MonthDatePointListView, DayMixin):
         return kwargs
 
 class DateListViewPointClass(BaseViewPointClass):
-    form_class = DateListViewPointForm
+    schema = DateListViewPoint
     list_view_class = DatePointListView
     detail_view_class = PointDetailView
     label = _('Date View')

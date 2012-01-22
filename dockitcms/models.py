@@ -1,25 +1,25 @@
-import dockit
 from dockit.schema import create_document, get_schema
+import dockit
 
 from django.utils.translation import ugettext_lazy as _
 
 from common import REGISTERED_VIEW_POINTS
+from properties import GenericViewPointEntryField
 
 from schemamaker.models import DocumentDesign
 
 class ViewPoint(dockit.Schema):
     url = dockit.CharField()
-    view_class = dockit.TextField()
-    view_config = dockit.DictField(blank=True)
+    view_type = dockit.CharField()
     
     def get_absolute_url(self):
         return self.url
     
     def get_view_instance(self):
-        return REGISTERED_VIEW_POINTS[self.view_class]
+        return REGISTERED_VIEW_POINTS[self.view_type]
     
     def dispatch(self, request, collection):
-        view_instance = REGISTERED_VIEW_POINTS[self.view_class]
+        view_instance = REGISTERED_VIEW_POINTS[self.view_type]
         return view_instance.dispatch(request, collection, self)
     
     def __unicode__(self):
@@ -33,7 +33,7 @@ class Collection(dockit.Document):
     key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(DocumentDesign)
     object_label = dockit.CharField(blank=True)
-    view_points = dockit.ListField(dockit.SchemaField(ViewPoint), blank=True)
+    view_points = dockit.ListField(GenericViewPointEntryField(), blank=True)
     #TODO add field for describing the label
     
     def save(self, *args, **kwargs):
@@ -88,3 +88,4 @@ class Collection(dockit.Document):
         else:
             return self.__repr__()
 
+import viewpoints
