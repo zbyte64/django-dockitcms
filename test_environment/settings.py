@@ -122,6 +122,8 @@ INSTALLED_APPS = (
     'dockit.backends.djangodocument',
     'dockitcms',
     'schemamaker',
+    'photoprocessor',
+    'dockitcms.contrib.thumbnailfield',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

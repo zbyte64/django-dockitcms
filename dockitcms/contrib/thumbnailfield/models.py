@@ -1,0 +1,77 @@
+import dockit
+
+import os
+
+from django.core.files.base import ContentFile
+
+from photoprocessor.utils import img_to_fobj
+from photoprocessor.processors import process_image, process_image_info
+from photoprocessor.lib import Image
+
+class GeneratedThumbnailSchema(dockit.Schema):
+    image = dockit.FileField()
+    info = dockit.DictField()
+    config = dockit.DictField()
+    
+    @property
+    def url(self):
+        return self.image.url
+    
+    @property
+    def width(self):
+        return self.info['width']
+    
+    @property
+    def height(self):
+        return self.info['height']
+
+class ThumbnailsSchema(GeneratedThumbnailSchema):
+    thumbnails = dockit.DictField(value_subfield=dockit.SchemaField(GeneratedThumbnailSchema))
+    
+    def pil_image(self):
+        file_obj = self.image
+        file_obj.open()
+        file_obj.seek(0)
+        try:
+            return Image.open(file_obj)
+        except IOError:
+            file_obj.seek(0)
+            cf = ContentFile(file_obj.read())
+            return Image.open(cf)
+    
+    def reprocess_info(self, config):
+        source_image = self.pil_image()
+        self.info = process_image_info(source_image)
+    
+    def reprocess_thumbnail_info(self, config):
+        source_image = self.pil_image()
+        for key, thumbnail in self.thumbnails.iteritems():
+            if key in config['thumbnails']:
+                cfg = config['thumbnails'][key]
+                info = process_image_info(source_image, cfg)
+                thumbnail.info = info
+    
+    def reprocess_thumbnails(self, config, force_reprocess=False):
+        base_name, base_ext = os.path.splitext(os.path.basename(self.image.name))
+        source_image = self.pil_image()
+        for key, cfg in config['thumbnails'].iteritems():
+            if not force_reprocess and key in self.thumbnails and self.thumbnails[key].config == cfg:
+                continue
+            thumb_name = '%s-%s%s' % (base_name, key, base_ext)
+            self.thumbnails[key] = self._process_thumbnail(source_image, thumb_name, cfg)
+    
+    def reprocess(self, config, force_reprocess=False):
+        self.reprocess_info(config)
+        self.reprocess_thumbnails(config, force_reprocess=force_reprocess)
+    
+    def _process_thumbnail(self, source_image, thumb_name, config):
+        img, info = process_image(source_image, config)
+        
+        thumb_name = self.image.field.generate_filename(thumb_name)
+        #not efficient, requires image to be loaded into memory
+        thumb_fobj = ContentFile(img_to_fobj(img, info).read())
+        thumb_name = self.image.storage.save(thumb_name, thumb_fobj)
+        
+        return {'path':thumb_name, 'config':config, 'info':info}
+
+import fields
