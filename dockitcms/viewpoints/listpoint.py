@@ -23,9 +23,11 @@ class ListViewPoint(ViewPoint):
     list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
     list_template_html = dockit.TextField(blank=True)
+    list_content = dockit.TextField(blank=True)
     detail_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     detail_template_name = dockit.CharField(default='dockitcms/detail.html', blank=True)
     detail_template_html = dockit.TextField(blank=True)
+    detail_content = dockit.TextField(blank=True)
     paginate_by = dockit.IntegerField(blank=True, null=True)
     
     #def __init__(self, **kwargs):
@@ -49,6 +51,12 @@ class ListViewPoint(ViewPoint):
     
     def clean_detail_template_html(self):
         return self._clean_template_html(self.cleaned_data.get('detail_template_html'))
+    
+    def clean_list_content(self):
+        return self._clean_template_html(self.cleaned_data.get('list_content'))
+    
+    def clean_detail_content(self):
+        return self._clean_template_html(self.cleaned_data.get('detail_content'))
     
     def clean(self):
         #TODO pump the error to their perspective field
@@ -93,7 +101,7 @@ class ListViewPointClass(BaseViewPointClass):
     
     def _configuration_from_prefix(self, params, prefix):
         config = dict()
-        for key in ('template_source', 'template_name', 'template_html'):
+        for key in ('template_source', 'template_name', 'template_html', 'content'):
             config[key] = params.get('%s_%s' % (prefix, key), None)
         return config
     
