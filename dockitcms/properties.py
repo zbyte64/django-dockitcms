@@ -1,6 +1,6 @@
 from dockit.schema.fields import GenericSchemaField
 
-from common import REGISTERED_VIEW_POINTS
+from dockitcms.common import REGISTERED_VIEW_POINTS
 
 class GenericViewPointEntryField(GenericSchemaField):
     def to_primitive(self, val):
