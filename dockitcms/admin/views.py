@@ -34,33 +34,13 @@ class ManageCollectionView(View):
     def get_collection(self):
         return Collection.objects.get(self.kwargs['pk'])
 
-from dockit.admin.views import SingleObjectFragmentView, CreateView, UpdateView, BaseFragmentViewMixin
+from dockit.admin.views import SingleObjectFragmentView
 from dockit.forms import DocumentForm
 from dockit.schema.exceptions import DotPathNotFound
-import dockit
 
 from dockitcms.common import REGISTERED_VIEW_POINTS
-from dockitcms.properties import GenericViewPointEntryField
 
-from fields import ViewPointEntryField
-
-class FieldsMixin(object):
-    def formfield_for_field(self, prop, field, **kwargs):
-        if isinstance(prop, dockit.ListField) and isinstance(prop.schema, GenericViewPointEntryField):
-            field = ViewPointEntryField
-            kwargs['dotpath'] = self.dotpath()
-            if self.next_dotpath():
-                kwargs['required'] = False
-            return field(**kwargs)
-        return BaseFragmentViewMixin.formfield_for_field(self, prop, field, **kwargs)
-
-class CreateDocumentDesignView(FieldsMixin, CreateView):
-    pass
-
-class UpdateDocumentDesignView(FieldsMixin, UpdateView):
-    pass
-
-class ViewPointProxyFragmentView(FieldsMixin, SingleObjectFragmentView):
+class ViewPointProxyFragmentView(SingleObjectFragmentView):
     def get_view_type_value(self):
         obj = self.get_temporary_store()
         if obj:
@@ -87,7 +67,7 @@ class ViewPointProxyFragmentView(FieldsMixin, SingleObjectFragmentView):
             return view(request, *args, **kwargs)
         return super(ViewPointProxyFragmentView, self).dispatch(request, *args, **kwargs)
 
-class ViewPointDesignerFragmentView(FieldsMixin, SingleObjectFragmentView):
+class ViewPointDesignerFragmentView(SingleObjectFragmentView):
     '''
     default admin handler for designing fields
     '''

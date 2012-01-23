@@ -6,11 +6,9 @@ from dockit.admin.documentadmin import DocumentAdmin
 
 from dockitcms.models import Collection
 
-from views import ManageCollectionView, ViewPointProxyFragmentView, CreateDocumentDesignView, UpdateDocumentDesignView
+from views import ManageCollectionView, ViewPointProxyFragmentView
 
 class CollectionAdmin(DocumentAdmin):
-    create = CreateDocumentDesignView
-    update = UpdateDocumentDesignView
     default_fragment = ViewPointProxyFragmentView
     manage_collection = ManageCollectionView
     list_display = ['title', 'admin_manage_link']

@@ -1,19 +1,20 @@
-from dockit.schema.fields import GenericSchemaField
+from dockit.schema.fields import TypedSchemaField
 
 from dockitcms.common import REGISTERED_VIEW_POINTS
 
-class GenericViewPointEntryField(GenericSchemaField):
-    def to_primitive(self, val):
-        if hasattr(val, 'to_primitive'):
-            return val.to_primitive(val)
-        return super(GeneriViewPointEntryField, self).to_primitive(val)
+class GenericViewPointEntryField(TypedSchemaField):
+    def __init__(self, schemas=REGISTERED_VIEW_POINTS, field_name='view_type', **kwargs):
+        super(GenericViewPointEntryField, self).__init__(schemas, field_name, **kwargs)
     
-    def to_python(self, val, parent=None):
-        if self.is_instance(val):
-            return val
-        view_type = val['view_type']
-        view_spec = REGISTERED_VIEW_POINTS[view_type]
-        return view_spec.schema.to_python(val, parent=parent)
+    def lookup_schema(self, key):
+        return self.schemas[key].schema
+    
+    def get_schema_choices(self):
+        keys = self.schemas.keys()
+        return zip(keys, keys)
+    
+    def set_schema_type(self, val):
+        return #this is done by the admin
     
     def is_instance(self, val):
         from models import ViewPoint
