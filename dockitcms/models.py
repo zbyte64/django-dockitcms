@@ -32,7 +32,6 @@ class Collection(dockit.Document):
     title = dockit.CharField()
     key = dockit.SlugField(unique=True)
     schema_definition = dockit.ReferenceField(DocumentDesign)
-    object_label = dockit.CharField(blank=True)
     view_points = dockit.ListField(GenericViewPointEntryField(), blank=True)
     #TODO add field for describing the label
     
@@ -47,19 +46,15 @@ class Collection(dockit.Document):
     
     def register_collection(self):
         name = str(self.key)
-        fields = self.schema_definition.get_fields()
-        document = create_document(name, fields, module='dockitcms.models', collection=self.get_collection_name())
+        schema = self.schema_definition.get_schema()
         
-        def __unicode__(instance):
-            if not self.object_label:
-                return repr(instance)
-            try:
-                return self.object_label % instance
-            except (KeyError, TypeError):
-                return repr(instance)
+        class GeneratedCollection(dockit.Document, schema):
+            __module__ = 'dockitcms.models'
+            
+            class Meta:
+                collection = self.get_collection_name()
         
-        document.__unicode__ = __unicode__
-        return document
+        return GeneratedCollection
     
     def register_view_points(self):
         for view_point in self.view_points:
