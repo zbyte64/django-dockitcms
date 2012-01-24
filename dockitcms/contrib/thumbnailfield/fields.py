@@ -13,6 +13,7 @@ CROP_CHOICES = [('smart', 'Smart'),
                 ('scale', 'Scale'),]
 
 class ThumbnailFieldEntrySchema(dockit.Schema):
+    key = dockit.SlugField()
     format = dockit.CharField(blank=True, null=True, choices=IMAGE_FORMATS)
     quality = dockit.IntegerField(blank=True, null=True)
     width = dockit.IntegerField(blank=True, null=True)
@@ -20,6 +21,9 @@ class ThumbnailFieldEntrySchema(dockit.Schema):
     upscale = dockit.BooleanField(default=False, help_text='Upsize the image if it doesn\'t match the width and height')
     crop = dockit.CharField(blank=True, null=True, choices=CROP_CHOICES)
     autocrop = dockit.BooleanField(default=False, help_text='Remove white space from around the image')
+    
+    def __unicode__(self):
+        return self.key or repr(self)
 
 class ThumbnailFieldSchema(BaseFieldSchema):
     thumbnails = dockit.ListField(dockit.SchemaField(ThumbnailFieldEntrySchema))
@@ -34,15 +38,18 @@ class ThumbnailField(BaseField):
         kwargs.pop('name', None)
         if kwargs.get('verbose_name', None) == '':
             del kwargs['verbose_name']
-        thumbnails = kwargs.pop('thumbnails', [])
+        thumbnails = kwargs.pop('thumbnails', list())
+        config = {'thumbnails': dict()}
         for thumb in thumbnails:
+            key = thumb.pop('key')
             resize = {}
             for key in ['width', 'height', 'crop', 'upscale']:
                 if key in thumb:
                     resize[key] = thumb.pop(key)
             if resize:
                 thumb['resize'] = resize
-        kwargs['config'] = {'thumbnails':thumbnails}
+            config['thumbnails'][key] = thumb
+        kwargs['config'] = config
         return self.field(**kwargs)
 
 registry.register_field('ThumbnailField', ThumbnailField)
