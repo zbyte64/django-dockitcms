@@ -12,7 +12,7 @@ class ThumbnailField(BaseField):
         self.config = config
         super(ThumbnailField, self).__init__(**kwargs)
     
-    def to_python(self, val):
+    def to_python(self, val, parent=None):
         if isinstance(val, File):
             schema = ThumbnailsSchema()
             schema.image = val

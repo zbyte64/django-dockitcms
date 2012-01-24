@@ -42,7 +42,7 @@ class ThumbnailField(BaseField):
                     resize[key] = thumb.pop(key)
             if resize:
                 thumb['resize'] = resize
-        kwargs['thumbnails'] = thumbnails
+        kwargs['config'] = {'thumbnails':thumbnails}
         return self.field(**kwargs)
 
 registry.register_field('ThumbnailField', ThumbnailField)
