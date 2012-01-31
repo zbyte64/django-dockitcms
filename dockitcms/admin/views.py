@@ -49,7 +49,7 @@ class ViewPointProxyFragmentView(SingleObjectFragmentView):
             except DotPathNotFound:
                 pass
             else:
-                if frag.view_type:
+                if frag and frag.view_type:
                     return frag.view_type
         if 'view_type' in self.request.GET:
             return self.request.GET['view_type']

@@ -20,26 +20,18 @@ class DockitCMSMiddleware(object):
         
         if prefix and chomped_url.startswith(prefix):
             chomped_url = chomped_url[len(prefix)-1:]
-        try:
-            #TODO find a more efficient way to do this
-            for collection in Collection.objects.all():
-                for view_point in collection.view_points:
-                    if chomped_url.startswith(view_point.url):
-                        try:
-                            response = view_point.dispatch(request, collection)
-                        except Http404:
-                            pass
-                        else:
-                            break
-                if isinstance(response, TemplateResponse):
-                    response.render()
-                return response
-        # Return the original response if any errors happened. Because this
-        # is a middleware, we can't assume the errors will be caught elsewhere.
-        except Http404:
-            return response
-        except:
-            if settings.DEBUG:
-                raise
-            return response
-
+        #TODO find a more efficient way to do this
+        for collection in Collection.objects.all():
+            print collection
+            for view_point in collection.view_points:
+                print chomped_url, view_point.url, view_point
+                if chomped_url.startswith(view_point.url):
+                    try:
+                        response = view_point.dispatch(request, collection)
+                    except Http404:
+                        pass
+                    else:
+                        if isinstance(response, TemplateResponse):
+                            response.render()
+                        return response
+        return response
