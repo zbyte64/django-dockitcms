@@ -1,8 +1,6 @@
-from dockitcms.common import register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_detail_scaffold, generate_object_list_scaffold
-from dockitcms.models import ViewPoint
 
-from common import BaseViewPointClass
+from common import BaseCollectionViewPoint
 
 import dockit
 from dockit.views import ListView, DetailView
@@ -18,8 +16,14 @@ TEMPLATE_SOURCE_CHOICES = [
     ('html', _('By Template HTML')),
 ]
 
+class PointListView(ConfigurableTemplateResponseMixin, ListView):
+    pass
 
-class ListViewPoint(ViewPoint):
+class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
+    pass
+
+
+class ListViewPoint(BaseCollectionViewPoint):
     list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
     list_template_html = dockit.TextField(blank=True)
@@ -30,11 +34,46 @@ class ListViewPoint(ViewPoint):
     detail_content = dockit.TextField(blank=True)
     paginate_by = dockit.IntegerField(blank=True, null=True)
     
-    #def __init__(self, **kwargs):
-    #    super(ListViewPointForm, self).__init__(**kwargs)
-    #    document = self.collection.get_document()
-    #    self.initial['list_template_html'] = generate_object_list_scaffold(document)
-    #    self.initial['detail_template_html'] = generate_object_detail_scaffold(document)
+    list_view_class = PointListView
+    detail_view_class = PointDetailView
+    
+    
+    def get_document(self):
+        doc_cls = self.collection.get_document()
+        view_point = self
+        class WrappedDoc(doc_cls):
+            def get_absolute_url(self):
+                return view_point.reverse('detail', self.pk)
+            
+            class Meta:
+                proxy = True
+        
+        return WrappedDoc
+    
+    def _configuration_from_prefix(self, params, prefix):
+        config = dict()
+        for key in ('template_source', 'template_name', 'template_html', 'content'):
+            config[key] = params.get('%s_%s' % (prefix, key), None)
+        return config
+    
+    def get_urls(self):
+        document = self.get_document()
+        params = self.to_primitive(self)
+        return patterns('',
+            url(r'^$', 
+                self.list_view_class.as_view(document=document,
+                                      configuration=self._configuration_from_prefix(params, 'list'),
+                                      paginate_by=params.get('paginate_by', None)),
+                name='index',
+            ),
+            url(r'^(?P<pk>.+)/$', 
+                self.detail_view_class.as_view(document=document,
+                                        configuration=self._configuration_from_prefix(params, 'detail'),),
+                name='detail',
+            ),
+        )
+    
+    
     
     def _clean_template_html(self, content):
         if not content:
@@ -74,54 +113,7 @@ class ListViewPoint(ViewPoint):
             if not self.cleaned_data.get('detail_template_html'):
                 raise forms.ValidationError(_('Please specify the detail template html'))
         return self.cleaned_data
-
-class PointListView(ConfigurableTemplateResponseMixin, ListView):
-    pass
-
-class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
-    pass
-
-class ListViewPointClass(BaseViewPointClass):
-    schema = ListViewPoint
-    list_view_class = PointListView
-    detail_view_class = PointDetailView
-    label = _('List View')
     
-    def get_document(self, collection, view_point_doc):
-        doc_cls = collection.get_document()
-        view_point = self
-        class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                return view_point.reverse(collection, view_point_doc, 'detail', self.pk)
-            
-            class Meta:
-                proxy = True
-        
-        return WrappedDoc
-    
-    def _configuration_from_prefix(self, params, prefix):
-        config = dict()
-        for key in ('template_source', 'template_name', 'template_html', 'content'):
-            config[key] = params.get('%s_%s' % (prefix, key), None)
-        return config
-    
-    def get_urls(self, collection, view_point_doc):
-        document = self.get_document(collection, view_point_doc)
-        params = view_point_doc.to_primitive(view_point_doc)
-        return patterns('',
-            url(r'^$', 
-                self.list_view_class.as_view(document=document,
-                                      configuration=self._configuration_from_prefix(params, 'list'),
-                                      paginate_by=params.get('paginate_by', None)),
-                name='index',
-            ),
-            url(r'^(?P<pk>.+)/$', 
-                self.detail_view_class.as_view(document=document,
-                                        configuration=self._configuration_from_prefix(params, 'detail'),),
-                name='detail',
-            ),
-        )
-
-register_view_point_class('list', ListViewPointClass)
-
+    class Meta:
+        typed_key = 'listview'
 

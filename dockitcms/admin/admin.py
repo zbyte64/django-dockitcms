@@ -4,12 +4,11 @@ from django.utils.functional import update_wrapper
 
 from dockit.admin.documentadmin import DocumentAdmin
 
-from dockitcms.models import Collection
+from dockitcms.models import Collection, ViewPoint
 
-from views import ManageCollectionView, ViewPointProxyFragmentView
+from views import ManageCollectionView
 
 class CollectionAdmin(DocumentAdmin):
-    default_fragment = ViewPointProxyFragmentView
     manage_collection = ManageCollectionView
     list_display = ['title', 'admin_manage_link']
     
@@ -27,3 +26,7 @@ class CollectionAdmin(DocumentAdmin):
 
 admin.site.register([Collection], CollectionAdmin)
 
+class ViewPointAdmin(DocumentAdmin):
+    pass
+
+admin.site.register([ViewPoint], ViewPointAdmin)

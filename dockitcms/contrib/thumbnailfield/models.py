@@ -15,7 +15,8 @@ class GeneratedThumbnailSchema(dockit.Schema):
     
     @property
     def url(self):
-        return self.image.url
+        if self.image:
+            return self.image.url
     
     @property
     def width(self):
@@ -24,6 +25,11 @@ class GeneratedThumbnailSchema(dockit.Schema):
     @property
     def height(self):
         return self.info['height']
+    
+    def __unicode__(self):
+        if self.image:
+            return self.image.name
+        return repr(self)
 
 class ThumbnailsSchema(GeneratedThumbnailSchema):
     thumbnails = dockit.DictField(value_subfield=dockit.SchemaField(GeneratedThumbnailSchema))
@@ -67,11 +73,16 @@ class ThumbnailsSchema(GeneratedThumbnailSchema):
     def _process_thumbnail(self, source_image, thumb_name, config):
         img, info = process_image(source_image, config)
         
-        thumb_name = self.image.field.generate_filename(thumb_name)
+        image_field = self._meta.fields['image']
+        storage = image_field.storage
+        
+        thumb_name = storage.get_available_name(thumb_name)
         #not efficient, requires image to be loaded into memory
         thumb_fobj = ContentFile(img_to_fobj(img, info).read())
-        thumb_name = self.image.storage.save(thumb_name, thumb_fobj)
+        thumb_name = storage.save(thumb_name, thumb_fobj)
         
         return {'path':thumb_name, 'config':config, 'info':info}
+
+assert hasattr(ThumbnailsSchema, 'url')
 
 import fields

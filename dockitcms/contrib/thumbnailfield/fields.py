@@ -1,5 +1,4 @@
 from schemamaker.fields import BaseFieldEntry
-from schemamaker.utils import prep_for_kwargs
 
 import dockit
 
@@ -24,19 +23,26 @@ class ThumbnailFieldEntrySchema(dockit.Schema):
     def __unicode__(self):
         return self.key or repr(self)
 
+
 class ThumbnailField(BaseFieldEntry):
     thumbnails = dockit.ListField(dockit.SchemaField(ThumbnailFieldEntrySchema))
     
     field_class = properties.ThumbnailField
     
     def get_field_kwargs(self):
-        kwargs = super(ThubmanilField, self).get_field_kwargs()
+        kwargs = super(ThumbnailField, self).get_field_kwargs()
+        
         if kwargs.get('verbose_name', None) == '':
             del kwargs['verbose_name']
         thumbnails = kwargs.pop('thumbnails', list())
         config = {'thumbnails': dict()}
         for thumb in thumbnails:
             key = thumb.pop('key')
+            
+            for key, value in thumb.items():
+                if value is None:
+                    thumb.pop(key)
+            
             resize = {}
             for key in ['width', 'height', 'crop', 'upscale']:
                 if key in thumb:
@@ -48,5 +54,5 @@ class ThumbnailField(BaseFieldEntry):
         return kwargs
 
     class Meta:
-        type_key = 'ThumbnailField'
+        typed_key = 'ThumbnailField'
 
