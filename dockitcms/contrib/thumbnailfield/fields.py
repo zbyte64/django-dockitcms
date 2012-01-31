@@ -1,5 +1,4 @@
-from schemamaker.fields import BaseFieldSchema, BaseField
-from schemamaker.schema_specifications import default_schema_specification as registry
+from schemamaker.fields import BaseFieldEntry
 from schemamaker.utils import prep_for_kwargs
 
 import dockit
@@ -25,17 +24,13 @@ class ThumbnailFieldEntrySchema(dockit.Schema):
     def __unicode__(self):
         return self.key or repr(self)
 
-class ThumbnailFieldSchema(BaseFieldSchema):
+class ThumbnailField(BaseFieldEntry):
     thumbnails = dockit.ListField(dockit.SchemaField(ThumbnailFieldEntrySchema))
-
-class ThumbnailField(BaseField):
-    schema = ThumbnailFieldSchema
-    field = properties.ThumbnailField
     
-    def create_field(self, data):
-        kwargs = prep_for_kwargs(data)
-        kwargs.pop('field_type', None)
-        kwargs.pop('name', None)
+    field_class = properties.ThumbnailField
+    
+    def get_field_kwargs(self):
+        kwargs = super(ThubmanilField, self).get_field_kwargs()
         if kwargs.get('verbose_name', None) == '':
             del kwargs['verbose_name']
         thumbnails = kwargs.pop('thumbnails', list())
@@ -50,7 +45,8 @@ class ThumbnailField(BaseField):
                 thumb['resize'] = resize
             config['thumbnails'][key] = thumb
         kwargs['config'] = config
-        return self.field(**kwargs)
+        return kwargs
 
-registry.register_field('ThumbnailField', ThumbnailField)
+    class Meta:
+        type_key = 'ThumbnailField'
 

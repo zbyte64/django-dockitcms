@@ -34,13 +34,13 @@ class ManageCollectionView(View):
     def get_collection(self):
         return Collection.objects.get(self.kwargs['pk'])
 
-from dockit.admin.views import SingleObjectFragmentView
+from dockit.admin.views import UpdateView
 from dockit.forms import DocumentForm
 from dockit.schema.exceptions import DotPathNotFound
 
 from dockitcms.common import REGISTERED_VIEW_POINTS
 
-class ViewPointProxyFragmentView(SingleObjectFragmentView):
+class ViewPointProxyFragmentView(UpdateView):
     def get_view_type_value(self):
         obj = self.get_temporary_store()
         if obj:
@@ -65,9 +65,9 @@ class ViewPointProxyFragmentView(SingleObjectFragmentView):
             kwargs['view_type'] = view_type
             view = view_spec.get_admin_view(**kwargs)
             return view(request, *args, **kwargs)
-        return super(ViewPointProxyFragmentView, self).dispatch(request, *args, **kwargs)
+        return super(UpdateView, self).dispatch(request, *args, **kwargs)
 
-class ViewPointDesignerFragmentView(SingleObjectFragmentView):
+class ViewPointDesignerFragmentView(UpdateView):
     '''
     default admin handler for designing fields
     '''
