@@ -1,0 +1,7 @@
+<div data-delay="{{widget.delay}}">
+{% for cta_image in widget.images %}
+<a href="{% if cta_image.url %}{{cta_image.url}}{% else %}{{widget.default_url}}{% endif %}">
+    <img src="{{cta_image.image.url}}" width="{{widget.width}}" height="{{widget.height}}"/>
+</a>
+{% endfor %}
+</div>
