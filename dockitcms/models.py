@@ -70,6 +70,7 @@ class Collection(dockit.Document):
             
             class Meta:
                 collection = self.get_collection_name()
+                verbose_name = self.title
         
         return GeneratedCollection
     
