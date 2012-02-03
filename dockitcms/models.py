@@ -1,3 +1,4 @@
+from django.db.models import permalink
 from dockit.schema import create_document, get_schema
 import dockit
 
@@ -80,9 +81,12 @@ class Collection(dockit.Document):
             doc = self.register_collection()
             return doc
     
+    @permalink
+    def get_admin_manage_url(self):
+        return ('admin:dockitcms_collection_manage', [self.pk], {})
+    
     def admin_manage_link(self):
-        from django.core.urlresolvers import reverse
-        url = reverse('admin:dockitcms-collection_manage', args=[self.pk])
+        url = self.get_admin_manage_url()
         return u'<a href="%s">%s</a>' % (url, _('Manage'))
     admin_manage_link.short_description = _('Manage')
     admin_manage_link.allow_tags = True
