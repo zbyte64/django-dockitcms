@@ -66,4 +66,9 @@ class CTAWidget(BaseTemplateWidget):
     
     class Meta:
         typed_key = 'cta_widget'
+    
+    @classmethod
+    def get_admin_class(cls):
+        from admin import CTAWidgetAdmin
+        return CTAWidgetAdmin
 
