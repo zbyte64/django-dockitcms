@@ -5,20 +5,11 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.dates import DayMixin, MonthMixin, YearMixin, DateMixin
 
-from dockitcms.common import register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin
-
-from common import BaseViewPointClass
 
 import dockit
 from dockit.views import ListView, DetailView
 
-class DateListViewPoint(ListViewPoint):
-    date_field = dockit.CharField(help_text=_('Dotpoint notation to the date field')) #TODO turn into a choice field
-    day_format = dockit.CharField(default='%d')
-    month_format = dockit.CharField(default='%b')
-    year_format = dockit.CharField(default='%Y')
-    allow_future = dockit.BooleanField(default=False)
 
 class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     pass
@@ -120,28 +111,31 @@ class DayDatePointListView(MonthDatePointListView, DayMixin):
         kwargs['day'] = self.get_day()
         return kwargs
 
-class DateListViewPointClass(BaseViewPointClass):
-    schema = DateListViewPoint
+class DateListViewPoint(ListViewPoint):
+    date_field = dockit.CharField(help_text=_('Dotpoint notation to the date field')) #TODO turn into a choice field
+    day_format = dockit.CharField(default='%d')
+    month_format = dockit.CharField(default='%b')
+    year_format = dockit.CharField(default='%Y')
+    allow_future = dockit.BooleanField(default=False)
+    
     list_view_class = DatePointListView
     detail_view_class = PointDetailView
-    label = _('Date View')
     
-    def register_view_point(self, collection, view_point_doc):
-        document = self.get_document(collection, view_point_doc)
-        field = view_point_doc.view_config['date_field']
-        document.objects.enable_index("date", field, {'field':field})
+    class Meta:
+        typed_key = 'datelist'
+
+    def register_view_point(self):
+        doc_cls = self.collection.get_document()
+        field = self.date_field
+        doc_cls.objects.enable_index("date", field, {'field':field})
+        print 'enabled for', field
+        ListViewPoint.register_view_point(self)
     
-    def _configuration_from_prefix(self, params, prefix):
-        config = dict()
-        for key in ('template_source', 'template_name', 'template_html'):
-            config[key] = params.get('%s_%s' % (prefix, key), None)
-        return config
-    
-    def get_urls(self, collection, view_point_doc):
-        document = self.get_document(collection, view_point_doc)
-        params = view_point_doc.to_primitive(view_point_doc)
+    def get_urls(self):
+        document = self.get_document()
+        params = self.to_primitive(self)
         list_configuration = self._configuration_from_prefix(params, 'list')
-        return patterns('',
+        urlpatterns = patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,
                                       allow_future=params.get('allow_future', False),
@@ -177,12 +171,23 @@ class DateListViewPointClass(BaseViewPointClass):
                                               configuration=list_configuration,),
                 name='day',
             ),
-            url(r'^(?P<pk>.+)/$', 
-                self.detail_view_class.as_view(document=document,
-                                        configuration=self._configuration_from_prefix(params, 'detail'),),
-                name='detail',
-            ),
         )
-
-register_view_point_class('datelist', DateListViewPointClass)
+        if params.get('slug_field', None):
+            urlpatterns += patterns('',
+                url(r'^(?P<slug>.+)/$', 
+                    self.detail_view_class.as_view(document=document,
+                                            slug_field=params['slug_field'],
+                                            configuration=self._configuration_from_prefix(params, 'detail'),),
+                    name='detail',
+                ),
+            )
+        else:
+            urlpatterns += patterns('',
+                url(r'^(?P<pk>.+)/$', 
+                    self.detail_view_class.as_view(document=document,
+                                            configuration=self._configuration_from_prefix(params, 'detail'),),
+                    name='detail',
+                ),
+            )
+        return urlpatterns
 
