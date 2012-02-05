@@ -1,13 +1,13 @@
 from django.views.generic import View
 
-from dockit.admin.documentadmin import DocumentAdmin
+from schemamaker.admin import AdminAwareDocumentAdmin
 
 from dockitcms.models import Collection
 from dockitcms.common import CMSURLResolver
 
-class VirtualDocumentAdmin(DocumentAdmin):
+class VirtualDocumentAdmin(AdminAwareDocumentAdmin):
     def __init__(self, document, admin_site, base_url):
-        DocumentAdmin.__init__(self, document, admin_site)
+        AdminAwareDocumentAdmin.__init__(self, document, admin_site)
         self.base_url = base_url
         self.resolver = CMSURLResolver(r'^'+base_url, self.get_urls())
     

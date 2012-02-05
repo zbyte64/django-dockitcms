@@ -2,13 +2,13 @@ from django.contrib import admin
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
-from dockit.admin.documentadmin import DocumentAdmin
+from schemamaker.admin import AdminAwareDocumentAdmin
 
 from dockitcms.models import Collection, ViewPoint
 
 from views import ManageCollectionView
 
-class CollectionAdmin(DocumentAdmin):
+class CollectionAdmin(AdminAwareDocumentAdmin):
     manage_collection = ManageCollectionView
     list_display = ['title', 'admin_manage_link']
     
@@ -26,7 +26,7 @@ class CollectionAdmin(DocumentAdmin):
 
 admin.site.register([Collection], CollectionAdmin)
 
-class ViewPointAdmin(DocumentAdmin):
+class ViewPointAdmin(AdminAwareDocumentAdmin):
     pass
 
 admin.site.register([ViewPoint], ViewPointAdmin)
