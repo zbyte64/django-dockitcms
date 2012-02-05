@@ -2,11 +2,6 @@ import re
 
 from django.core.urlresolvers import RegexURLResolver
 
-REGISTERED_VIEW_POINTS = dict()
-
-def register_view_point_class(key, cls):
-    REGISTERED_VIEW_POINTS[key] = cls()
-
 class CMSURLResolver(RegexURLResolver):
     def __init__(self, regex, url_patterns, default_kwargs=None, app_name=None, namespace=None):
         # regex is a string representing a regular expression.

@@ -15,5 +15,5 @@ class CTAImageInline(TabularInline):
     dotpath = 'images'
 
 class CTAWidgetAdmin(SchemaAdmin):
-    pass#inlines = [CTAImageInline]
+    inlines = [CTAImageInline]
 
