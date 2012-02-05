@@ -3,6 +3,7 @@ from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_d
 from common import BaseCollectionViewPoint
 
 import dockit
+from dockit.forms import DocumentForm
 from dockit.views import ListView, DetailView
 
 from django.conf.urls.defaults import patterns, url
@@ -93,7 +94,16 @@ class ListViewPoint(BaseCollectionViewPoint):
             )
         return urlpatterns
     
+    class Meta:
+        typed_key = 'listview'
     
+    @classmethod
+    def get_admin_form_class(cls):
+        return ListViewPointForm
+
+class ListViewPointForm(DocumentForm):
+    class Meta:
+        document = ListViewPoint
     
     def _clean_template_html(self, content):
         if not content:
@@ -104,7 +114,6 @@ class ListViewPoint(BaseCollectionViewPoint):
             raise forms.ValidationError(unicode(e))
         return content
     
-    #TODO add model level validation
     def clean_list_template_html(self):
         return self._clean_template_html(self.cleaned_data.get('list_template_html'))
     
@@ -133,7 +142,4 @@ class ListViewPoint(BaseCollectionViewPoint):
             if not self.cleaned_data.get('detail_template_html'):
                 raise forms.ValidationError(_('Please specify the detail template html'))
         return self.cleaned_data
-    
-    class Meta:
-        typed_key = 'listview'
 
