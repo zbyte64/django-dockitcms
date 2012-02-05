@@ -24,6 +24,7 @@ class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
 
 
 class ListViewPoint(BaseCollectionViewPoint):
+    slug_field = dockit.SlugField(blank=True)
     list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
     list_template_html = dockit.TextField(blank=True)
@@ -37,12 +38,18 @@ class ListViewPoint(BaseCollectionViewPoint):
     list_view_class = PointListView
     detail_view_class = PointDetailView
     
+    def register_view_point(self):
+        if self.slug_field:
+            doc_cls = self.collection.get_document()
+            doc_cls.objects.enable_index("equals", self.slug_field, {'field':self.slug_field})
     
     def get_document(self):
         doc_cls = self.collection.get_document()
         view_point = self
         class WrappedDoc(doc_cls):
             def get_absolute_url(self):
+                if view_point.slug_field:
+                    return view_point.reverse('detail', self[view_point.slug_field])
                 return view_point.reverse('detail', self.pk)
             
             class Meta:
@@ -59,19 +66,32 @@ class ListViewPoint(BaseCollectionViewPoint):
     def get_urls(self):
         document = self.get_document()
         params = self.to_primitive(self)
-        return patterns('',
+        urlpatterns = patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,
                                       configuration=self._configuration_from_prefix(params, 'list'),
                                       paginate_by=params.get('paginate_by', None)),
                 name='index',
             ),
-            url(r'^(?P<pk>.+)/$', 
-                self.detail_view_class.as_view(document=document,
-                                        configuration=self._configuration_from_prefix(params, 'detail'),),
-                name='detail',
-            ),
         )
+        if params.get('slug_field', None):
+            urlpatterns += patterns('',
+                url(r'^(?P<slug>.+)/$', 
+                    self.detail_view_class.as_view(document=document,
+                                            slug_field=params['slug_field'],
+                                            configuration=self._configuration_from_prefix(params, 'detail'),),
+                    name='detail',
+                ),
+            )
+        else:
+            urlpatterns += patterns('',
+                url(r'^(?P<pk>.+)/$', 
+                    self.detail_view_class.as_view(document=document,
+                                            configuration=self._configuration_from_prefix(params, 'detail'),),
+                    name='detail',
+                ),
+            )
+        return urlpatterns
     
     
     

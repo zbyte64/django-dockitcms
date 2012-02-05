@@ -12,6 +12,7 @@ class ViewPoint(dockit.Document):
     def get_absolute_url(self):
         return self.url
     
+    #TODO this is currently only called during the save
     def register_view_point(self):
         pass
     
@@ -37,6 +38,10 @@ class ViewPoint(dockit.Document):
     def reverse(self, name, *args, **kwargs):
         resolver = self.get_resolver()
         return resolver.reverse(name, *args, **kwargs)
+    
+    def save(self, *args, **kwargs):
+        super(ViewPoint, self).save(*args, **kwargs)
+        self.register_view_point()
     
     def __unicode__(self):
         if self.url:
