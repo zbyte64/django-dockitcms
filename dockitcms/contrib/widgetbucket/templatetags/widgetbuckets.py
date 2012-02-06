@@ -43,12 +43,10 @@ class WidgetBucket(InclusionTag):
     
     def get_context(self, context, bucket_key, vary_on=''):
         vary_on = self.prep_vary_on(vary_on)
-        widgets = self.get_widgets(bucket_key, vary_on)
-        rendered_widgets = list()
+        widgets = list(self.get_widgets(bucket_key, vary_on))
         for widget in widgets:
-            rendered_widgets.append(widget.render(context))
-        return {'rendered_widgets':rendered_widgets,
-                'widgets':widgets,
+            widget.rendered_content = widget.render(context)
+        return {'widgets':widgets,
                 'bucket_key':bucket_key,
                 'vary_on':vary_on,}
 

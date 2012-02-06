@@ -1,7 +1,7 @@
-<div class="widgetbucket" data-bucket-key="{{bucket_key}}" data-vary-on="{{vary_on}}">
-{% for widget in rendered_widgets %}
-<div>
-{{widget}}
+<div class="widgetbucket" data-bucket-key="{{bucket_key}}" data-bucket-vary-on="{{vary_on}}">
+{% for widget in widgets %}
+<div data-widget-id="{{widget.pk}}" data-widget-vary-on="{{widget.vary_on}}">
+{{widget.rendered_content}}
 </div>
 {% endfor %}
 </div>
