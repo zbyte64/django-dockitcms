@@ -8,6 +8,9 @@ from classytags.arguments import Argument
 
 from dockitcms.contrib.widgetbucket.models import BaseWidget
 
+from django.db.models import Model
+from dockit import Document
+
 class WidgetBucket(InclusionTag):
     name = 'widgetbucket'
     template = 'widgetbucket/widget_holder.html'
@@ -30,7 +33,12 @@ class WidgetBucket(InclusionTag):
             return ''
         if isinstance(vary_on, basestring):
             return vary_on
-        #TODO handle db.Model and dockit.Document
+        if isinstance(vary_on, Model):
+            vary_on = '%s.%s.%s' % (vary_on._meta.app_label, vary_on._meta.object_name, vary_on.pk)
+        elif isinstance(vary_on, Document):
+            vary_on = '%s.%s' % (vary_on._meta.collection, vary_on.pk)
+        else:
+            vary_on = str(vary_on)
         return vary_on
     
     def get_context(self, context, bucket_key, vary_on=''):

@@ -1,19 +1,11 @@
 from django.contrib import admin
 
-from dockit.admin.documentadmin import DocumentAdmin, SchemaAdmin
-from dockit.admin.inlines import TabularInline
+from schemamaker.admin import AdminAwareDocumentAdmin
 
-from models import BaseWidget, CTAImage
+from models import BaseWidget
 
-class WidgetAdmin(DocumentAdmin):
+class WidgetAdmin(AdminAwareDocumentAdmin):
     list_display = ['__str__', 'bucket_key', 'vary_on']
 
 admin.site.register([BaseWidget], WidgetAdmin)
-
-class CTAImageInline(TabularInline):
-    schema = CTAImage
-    dotpath = 'images'
-
-class CTAWidgetAdmin(SchemaAdmin):
-    inlines = [CTAImageInline]
 

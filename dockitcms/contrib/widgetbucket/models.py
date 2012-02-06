@@ -56,7 +56,6 @@ class CTAImage(dockit.Schema):
         return repr(self)
 
 class CTAWidget(BaseTemplateWidget):
-    template_name = dockit.CharField(blank=True, default='widgetbucket/cta_widget.html')
     default_url = dockit.CharField()
     width = dockit.CharField()
     height = dockit.CharField()
@@ -66,4 +65,9 @@ class CTAWidget(BaseTemplateWidget):
     
     class Meta:
         typed_key = 'cta_widget'
+    
+    @classmethod
+    def get_admin_form_class(cls):
+        from forms import CTAWidgetForm
+        return CTAWidgetForm
 
