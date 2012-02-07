@@ -81,6 +81,7 @@ class Collection(dockit.Document):
     
     def get_document(self):
         key = self.get_collection_name()
+        #TODO how do we know if we should recreate the document? ie what if the design was modified on another node
         try:
             return get_schema(key)
         except KeyError:
