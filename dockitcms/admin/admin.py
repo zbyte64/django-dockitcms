@@ -2,11 +2,16 @@ from django.contrib import admin
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
-from schemamaker.admin import AdminAwareDocumentAdmin
-
-from dockitcms.models import Collection, ViewPoint
+from dockitcms.models import Collection, ViewPoint, DocumentDesign
 
 from views import ManageCollectionView
+
+from common import AdminAwareDocumentAdmin
+
+class DocumentDesignAdmin(AdminAwareDocumentAdmin):
+    pass
+
+admin.site.register([DocumentDesign], DocumentDesignAdmin)
 
 class CollectionAdmin(AdminAwareDocumentAdmin):
     manage_collection = ManageCollectionView

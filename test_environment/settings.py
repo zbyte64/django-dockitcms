@@ -124,7 +124,6 @@ INSTALLED_APPS = (
     'dockit',
     'dockit.backends.djangodocument',
     'dockitcms',
-    'schemamaker',
     'photoprocessor',
     'dockitcms.contrib.thumbnailfield',
     'dockitcms.contrib.widgetbucket',

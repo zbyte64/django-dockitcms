@@ -1,4 +1,4 @@
-from schemamaker.fields import BaseFieldEntry
+from dockitcms.fields import BaseFieldEntry
 
 import dockit
 

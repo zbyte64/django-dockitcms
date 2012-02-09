@@ -1,6 +1,6 @@
 from django.views.generic import View
 
-from schemamaker.admin import AdminAwareDocumentAdmin
+from common import AdminAwareDocumentAdmin
 
 from dockitcms.models import Collection
 from dockitcms.common import CMSURLResolver

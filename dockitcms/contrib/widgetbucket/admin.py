@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from schemamaker.admin import AdminAwareDocumentAdmin
+from dockitcms.admin import AdminAwareDocumentAdmin
 
 from models import BaseWidget
 
