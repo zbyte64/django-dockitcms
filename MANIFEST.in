@@ -1,0 +1,2 @@
+recursive-include dockitcms/templates *
+recursive-exclude test_environment *
