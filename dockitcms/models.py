@@ -190,4 +190,3 @@ class Collection(dockit.Document):
         else:
             return self.__repr__()
 
-import viewpoints

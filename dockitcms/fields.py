@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 
-from models import SchemaEntry, FieldEntry
+from models import SchemaEntry, FieldEntry, Collection
 
 import dockit
 
@@ -286,6 +286,29 @@ class URLField(BaseField):
 
 registry.register_field('URLField', URLField)
 '''
+
+class CollectionReferenceField(BaseFieldEntry):
+    collection = dockit.ReferenceField(Collection)
+
+    field_class = dockit.ReferenceField
+    
+    def get_field_kwargs(self):
+        kwargs = dict(super(CollectionReferenceField, self).get_field_kwargs())
+        kwargs['document'] = self.collection
+        kwargs.pop('collection', None)
+        return kwargs
+
+    class Meta:
+        typed_key = 'CollectionReferenceField'
+
+class ListCollectionReferenceField(ListFieldMixin, CollectionReferenceField):
+    def get_list_field_kwargs(self):
+        subfield = CollectionReferenceField.create_field(self)
+        return {'subfield': subfield}
+
+    class Meta:
+        typed_key = 'ListCollectionReferenceField'
+
 class ModelReferenceField(BaseFieldEntry):
     model = dockit.ModelReferenceField(ContentType)
 
