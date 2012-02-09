@@ -294,20 +294,19 @@ class CollectionReferenceField(BaseFieldEntry):
     
     def get_field_kwargs(self):
         kwargs = dict(super(CollectionReferenceField, self).get_field_kwargs())
-        kwargs['document'] = self.collection
+        kwargs['document'] = self.collection.get_document()
         kwargs.pop('collection', None)
         return kwargs
 
     class Meta:
         typed_key = 'CollectionReferenceField'
 
-class ListCollectionReferenceField(ListFieldMixin, CollectionReferenceField):
-    def get_list_field_kwargs(self):
-        subfield = CollectionReferenceField.create_field(self)
-        return {'subfield': subfield}
-
+class CollectionSetField(CollectionReferenceField):
+    field_class = dockit.DocumentSetField
+    
     class Meta:
-        typed_key = 'ListCollectionReferenceField'
+        typed_key = 'CollectionSetField'
+
 
 class ModelReferenceField(BaseFieldEntry):
     model = dockit.ModelReferenceField(ContentType)
@@ -327,13 +326,23 @@ class ModelReferenceField(BaseFieldEntry):
     class Meta:
         typed_key = 'ModelReferenceField'
 
-class ListModelReferenceField(ListFieldMixin, ModelReferenceField):
+'''
+class ListFieldMixin(object):
+    list_field_class = dockit.ListField
+    
     def get_list_field_kwargs(self):
-        subfield = ModelReferenceField.create_field(self)
-        return {'subfield': subfield}
+        raise NotImplementedError
+    
+    def create_field(self):
+        kwargs = self.get_list_field_kwargs()
+        return self.list_field_class(**kwargs)
+'''
 
+class ModelSetField(ModelReferenceField):
+    field_class = dockit.ModelSetField
+    
     class Meta:
-        typed_key = 'ListModelReferenceField'
+        typed_key = 'ModelSetField'
 
 class SchemaField(SchemaEntry):
     field_class = dockit.SchemaField
