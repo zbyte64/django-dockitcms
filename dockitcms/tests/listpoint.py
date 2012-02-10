@@ -50,7 +50,7 @@ class ListViewPointTestCase(unittest.TestCase):
         for i in range(5):
             data = {'title': 'title-%s' % i,
                     'slug': 'slug-%s' % i,
-                    'bodoy': 'body text'}
+                    'body': 'body text'}
             self.document(**data).save()
     
     def test_index(self):
