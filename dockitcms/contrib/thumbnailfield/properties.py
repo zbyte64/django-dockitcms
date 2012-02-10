@@ -28,6 +28,9 @@ class ThumbnailField(BaseField):
             return self.subschema.to_python(val, parent=parent)
         return val
     
+    def to_primitive(self, val):
+        if val:
+            return val.to_primitive(val)
     #returns a file form field
     #to_python takes a file object and returns a ThumbnailsSchema
 

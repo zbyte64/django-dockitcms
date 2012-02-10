@@ -48,6 +48,7 @@ class ThumbnailsSchema(GeneratedThumbnailSchema):
     def reprocess_info(self, config):
         source_image = self.pil_image()
         self.info = process_image_info(source_image)
+        self.config = config
     
     def reprocess_thumbnail_info(self, config):
         source_image = self.pil_image()
@@ -81,7 +82,7 @@ class ThumbnailsSchema(GeneratedThumbnailSchema):
         thumb_fobj = ContentFile(img_to_fobj(img, info).read())
         thumb_name = storage.save(thumb_name, thumb_fobj)
         
-        return {'path':thumb_name, 'config':config, 'info':info}
+        return GeneratedThumbnailSchema(**{'image':thumb_name, 'config':config, 'info':info})
 
 assert hasattr(ThumbnailsSchema, 'url')
 
