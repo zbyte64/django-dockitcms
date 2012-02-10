@@ -3,6 +3,7 @@ from dockit.schema import get_schema
 import dockit
 
 from django.utils.translation import ugettext_lazy as _
+from django.utils.text import capfirst
 
 from dockit.schema.schema import create_schema
 
@@ -51,17 +52,21 @@ class DesignMixin(object):
             fields[field_entry.name] = field
         return fields
     
+    def get_schema_name(self):
+        return 'temp_schema'
+    
     def get_schema(self):
         fields = self.get_fields()
+        name = self.get_schema_name()
         if self.inherit_from:
             parent = self._meta.fields['inherit_from'].get_schema(self.inherit_from)
             if parent:
                 parents = (parent, )
-                schema = create_schema('temp_schema', fields, module='dockitcms.models', parents=parents)
+                schema = create_schema(name, fields, module='dockitcms.models', parents=parents)
             else:
-                schema = create_schema('temp_schema', fields, module='dockitcms.models')
+                schema = create_schema(name, fields, module='dockitcms.models')
         else:
-            schema = create_schema('temp_schema', fields, module='dockitcms.models')
+            schema = create_schema(name, fields, module='dockitcms.models')
         
         def __unicode__(instance):
             if not self.object_label:
@@ -90,6 +95,9 @@ class DocumentDesign(dockit.Document, DesignMixin):
     
     def __unicode__(self):
         return self.title or ''
+    
+    def get_schema_name(self):
+        return str(''.join([capfirst(part) for part in self.title.split()]))
 
 
 class ViewPoint(dockit.Document):

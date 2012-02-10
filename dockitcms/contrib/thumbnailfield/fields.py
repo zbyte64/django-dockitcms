@@ -1,4 +1,4 @@
-from dockitcms.fields import BaseFieldEntry
+from dockitcms.fields import BaseFieldEntry, ListFieldMixin
 
 import dockit
 
@@ -55,4 +55,12 @@ class ThumbnailField(BaseFieldEntry):
 
     class Meta:
         typed_key = 'ThumbnailField'
+
+class ListThumbnailField(ListFieldMixin, ThumbnailField):
+    def get_list_field_kwargs(self):
+        subfield = ThumbnailField.create_field(self)
+        return {'subfield': subfield}
+
+    class Meta:
+        typed_key = 'ListThumbnailField'
 

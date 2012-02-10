@@ -368,6 +368,8 @@ class ComplexListField(SchemaEntry):
     
     def get_field_kwargs(self):
         schema = self.get_schema()
+        schema._meta.verbose_name = self.name
+        schema._meta.verbose_name_plural = self.name + 's'
         kwargs = {'subfield':dockit.SchemaField(schema)}
         return kwargs
     
