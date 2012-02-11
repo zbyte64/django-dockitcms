@@ -1,4 +1,6 @@
-from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_detail_scaffold, generate_object_list_scaffold
+from forms import TemplateFormMixin
+
+from dockitcms.utils import ConfigurableTemplateResponseMixin
 from dockitcms.models import ViewPoint
 
 import dockit
@@ -6,8 +8,6 @@ from dockit.forms import DocumentForm
 
 from django.views.generic import ListView, DetailView
 from django.conf.urls.defaults import patterns, url
-from django import forms
-from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 
@@ -52,7 +52,7 @@ class ModelListViewPoint(BaseModelViewPoint):
             url(r'^$', 
                 self.view_class.as_view(model=self.model.model_class(),
                                       configuration=params,
-                                      paginate_by=params.get('paginate_by', None)),
+                                      paginate_by=self.paginate_by),
                 name='index',
             ),
         )
@@ -89,32 +89,7 @@ class ModelDetailViewPoint(BaseModelViewPoint):
     class Meta:
         typed_key = 'modeldetailview'
 
-class BaseModelViewPointForm(DocumentForm):
+class BaseModelViewPointForm(TemplateFormMixin, DocumentForm):
     class Meta:
         document = BaseModelViewPoint
-    
-    def _clean_template_html(self, content):
-        if not content:
-            return content
-        try:
-            Template(content)
-        except TemplateSyntaxError, e:
-            raise forms.ValidationError(unicode(e))
-        return content
-    
-    def clean_template_html(self):
-        return self._clean_template_html(self.cleaned_data.get('template_html'))
-    
-    def clean_content(self):
-        return self._clean_template_html(self.cleaned_data.get('content'))
-    
-    def clean(self):
-        #TODO pump the error to their perspective field
-        if self.cleaned_data.get('template_source') == 'name':
-            if not self.cleaned_data.get('template_name'):
-                raise forms.ValidationError(_('Please specify a template name'))
-        if self.cleaned_data.get('template_source') == 'html':
-            if not self.cleaned_data.get('template_html'):
-                raise forms.ValidationError(_('Please specify the template html'))
-        return self.cleaned_data
 
