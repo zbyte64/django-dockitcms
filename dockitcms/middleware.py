@@ -5,6 +5,8 @@ from django.template.response import TemplateResponse
 
 from models import ViewPoint
 
+registered_view_points = set()
+
 class DockitCMSMiddleware(object):
     ignore_script_prefix = False
     
@@ -23,6 +25,9 @@ class DockitCMSMiddleware(object):
         #TODO find a more efficient way to do this
         for view_point in ViewPoint.objects.all():
             if chomped_url.startswith(view_point.url):
+                if view_point.pk not in registered_view_points:
+                    view_point.register_view_point()
+                    registered_view_points.add(view_point.pk)
                 try:
                     response = view_point.dispatch(request)
                 except Http404:

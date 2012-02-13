@@ -25,8 +25,9 @@ class CategoryDetailView(ConfigurableTemplateResponseMixin, ListView):
         return self.document.objects.filter.view_category(self.category.pk)
     
     def get_category(self):
-        return self.category_queryset.get(path=self.kwargs['path'],
-                                          collection=self.category_document._meta.collection)
+        category_index = self.category_queryset.get(path=self.kwargs['path'],
+                                                    collection=self.category_document._meta.collection)
+        return self.category_document.objects.get(category_index.document_id)
     
     def get_context_data(self, **kwargs):
         context = super(CategoryDetailView, self).get_context_data(**kwargs)
