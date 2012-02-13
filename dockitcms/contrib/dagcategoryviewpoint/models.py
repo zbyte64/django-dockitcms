@@ -77,8 +77,11 @@ class AbstractDocumentCategory(dockit.Document):
     listed = dockit.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
-        ret = super(AbstractDocumentCategory, self).save(*args, **kwargs)
+        if not self.pk:
+            #can only proceed if we have a document id
+            super(AbstractDocumentCategory, self).save(*args, **kwargs)
         DocumentCategoryModel.objects.create_or_update_for_document(self)
+        ret = super(AbstractDocumentCategory, self).save(*args, **kwargs)
         return ret
     
     def delete(self, *args, **kwargs):
@@ -86,7 +89,7 @@ class AbstractDocumentCategory(dockit.Document):
         return super(AbstractDocumentCategory, self).delete(*args, **kwargs)
     
     class Meta:
-        abstract = True
+        virtual = True
 
 REGISTERED_BASE_SCHEMA_DESIGNS['dagcategory.category'] = AbstractDocumentCategory
 

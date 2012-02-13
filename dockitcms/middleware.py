@@ -24,7 +24,7 @@ class DockitCMSMiddleware(object):
             chomped_url = chomped_url[len(prefix)-1:]
         #TODO find a more efficient way to do this
         for view_point in ViewPoint.objects.all():
-            if chomped_url.startswith(view_point.url):
+            if view_point.url_regexp.match(chomped_url):
                 if view_point.pk not in registered_view_points:
                     view_point.register_view_point()
                     registered_view_points.add(view_point.pk)

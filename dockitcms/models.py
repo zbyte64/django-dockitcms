@@ -11,6 +11,8 @@ from django.utils.datastructures import SortedDict
 
 from properties import SchemaDesignChoiceField
 
+import re
+
 class FieldEntry(dockit.Schema):
     '''
     This schema is extended by others to define a field entry
@@ -115,7 +117,11 @@ class DocumentDesign(dockit.Document, DesignMixin):
         return document
 
 class ViewPoint(dockit.Document):
-    url = dockit.CharField()
+    url = dockit.CharField(help_text='May be a regular expression that the url has to match')
+    
+    @property
+    def url_regexp(self):
+        return re.compile(self.url)
     
     def get_absolute_url(self):
         return self.url

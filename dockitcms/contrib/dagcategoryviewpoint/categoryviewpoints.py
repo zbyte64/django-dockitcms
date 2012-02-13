@@ -16,6 +16,13 @@ TEMPLATE_SOURCE_CHOICES = [
     ('html', _('By Template HTML')),
 ]
 
+CONTEXT_DESCRIPTION = '''
+The following context is provided:<br/>
+category: the category matching the url path<br/>
+object_list: the items belonging to the category</br/>
+paginator: the paginator object<br/>
+'''
+
 class CategoryDetailView(ConfigurableTemplateResponseMixin, ListView):
     document = None
     category_queryset = DocumentCategoryModel.objects.listed()
@@ -25,6 +32,8 @@ class CategoryDetailView(ConfigurableTemplateResponseMixin, ListView):
         return self.document.objects.filter.view_category(self.category.pk)
     
     def get_category(self):
+        print self.category_queryset.values('collection', 'path')
+        print self.category_document._meta.collection
         category_index = self.category_queryset.get(path=self.kwargs['path'],
                                                     collection=self.category_document._meta.collection)
         return self.category_document.objects.get(category_index.document_id)
@@ -49,7 +58,7 @@ class CategoryViewPoint(ViewPoint):
     template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
     template_html = dockit.TextField(blank=True)
-    content = dockit.TextField(blank=True)
+    content = dockit.TextField(blank=True, help_text=CONTEXT_DESCRIPTION)
     #TODO filters
     
     view_class = CategoryDetailView
@@ -71,7 +80,6 @@ class CategoryViewPoint(ViewPoint):
             
             class Meta:
                 proxy = True
-        
         return WrappedDoc
     
     def get_item_document(self):
@@ -85,8 +93,13 @@ class CategoryViewPoint(ViewPoint):
         category_document = self.get_category_document()
         item_document = self.get_item_document()
         params = self.to_primitive(self)
+        
+        url_pattern = r'^(?P<path>.+)/$'
+        if 'path' in self.url_regexp.groupindex:
+            url_pattern = r'^'
+        
         urlpatterns = patterns('',
-            url(r'^(?P<path>.+)/$', 
+            url(url_pattern,
                 self.view_class.as_view(document=item_document,
                                         category_document=category_document,
                                         paginate_by=self.paginate_by,
