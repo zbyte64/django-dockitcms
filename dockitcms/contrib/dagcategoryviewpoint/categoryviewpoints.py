@@ -1,0 +1,105 @@
+from forms import TemplateFormMixin
+
+from dockitcms.utils import ConfigurableTemplateResponseMixin
+from dockitcms.models import ViewPoint
+
+import dockit
+from dockit.forms import DocumentForm
+from dockit.views import ListView
+
+from django.views.generic import DetailView
+from django.conf.urls.defaults import patterns, url
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
+
+from models import DocumentCategoryModel
+
+TEMPLATE_SOURCE_CHOICES = [
+    ('name', _('By Template Name')),
+    ('html', _('By Template HTML')),
+]
+
+class CategoryDetailView(ConfigurableTemplateResponseMixin, ListView):
+    document = None
+    category_queryset = DocumentCategoryModel.objects.listed()
+
+    def get_queryset(self):
+        return self.document.objects.filter.view_category(self.category.pk)
+    
+    def get_category(self):
+        return self.category_queryset.get(path=self.kwargs['path'])
+    
+    def get_context_data(self, **kwargs):
+        context = super(CategoryDetailView, self).get_context_data(**kwargs)
+        context['category'] = self.category
+        return context
+    
+    def get(self, request, *args, **kwargs):
+        self.category = self.get_category()
+        return super(CategoryDetailView, self).get(request, *args, **kwargs)
+
+class CategoryViewPoint(ViewPoint):
+    category_collection = dockit.ReferenceField(Collection)
+    
+    item_collection = dockit.ReferenceField(Collection)
+    item_category_dot_path = dockit.CharField()
+    
+    paginate_by = dockit.IntegerField(blank=True, null=True)
+    
+    template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
+    template_html = dockit.TextField(blank=True)
+    content = dockit.TextField(blank=True)
+    #TODO filters
+    
+    view_class = CategoryDetailView
+    
+    def register_view_point(self):
+        if self.item_category_dot_path:
+            doc_cls = self.item_collection.get_document()
+            #TODO need a better filter spec...
+            doc_cls.objects.enable_index("equals", 'view_category', {'dotpath':self.item_category_dot_path})
+    
+    def get_category_document(self):
+        doc_cls = self.category_collection.get_document()
+        view_point = self
+        class WrappedDoc(doc_cls):
+            def get_absolute_url(self):
+                if view_point.category_slug_field:
+                    return view_point.reverse('category-detail', self[view_point.category_slug_field])
+                return view_point.reverse('category-detail', self.pk)
+            
+            class Meta:
+                proxy = True
+        
+        return WrappedDoc
+    
+    def get_item_document(self):
+        return self.item_collection.get_document()
+    
+    @classmethod
+    def get_admin_form_class(cls):
+        return CategoryViewPointForm
+    
+    def get_urls(self):
+        category_document = self.get_category_document()
+        item_document = self.get_item_document()
+        params = self.to_primitive(self)
+        urlpatterns = patterns('',
+            url(r'^(?P<path>.+)/$', 
+                self.view_class.as_view(document=category_document,
+                                        item_collection=item_document,
+                                        paginate_by=self.paginate_by,
+                                        configuration=params,),
+                name='category-detail',
+            ),
+        )
+        return urlpatterns
+    
+    class Meta:
+        typed_key = 'contrib.dagcategory'
+
+class CategoryViewPointForm(TemplateFormMixin, DocumentForm):
+    class Meta:
+        document = CategoryViewPoint
+
