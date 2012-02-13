@@ -32,6 +32,6 @@ class CollectionAdmin(AdminAwareDocumentAdmin):
 admin.site.register([Collection], CollectionAdmin)
 
 class ViewPointAdmin(AdminAwareDocumentAdmin):
-    pass
+    list_display = ['url', 'view_type']
 
 admin.site.register([ViewPoint], ViewPointAdmin)
