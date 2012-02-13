@@ -1,16 +1,13 @@
-from forms import TemplateFormMixin
-
 from dockitcms.utils import ConfigurableTemplateResponseMixin
-from dockitcms.models import ViewPoint
+from dockitcms.models import ViewPoint, Collection
+from dockitcms.viewpoints.forms import TemplateFormMixin
 
 import dockit
 from dockit.forms import DocumentForm
 from dockit.views import ListView
 
-from django.views.generic import DetailView
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes.models import ContentType
 
 from models import DocumentCategoryModel
 
@@ -22,12 +19,14 @@ TEMPLATE_SOURCE_CHOICES = [
 class CategoryDetailView(ConfigurableTemplateResponseMixin, ListView):
     document = None
     category_queryset = DocumentCategoryModel.objects.listed()
+    category_document = None
 
     def get_queryset(self):
         return self.document.objects.filter.view_category(self.category.pk)
     
     def get_category(self):
-        return self.category_queryset.get(path=self.kwargs['path'])
+        return self.category_queryset.get(path=self.kwargs['path'],
+                                          collection=self.category_document._meta.collection)
     
     def get_context_data(self, **kwargs):
         context = super(CategoryDetailView, self).get_context_data(**kwargs)
@@ -87,8 +86,8 @@ class CategoryViewPoint(ViewPoint):
         params = self.to_primitive(self)
         urlpatterns = patterns('',
             url(r'^(?P<path>.+)/$', 
-                self.view_class.as_view(document=category_document,
-                                        item_collection=item_document,
+                self.view_class.as_view(document=item_document,
+                                        category_document=category_document,
                                         paginate_by=self.paginate_by,
                                         configuration=params,),
                 name='category-detail',

@@ -1,10 +1,12 @@
 from django.db import models
 
-from dagcategory.models import DagCategory
+from dagcategory.models import DAGCategory
 
 import datetime
 
 import dockit
+
+from dockitcms.properties import REGISTERED_BASE_SCHEMA_DESIGNS
 
 class DocumentCategoryManager(models.Manager):
     def listed(self):
@@ -18,14 +20,17 @@ class DocumentCategoryManager(models.Manager):
             parent = self.create_or_update_for_document(document.parent)
         defaults = {'slug':document.slug,
                     'parent':parent,
+                    'path':'',
                     'order':document.order,
                     'staff_only':document.staff_only,
                     'authenticated_users_only':document.authenticated_users_only,
-                    'listed':listed,}
+                    'listed':document.listed,}
         obj, created = self.get_or_create(collection=collection, 
                                           document_id=document_id,
-                                          defaults=detaults)
-        if not created:
+                                          defaults=defaults)
+        if created:
+            obj.save() #TODO if we compute the path properly in default this will not be necesssary
+        else:
             updated = False
             for key, value in defaults.iteritems():
                 if getattr(obj, key) != value:
@@ -41,22 +46,19 @@ class DocumentCategoryManager(models.Manager):
         document_id = document.pk
         self.filter(collection=collection, doucment_id=document_id).delete()
 
-class DocumentCategoryModel(DagCategory):
+class DocumentCategoryModel(DAGCategory):
     collection = models.CharField(max_length=128, db_index=True)
     document_id = models.CharField(max_length=128, db_index=True)
     
-    created = models.DateTimeField(default=datetime.now, editable=False)
+    created = models.DateTimeField(default=datetime.datetime.now, editable=False)
     order = models.IntegerField(default=0)
 
     #visibility flags    
     staff_only = models.BooleanField(default=False)
-    authenticated_users_only = models.BooleanField(detault=False)
+    authenticated_users_only = models.BooleanField(default=False)
     listed = models.BooleanField(default=True, db_index=True)
     
     objects = DocumentCategoryManager()
-    
-    def get_document(self):
-        pass #TODO
     
     class Meta:
         ordering = ['order']
@@ -66,22 +68,27 @@ class AbstractDocumentCategory(dockit.Document):
     Inherited by other documents, on save and delete a category model is updated
     '''
     slug = dockit.SlugField()
-    parent = dockit.RefenceField('self', blank=True, null=True)
+    parent = dockit.ReferenceField('self', blank=True, null=True)
     path = dockit.CharField(editable=False)
     order = dockit.IntegerField(default=0)
     
     staff_only = dockit.BooleanField(default=False)
-    authenticated_users_only = dockit.BooleanField(detault=False)
-    listed = doclit.BooleanField(default=True)
+    authenticated_users_only = dockit.BooleanField(default=False)
+    listed = dockit.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
-        DocumanteCategoryModel.objects.create_or_update_for_document(self)
-        return super(AbstractDocumentCategory, self).save(*args, **kwargs)
+        ret = super(AbstractDocumentCategory, self).save(*args, **kwargs)
+        DocumentCategoryModel.objects.create_or_update_for_document(self)
+        return ret
     
     def delete(self, *args, **kwargs):
-        DocumanteCategoryModel.objects.delete_for_document(self)
+        DocumentCategoryModel.objects.delete_for_document(self)
         return super(AbstractDocumentCategory, self).delete(*args, **kwargs)
     
     class Meta:
         abstract = True
+
+REGISTERED_BASE_SCHEMA_DESIGNS['dagcategory.category'] = AbstractDocumentCategory
+
+import categoryviewpoints
 

@@ -127,6 +127,7 @@ INSTALLED_APPS = (
     'photoprocessor',
     'dockitcms.contrib.thumbnailfield',
     'dockitcms.contrib.widgetbucket',
+    'dockitcms.contrib.dagcategoryviewpoint',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

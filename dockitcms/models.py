@@ -5,7 +5,7 @@ import dockit
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import capfirst
 
-from dockit.schema.schema import create_schema
+from dockit.schema.schema import create_schema, create_document
 
 from django.utils.datastructures import SortedDict
 
@@ -58,15 +58,7 @@ class DesignMixin(object):
     def get_schema(self):
         fields = self.get_fields()
         name = self.get_schema_name()
-        if self.inherit_from:
-            parent = self._meta.fields['inherit_from'].get_schema(self.inherit_from)
-            if parent:
-                parents = (parent, )
-                schema = create_schema(name, fields, module='dockitcms.models', parents=parents)
-            else:
-                schema = create_schema(name, fields, module='dockitcms.models')
-        else:
-            schema = create_schema(name, fields, module='dockitcms.models')
+        schema = create_schema(name, fields, module='dockitcms.models')
         
         def __unicode__(instance):
             if not self.object_label:
@@ -80,7 +72,7 @@ class DesignMixin(object):
         return schema
 
 class SchemaEntry(FieldEntry, DesignMixin):
-    inherit_from = SchemaDesignChoiceField(blank=True)
+    #inherit_from = SchemaDesignChoiceField(blank=True)
     fields = dockit.ListField(dockit.SchemaField(FieldEntry))
     object_label = dockit.CharField(blank=True)
     
@@ -98,7 +90,29 @@ class DocumentDesign(dockit.Document, DesignMixin):
     
     def get_schema_name(self):
         return str(''.join([capfirst(part) for part in self.title.split()]))
-
+    
+    def get_document(self, **kwargs):
+        fields = self.get_fields()
+        name = self.get_schema_name()
+        params = {'module':'dockitcms.models',
+                  'virtual':True,}
+        if self.inherit_from:
+            parent = self._meta.fields['inherit_from'].get_schema(self.inherit_from)
+            if parent:
+                params['parents'] = (parent, )
+        params.update(kwargs)
+        document = create_document(name, fields, **params)
+        
+        def __unicode__(instance):
+            if not self.object_label:
+                return repr(instance)
+            try:
+                return self.object_label % instance
+            except (KeyError, TypeError):
+                return repr(instance)
+        
+        document.__unicode__ = __unicode__
+        return document
 
 class ViewPoint(dockit.Document):
     url = dockit.CharField()
@@ -149,7 +163,7 @@ class ViewPoint(dockit.Document):
 class Collection(dockit.Document):
     title = dockit.CharField()
     key = dockit.SlugField(unique=True)
-    schema_definition = dockit.ReferenceField(DocumentDesign)
+    document_design = dockit.ReferenceField(DocumentDesign)
     #TODO add field for describing the label
     
     def save(self, *args, **kwargs):
@@ -162,16 +176,9 @@ class Collection(dockit.Document):
     
     def register_collection(self):
         name = str(self.key)
-        schema = self.schema_definition.get_schema()
-        
-        class GeneratedCollection(dockit.Document, schema):
-            __module__ = 'dockitcms.models'
-            
-            class Meta:
-                collection = self.get_collection_name()
-                verbose_name = self.title
-        
-        return GeneratedCollection
+        document = self.document_design.get_document(collection=self.get_collection_name(), virtual=False)
+        document._meta.verbose_bame = self.title
+        return document
     
     def get_document(self):
         key = self.get_collection_name()
