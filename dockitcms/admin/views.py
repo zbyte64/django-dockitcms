@@ -32,5 +32,5 @@ class ManageCollectionView(View):
         return VirtualDocumentAdmin(collection.get_document(), self.admin_site, base_url)
     
     def get_collection(self):
-        return Collection.objects.get(self.kwargs['pk'])
+        return Collection.objects.get(pk=self.kwargs['pk'])
 

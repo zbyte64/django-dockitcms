@@ -16,8 +16,7 @@ class BaseWidget(dockit.Document):
     def render(self, context):
         raise NotImplementedError
 
-BaseWidget.objects.enable_index("equals", "bucket_key", {"field":"bucket_key"})
-BaseWidget.objects.enable_index("equals", "vary_on", {'field':'vary_on'})
+BaseWidget.objects.index("bucket_key", "vary_on").commit()
 
 TEMPLATE_SOURCE_CHOICES = [
     ('name', _('By Template Name')),

@@ -20,12 +20,11 @@ class WidgetBucket(InclusionTag):
     )
     
     def get_widgets(self, bucket_key, vary_on=''):
-        base_qs = BaseWidget.objects.filter.bucket_key(bucket_key)
         if vary_on:
-            obj_qs = base_qs & BaseWidget.objects.filter.vary_on(vary_on)
+            obj_qs = BaseWidget.objects.filter(backet_key=bucket_key, vary_on=vary_on)
             if obj_qs:
                 return obj_qs
-        obj_qs = base_qs & BaseWidget.objects.filter.vary_on('')
+        obj_qs = BaseWidget.objects.filter(backet_key=bucket_key, vary_on='')
         return obj_qs
     
     def prep_vary_on(self, vary_on):
