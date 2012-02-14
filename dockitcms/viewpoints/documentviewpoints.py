@@ -72,7 +72,7 @@ class CollectionDetailViewPoint(BaseCollectionViewPoint):
     def register_view_point(self):
         if self.slug_field:
             doc_cls = self.collection.get_document()
-            doc_cls.objects.enable_index("equals", self.slug_field, {'field':self.slug_field})
+            doc_cls.objects.index(self.slug_field).commit()
     
     def get_urls(self):
         params = self.to_primitive(self)

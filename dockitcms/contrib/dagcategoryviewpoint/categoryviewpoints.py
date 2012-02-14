@@ -64,8 +64,7 @@ class CategoryViewPoint(ViewPoint):
     def register_view_point(self):
         if self.item_category_dot_path:
             doc_cls = self.item_collection.get_document()
-            #TODO need a better filter spec...
-            doc_cls.objects.enable_index("equals", 'view_category', {'dotpath':self.item_category_dot_path})
+            doc_cls.objects.index(self.item_category_dot_path).commit()
     
     def get_category_document(self):
         doc_cls = self.category_collection.get_document()
