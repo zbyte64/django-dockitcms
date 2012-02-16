@@ -1,5 +1,5 @@
-#import listpoint
+import listpoint
 #import datepoint
-#import categorypoint
+import categorypoint
 import documentviewpoints
 

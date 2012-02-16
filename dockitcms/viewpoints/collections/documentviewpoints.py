@@ -1,66 +1,28 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
+from dockitcms.viewpoints.common import AuthenticatedMixin, TemplateMixin
 
-from dockitcms.utils import ConfigurableTemplateResponseMixin
-from dockitcms.models import ViewPoint, Collection
+from common import CollectionMixin, PointListView, PointDetailView
+
+from dockitcms.models import ViewPoint
 
 import dockit
 from dockit.forms import DocumentForm
-from dockit.views import ListView, DetailView
-from dockit.backends.queryindex import QueryFilterOperation
 
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 
-
-TEMPLATE_SOURCE_CHOICES = [
-    ('name', _('By Template Name')),
-    ('html', _('By Template HTML')),
-]
-
-class PointListView(ConfigurableTemplateResponseMixin, ListView):
-    pass
-
-class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
-    pass
-
-class CollectionFilter(dockit.Schema):
-    field = dockit.CharField()
-    operation = dockit.CharField()
-    value = dockit.CharField()
-    
-    def get_query_filter_operation(self):
-        return QueryFilterOperation(field=self.field,
-                                    operation=self.operation,
-                                    value=self.value)
-
-class BaseCollectionViewPoint(ViewPoint):
-    collection = dockit.ReferenceField(Collection)
-    template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
-    template_html = dockit.TextField(blank=True)
-    content = dockit.TextField(blank=True)
-    filters = dockit.ListField(dockit.SchemaField(CollectionFilter), blank=True)
-    
+class BaseCollectionViewPoint(CollectionMixin, TemplateMixin, AuthenticatedMixin, ViewPoint):
+    view_type = ViewPoint._meta.fields['view_type'] #hack around
     view_class = None
     
     class Meta:
+        typed_field = 'view_type'
+        collection = ViewPoint._meta.collection
         proxy = True
     
     @classmethod
     def get_admin_form_class(cls):
         return BaseCollectionViewPointForm
-    
-    def get_document(self):
-        return self.collection.get_document()
-    
-    def get_base_index(self):
-        document = self.get_document()
-        index = document.objects.all()
-        inclusions = list()
-        for collection_filter in self.filters:
-            inclusions.append(collection_filter.get_query_filter_operation())
-        index = index._add_filter_parts(inclusions=inclusions)
-        return index
     
     def register_view_point(self):
         index = self.get_base_index()

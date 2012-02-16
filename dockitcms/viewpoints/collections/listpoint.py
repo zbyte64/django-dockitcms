@@ -1,30 +1,17 @@
-from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_detail_scaffold, generate_object_list_scaffold
-
-from dockitcms.viewpoints.common import BaseCollectionViewPoint
+from dockitcms.models import ViewPoint
+from dockitcms.viewpoints.common import AuthenticatedMixin, TEMPLATE_SOURCE_CHOICES
+from common import CollectionMixin, PointListView, PointDetailView
 
 import dockit
 from dockit.forms import DocumentForm
-from dockit.views import ListView, DetailView
 
 from django.conf.urls.defaults import patterns, url
 from django import forms
 from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-
-TEMPLATE_SOURCE_CHOICES = [
-    ('name', _('By Template Name')),
-    ('html', _('By Template HTML')),
-]
-
-class PointListView(ConfigurableTemplateResponseMixin, ListView):
-    pass
-
-class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
-    pass
-
-
-class CollectionListingViewPoint(BaseCollectionViewPoint):
+class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint):
+    view_type = ViewPoint._meta.fields['view_type'] #hack around
     slug_field = dockit.SlugField(blank=True)
     list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
@@ -39,10 +26,15 @@ class CollectionListingViewPoint(BaseCollectionViewPoint):
     list_view_class = PointListView
     detail_view_class = PointDetailView
     
-    def register_view_point(self):
+    def get_base_index(self):
+        index = super(CollectionListingViewPoint, self).get_base_index()
         if self.slug_field:
-            doc_cls = self.collection.get_document()
-            doc_cls.objects.enable_index("equals", self.slug_field, {'field':self.slug_field})
+            index = index.index(self.slug_field)
+        return index
+    
+    def register_view_point(self):
+        index = self.get_base_index()
+        index.commit()
     
     def get_document(self):
         doc_cls = self.collection.get_document()
@@ -67,9 +59,11 @@ class CollectionListingViewPoint(BaseCollectionViewPoint):
     def get_urls(self):
         document = self.get_document()
         params = self.to_primitive(self)
+        index = self.get_base_index()
         urlpatterns = patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,
+                                      queryset=index,
                                       configuration=self._configuration_from_prefix(params, 'list'),
                                       paginate_by=params.get('paginate_by', None)),
                 name='index',
@@ -79,6 +73,7 @@ class CollectionListingViewPoint(BaseCollectionViewPoint):
             urlpatterns += patterns('',
                 url(r'^(?P<slug>.+)/$', 
                     self.detail_view_class.as_view(document=document,
+                                            queryset=index,
                                             slug_field=params['slug_field'],
                                             configuration=self._configuration_from_prefix(params, 'detail'),),
                     name='detail',
@@ -88,6 +83,7 @@ class CollectionListingViewPoint(BaseCollectionViewPoint):
             urlpatterns += patterns('',
                 url(r'^(?P<pk>.+)/$', 
                     self.detail_view_class.as_view(document=document,
+                                            queryset=index,
                                             configuration=self._configuration_from_prefix(params, 'detail'),),
                     name='detail',
                 ),
@@ -95,6 +91,8 @@ class CollectionListingViewPoint(BaseCollectionViewPoint):
         return urlpatterns
     
     class Meta:
+        typed_field = 'view_type'
+        collection = ViewPoint._meta.collection
         typed_key = 'dockitcms.collectionlisting'
     
     @classmethod
