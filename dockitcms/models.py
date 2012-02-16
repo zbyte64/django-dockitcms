@@ -1,5 +1,5 @@
 from django.db.models import permalink
-from dockit.schema import get_schema
+from dockit.schema import get_base_document
 import dockit
 
 from django.utils.translation import ugettext_lazy as _
@@ -57,21 +57,37 @@ class DesignMixin(object):
     def get_schema_name(self):
         return 'temp_schema'
     
-    def get_schema(self):
-        fields = self.get_fields()
-        name = self.get_schema_name()
-        schema = create_schema(name, fields, module='dockitcms.models')
-        
-        def __unicode__(instance):
-            if not self.object_label:
-                return repr(instance)
-            try:
-                return self.object_label % instance
-            except (KeyError, TypeError):
-                return repr(instance)
-        
-        schema.__unicode__ = __unicode__
-        return schema
+    def get_schema_kwargs(self, **kwargs):
+        params = {'module':'dockitcms.models',
+                  'virtual':True,
+                  'fields':self.get_fields(),
+                  'name':self.get_schema_name(),}
+        attrs = {}
+        if self.object_label:
+            def __unicode__(instance):
+                try:
+                    return self.object_label % instance
+                except (KeyError, TypeError):
+                    return repr(instance)
+            attrs['__unicode__'] = __unicode__
+        params.update(kwargs)
+        params.setdefault('attrs', {})
+        params['attrs'].update(attrs)
+        return params
+    
+    def get_document_kwargs(self, **kwargs):
+        return self.get_schema_kwargs(**kwargs)
+    
+    def get_schema(self, **kwargs):
+        params = self.get_schema_kwargs(**kwargs)
+        return create_schema(**params)
+    
+    def get_document(self, **kwargs):
+        params = self.get_document_kwargs(**kwargs)
+        doc = create_document(**params)
+        if not issubclass(doc, dockit.Document):
+            raise TypeError("Did not properly create a document")
+        return doc
 
 class SchemaEntry(FieldEntry, DesignMixin):
     #inherit_from = SchemaDesignChoiceField(blank=True)
@@ -84,7 +100,7 @@ class SchemaEntry(FieldEntry, DesignMixin):
 class DocumentDesign(dockit.Document, DesignMixin):
     title = dockit.CharField()
     inherit_from = SchemaDesignChoiceField(blank=True)
-    fields = dockit.ListField(dockit.SchemaField(FieldEntry))
+    fields = dockit.ListField(dockit.SchemaField(FieldEntry), blank=True)
     object_label = dockit.CharField(blank=True)
     
     def __unicode__(self):
@@ -93,28 +109,56 @@ class DocumentDesign(dockit.Document, DesignMixin):
     def get_schema_name(self):
         return str(''.join([capfirst(part) for part in self.title.split()]))
     
-    def get_document(self, **kwargs):
-        fields = self.get_fields()
-        name = self.get_schema_name()
-        params = {'module':'dockitcms.models',
-                  'virtual':True,}
+    def get_document_kwargs(self, **kwargs):
+        kwargs = DesignMixin.get_document_kwargs(self, **kwargs)
         if self.inherit_from:
             parent = self._meta.fields['inherit_from'].get_schema(self.inherit_from)
             if parent:
-                params['parents'] = (parent, )
-        params.update(kwargs)
-        document = create_document(name, fields, **params)
-        
-        def __unicode__(instance):
-            if not self.object_label:
-                return repr(instance)
-            try:
-                return self.object_label % instance
-            except (KeyError, TypeError):
-                return repr(instance)
-        
-        document.__unicode__ = __unicode__
-        return document
+                if issubclass(parent, dockit.Document):
+                    kwargs['parents'] = (parent,)
+                else:
+                    kwargs['parents'] = (parent, dockit.Document)
+        return kwargs
+
+class Collection(DocumentDesign):
+    key = dockit.SlugField(unique=True)
+    
+    def save(self, *args, **kwargs):
+        ret = super(Collection, self).save(*args, **kwargs)
+        self.register_collection()
+        return ret
+    
+    def get_collection_name(self):
+        return 'dockitcms.virtual.%s' % self.key
+    
+    def register_collection(self):
+        doc = DocumentDesign.get_document(self, virtual=False, verbose_name=self.title, collection=self.get_collection_name())
+        return doc
+    
+    def get_document(self):
+        key = self.get_collection_name()
+        #TODO how do we know if we should recreate the document? ie what if the design was modified on another node
+        try:
+            return get_base_document(key)
+        except KeyError:
+            doc = self.register_collection()
+            return doc
+    
+    @permalink
+    def get_admin_manage_url(self):
+        return ('admin:dockitcms_collection_manage', [self.pk], {})
+    
+    def admin_manage_link(self):
+        url = self.get_admin_manage_url()
+        return u'<a href="%s">%s</a>' % (url, _('Manage'))
+    admin_manage_link.short_description = _('Manage')
+    admin_manage_link.allow_tags = True
+    
+    def __unicode__(self):
+        if self.title:
+            return self.title
+        else:
+            return self.__repr__()
 
 class ViewPoint(dockit.Document):
     url = dockit.CharField(help_text='May be a regular expression that the url has to match')
@@ -165,49 +209,4 @@ class ViewPoint(dockit.Document):
     
     class Meta:
         typed_field = 'view_type'
-
-class Collection(dockit.Document):
-    title = dockit.CharField()
-    key = dockit.SlugField(unique=True)
-    document_design = dockit.ReferenceField(DocumentDesign)
-    #TODO add field for describing the label
-    
-    def save(self, *args, **kwargs):
-        ret = super(Collection, self).save(*args, **kwargs)
-        self.register_collection()
-        return ret
-    
-    def get_collection_name(self):
-        return 'dockitcms.virtual.%s' % self.key
-    
-    def register_collection(self):
-        name = str(self.key)
-        document = self.document_design.get_document(collection=self.get_collection_name(), virtual=False)
-        document._meta.verbose_bame = self.title
-        return document
-    
-    def get_document(self):
-        key = self.get_collection_name()
-        #TODO how do we know if we should recreate the document? ie what if the design was modified on another node
-        try:
-            return get_schema(key)
-        except KeyError:
-            doc = self.register_collection()
-            return doc
-    
-    @permalink
-    def get_admin_manage_url(self):
-        return ('admin:dockitcms_collection_manage', [self.pk], {})
-    
-    def admin_manage_link(self):
-        url = self.get_admin_manage_url()
-        return u'<a href="%s">%s</a>' % (url, _('Manage'))
-    admin_manage_link.short_description = _('Manage')
-    admin_manage_link.allow_tags = True
-    
-    def __unicode__(self):
-        if self.title:
-            return self.title
-        else:
-            return self.__repr__()
 
