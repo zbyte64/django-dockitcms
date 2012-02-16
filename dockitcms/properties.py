@@ -1,5 +1,4 @@
 from dockit.schema.fields import BaseField
-from dockit import Schema
 
 from django.db.models.fields import BLANK_CHOICE_DASH
 
@@ -38,7 +37,7 @@ class SchemaDesignChoiceField(BaseField):
     def get_schema(self, key):
         for skey, label, schema in self.get_all_schemas():
             if skey == key:
-                if callable(schema) and not issubclass(schema, Schema):
+                if callable(schema) and not isinstance(schema, type):
                     schema = schema()
                 return schema
 

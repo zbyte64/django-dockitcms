@@ -295,6 +295,7 @@ class CollectionReferenceField(BaseFieldEntry):
     def get_field_kwargs(self):
         kwargs = dict(super(CollectionReferenceField, self).get_field_kwargs())
         kwargs['document'] = self.collection.get_document()
+        assert issubclass(kwargs['document'], dockit.Document)
         kwargs.pop('collection', None)
         return kwargs
 
