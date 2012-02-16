@@ -1,4 +1,4 @@
-from forms import TemplateFormMixin
+from dockitcms.viewpoints.forms import TemplateFormMixin
 
 from dockitcms.utils import ConfigurableTemplateResponseMixin
 from dockitcms.models import ViewPoint

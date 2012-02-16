@@ -1,6 +1,6 @@
 from dockitcms.utils import ConfigurableTemplateResponseMixin, generate_object_detail_scaffold, generate_object_list_scaffold
 
-from common import BaseCollectionViewPoint
+from dockitcms.viewpoints.common import BaseCollectionViewPoint
 
 import dockit
 from dockit.forms import DocumentForm
@@ -24,7 +24,7 @@ class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     pass
 
 
-class ListViewPoint(BaseCollectionViewPoint):
+class CollectionListingViewPoint(BaseCollectionViewPoint):
     slug_field = dockit.SlugField(blank=True)
     list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
@@ -95,15 +95,15 @@ class ListViewPoint(BaseCollectionViewPoint):
         return urlpatterns
     
     class Meta:
-        typed_key = 'listview'
+        typed_key = 'dockitcms.collectionlisting'
     
     @classmethod
     def get_admin_form_class(cls):
-        return ListViewPointForm
+        return CollectionListingViewPointForm
 
-class ListViewPointForm(DocumentForm):
+class CollectionListingViewPointForm(DocumentForm):
     class Meta:
-        document = ListViewPoint
+        document = CollectionListingViewPoint
     
     def _clean_template_html(self, content):
         if not content:

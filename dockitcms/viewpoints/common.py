@@ -7,3 +7,4 @@ class BaseCollectionViewPoint(ViewPoint):
     
     class Meta:
         proxy = True
+
