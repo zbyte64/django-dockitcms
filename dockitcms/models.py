@@ -143,14 +143,22 @@ class Collection(DocumentDesign):
     def get_document_kwargs(self, **kwargs):
         kwargs = super(Collection, self).get_document_kwargs()
         parents = list(kwargs.get('parents', list()))
+        
+        active_mixins = dict()
+        
         for mixin in self.mixins:
             mixin_cls = MIXINS.get(mixin, None)
             if mixin_cls:
                 parents.append(mixin_cls)
+                active_mixins[mixin] = mixin_cls
+        
         if parents and not any([issubclass(parent, dockit.Document) for parent in parents]):
             parents.append(dockit.Document)
         if parents:
             kwargs['parents'] = tuple(parents)
+        if active_mixins:
+            kwargs.setdefault('attrs', dict())
+            kwargs['attrs']['_mixins'] = active_mixins
         return kwargs
     
     def register_collection(self):
