@@ -120,8 +120,17 @@ class DocumentDesign(dockit.Document, DesignMixin):
                     kwargs['parents'] = (parent, dockit.Document)
         return kwargs
 
+from mixins import MIXINS
+
+def mixin_choices():
+    choices = list()
+    for key, value in MIXINS.iteritems():
+        choices.append((key, value._meta.verbose_name))
+    return choices
+
 class Collection(DocumentDesign):
     key = dockit.SlugField(unique=True)
+    mixins = dockit.SetField(dockit.CharField(), choices=mixin_choices, blank=True)
     
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
@@ -130,6 +139,19 @@ class Collection(DocumentDesign):
     
     def get_collection_name(self):
         return 'dockitcms.virtual.%s' % self.key
+    
+    def get_document_kwargs(self, **kwargs):
+        kwargs = super(Collection, self).get_document_kwargs()
+        parents = list(kwargs.get('parents', list()))
+        for mixin in self.mixins:
+            mixin_cls = MIXINS.get(mixin, None)
+            if mixin_cls:
+                parents.append(mixin_cls)
+        if parents and not any([issubclass(parent, dockit.Document) for parent in parents]):
+            parents.append(dockit.Document)
+        if parents:
+            kwargs['parents'] = tuple(parents)
+        return kwargs
     
     def register_collection(self):
         doc = DocumentDesign.get_document(self, virtual=False, verbose_name=self.title, collection=self.get_collection_name())
