@@ -29,7 +29,7 @@ class MixinObjectTool(ObjectTool):
         else:
             params['_dotpath'] = target_field
         context['link_url'] = './?%s' % params.urlencode()
-        context['link_display'] = 'Edit %s' % target_field
+        context['link_display'] = 'Edit %s' % self.mixin._meta.verbose_name
         return template.render(context)
 
 class BaseMixin(dockit.Schema):
@@ -53,6 +53,8 @@ register_mixin(AuthMixin)
 #from models import ViewPoint
 #attach_mixin(AuthMixin, ViewPoint)
 
+#TODO roll widget buckets in, this will power much of the layout
+
 class Widget(dockit.Schema):
     pass
 
@@ -62,7 +64,7 @@ class WidgetMixin(BaseMixin):
     class MixinMeta:
         admin_display = 'object_tool'
 
-register_mixin(WidgetMixin)
+#register_mixin(WidgetMixin)
 
 '''
 1) Collection will need to see what the active mixins are and their fields

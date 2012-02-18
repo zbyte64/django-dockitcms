@@ -1,17 +1,18 @@
-from django.db.models import permalink
+from dockit.schema.schema import create_schema, create_document
 from dockit.schema import get_base_document
 import dockit
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import capfirst
-
-from dockit.schema.schema import create_schema, create_document
-
 from django.utils.datastructures import SortedDict
+from django.db.models import permalink
+from django.contrib.sites.models import Site
 
 from properties import SchemaDesignChoiceField
+from scope import Scope
 
 import re
+import urlparse
 
 class FieldEntry(dockit.Schema):
     '''
@@ -128,7 +129,14 @@ def mixin_choices():
         choices.append((key, value._meta.verbose_name))
     return choices
 
+class Application(dockit.Document):
+    name = dockit.CharField()
+    
+    def __unicode__(self):
+        return self.name
+
 class Collection(DocumentDesign):
+    application = dockit.ReferenceField(Application)
     key = dockit.SlugField(unique=True)
     mixins = dockit.SetField(dockit.CharField(), choices=mixin_choices, blank=True)
     
@@ -190,19 +198,39 @@ class Collection(DocumentDesign):
         else:
             return self.__repr__()
 
+class Subsite(dockit.Document):
+    url = dockit.CharField()
+    name = dockit.CharField()
+    sites = dockit.ModelSetField(Site, blank=True)
+    
+    def __unicode__(self):
+        return u'%s - %s' % (self.name, self.url)
+
+Subsite.objects.index('sites').commit()
+
 class ViewPoint(dockit.Document):
+    subsite = dockit.ReferenceField(Subsite)
     url = dockit.CharField(help_text='May be a regular expression that the url has to match')
     
     @property
     def url_regexp(self):
-        return re.compile(self.url)
+        return re.compile(self.full_url)
+    
+    @property
+    def full_url(self):
+        return urlparse.urljoin(self.subsite.url, self.url)
     
     def get_absolute_url(self):
-        return self.url
+        return self.full_url
     
     #TODO this is currently only called during the save
     def register_view_point(self):
         pass
+    
+    def get_scopes(self):
+        return [Scope('site', object=Site.objects.get_current()),
+                Scope('subsite', object=self.subsite),
+                Scope('viewpoint', object=self)]
     
     def get_admin_view(self, **kwargs):
         from dockitcms.admin.views import ViewPointDesignerFragmentView
@@ -216,7 +244,7 @@ class ViewPoint(dockit.Document):
     def get_resolver(self):
         from dockitcms.common import CMSURLResolver
         urls = self.get_urls()
-        return CMSURLResolver(r'^'+self.url, urls)
+        return CMSURLResolver(r'^'+self.full_url, urls)
     
     def dispatch(self, request):
         resolver = self.get_resolver()
@@ -239,4 +267,6 @@ class ViewPoint(dockit.Document):
     
     class Meta:
         typed_field = 'view_type'
+
+ViewPoint.objects.index('subsite').commit()
 

@@ -2,8 +2,9 @@ import dockit
 from dockit.views import ListView, DetailView
 from dockit.backends.queryindex import QueryFilterOperation
 
-from dockitcms.utils import ConfigurableTemplateResponseMixin
+from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 from dockitcms.models import Collection
+from dockitcms.scope import Scope
 
 class CollectionFilter(dockit.Schema):
     key = dockit.CharField()
@@ -38,5 +39,8 @@ class PointListView(ConfigurableTemplateResponseMixin, ListView):
     pass
 
 class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
-    pass
+    def get_scopes(self):
+        scopes = super(PointDetailView, self).get_scopes()
+        scopes.append(Scope('object', object=self.object))
+        return scopes
 
