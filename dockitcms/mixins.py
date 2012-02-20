@@ -55,17 +55,6 @@ register_mixin(AuthMixin)
 
 #TODO roll widget buckets in, this will power much of the layout
 
-class Widget(dockit.Schema):
-    pass
-
-class WidgetMixin(BaseMixin):
-    _widgets = dockit.ListField(dockit.SchemaField(Widget)) #TODO signal admin to exclude
-    
-    class MixinMeta:
-        admin_display = 'object_tool'
-
-#register_mixin(WidgetMixin)
-
 '''
 1) Collection will need to see what the active mixins are and their fields
 2) Send a warning if there are any overlapping fields

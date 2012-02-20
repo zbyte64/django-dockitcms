@@ -270,3 +270,7 @@ class ViewPoint(dockit.Document):
 
 ViewPoint.objects.index('subsite').commit()
 
+import fields
+import viewpoints
+
+
