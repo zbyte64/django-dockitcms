@@ -18,7 +18,6 @@ class TagPointListView(ConfigurableTemplateResponseMixin, ListView):
     pass
 
 class TagListViewPointClass(BaseViewPointClass):
-    schema = TagListViewPoint
     tag_list_view_class = TagPointListView
     label = _('Tag View')
     
@@ -35,17 +34,20 @@ class TagListViewPointClass(BaseViewPointClass):
             url(r'^$', 
                 self.list_view_class.as_view(document=document,
                                       configuration=self._configuration_from_prefix(params, 'list'),
+                                      view_point=self,
                                       paginate_by=params.get('paginate_by', None)),
                 name='index',
             ),
             url(r'^t/(?P<tag>.+)/$', 
                 self.tag_list_view_class.as_view(document=document,
                                                  configuration=self._configuration_from_prefix(params, 'list'),
+                                                 view_point=self,
                                                  paginate_by=params.get('paginate_by', None)),
                 name='tag',
             ),
             url(r'^(?P<pk>.+)/$', 
                 self.detail_view_class.as_view(document=document,
+                                        view_point=self,
                                         configuration=self._configuration_from_prefix(params, 'detail'),),
                 name='detail',
             ),

@@ -2,11 +2,16 @@ from django.contrib import admin
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
-from dockitcms.models import Collection, ViewPoint, DocumentDesign
+from dockitcms.models import Collection, ViewPoint, DocumentDesign, Subsite, Application
 
 from views import ManageCollectionView
 
 from common import AdminAwareDocumentAdmin
+
+class ApplicationAdmin(AdminAwareDocumentAdmin):
+    pass
+
+admin.site.register([Application], ApplicationAdmin)
 
 class DocumentDesignAdmin(AdminAwareDocumentAdmin):
     pass
@@ -15,7 +20,7 @@ admin.site.register([DocumentDesign], DocumentDesignAdmin)
 
 class CollectionAdmin(AdminAwareDocumentAdmin):
     manage_collection = ManageCollectionView
-    list_display = ['title', 'admin_manage_link']
+    list_display = ['title', 'application', 'admin_manage_link']
     
     def get_extra_urls(self):
         def wrap(view, cacheable=False):
@@ -31,7 +36,12 @@ class CollectionAdmin(AdminAwareDocumentAdmin):
 
 admin.site.register([Collection], CollectionAdmin)
 
+class SubsiteAdmin(AdminAwareDocumentAdmin):
+    list_display = ['name', 'url']
+
+admin.site.register([Subsite], SubsiteAdmin)
+
 class ViewPointAdmin(AdminAwareDocumentAdmin):
-    list_display = ['url', 'view_type']
+    list_display = ['url', 'subsite', 'view_type']
 
 admin.site.register([ViewPoint], ViewPointAdmin)

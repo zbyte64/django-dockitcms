@@ -29,7 +29,7 @@ class MixinObjectTool(ObjectTool):
         else:
             params['_dotpath'] = target_field
         context['link_url'] = './?%s' % params.urlencode()
-        context['link_display'] = 'Edit %s' % target_field
+        context['link_display'] = 'Edit %s' % self.mixin._meta.verbose_name
         return template.render(context)
 
 class BaseMixin(dockit.Schema):
@@ -53,16 +53,7 @@ register_mixin(AuthMixin)
 #from models import ViewPoint
 #attach_mixin(AuthMixin, ViewPoint)
 
-class Widget(dockit.Schema):
-    pass
-
-class WidgetMixin(BaseMixin):
-    _widgets = dockit.ListField(dockit.SchemaField(Widget)) #TODO signal admin to exclude
-    
-    class MixinMeta:
-        admin_display = 'object_tool'
-
-register_mixin(WidgetMixin)
+#TODO roll widget buckets in, this will power much of the layout
 
 '''
 1) Collection will need to see what the active mixins are and their fields

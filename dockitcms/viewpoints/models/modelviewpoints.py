@@ -1,6 +1,6 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
+from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 
-from dockitcms.utils import ConfigurableTemplateResponseMixin
 from dockitcms.models import ViewPoint
 
 import dockit
@@ -52,6 +52,7 @@ class ModelListViewPoint(BaseModelViewPoint):
             url(r'^$', 
                 self.view_class.as_view(model=self.model.model_class(),
                                       configuration=params,
+                                      view_point=self,
                                       paginate_by=self.paginate_by),
                 name='index',
             ),
@@ -73,6 +74,7 @@ class ModelDetailViewPoint(BaseModelViewPoint):
                 url(r'^(?P<slug>.+)/$',
                     self.view_class.as_view(model=self.model.model_class(),
                                           configuration=params,
+                                          view_point=self,
                                           slug_field=self.slug_field,),
                     name='index',
                 ),
@@ -81,6 +83,7 @@ class ModelDetailViewPoint(BaseModelViewPoint):
             return patterns('',
                 url(r'^(?P<pk>.+)/$',
                     self.view_class.as_view(model=self.model.model_class(),
+                                          view_point=self,
                                           configuration=params,),
                     name='index',
                 ),
