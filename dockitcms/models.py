@@ -14,6 +14,17 @@ from scope import Scope
 import re
 import urlparse
 
+class SchemaDefMixin(dockit.Schema):
+    #_mixins = dict() #define on a document that implements mixins
+    
+    @classmethod
+    def register_schema_mixin(cls, mixin):
+        cls._mixins[mixin._meta.schema_key] = mixin
+    
+    @classmethod
+    def get_active_mixins(cls, instance=None):
+        return cls._mixins.values()
+
 class FieldEntry(dockit.Schema):
     '''
     This schema is extended by others to define a field entry
@@ -135,10 +146,12 @@ class Application(dockit.Document):
     def __unicode__(self):
         return self.name
 
-class Collection(DocumentDesign):
+class Collection(DocumentDesign, SchemaDefMixin):
     application = dockit.ReferenceField(Application)
     key = dockit.SlugField(unique=True)
     mixins = dockit.SetField(dockit.CharField(), choices=mixin_choices, blank=True)
+    
+    _mixins = dict()
     
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
@@ -157,9 +170,11 @@ class Collection(DocumentDesign):
         for mixin in self.mixins:
             mixin_cls = MIXINS.get(mixin, None)
             if mixin_cls:
-                parents.append(mixin_cls)
+                #parents.append(mixin_cls)
                 active_mixins[mixin] = mixin_cls
         
+        if active_mixins:
+            parents.append(SchemaDefMixin)
         if parents and not any([issubclass(parent, dockit.Document) for parent in parents]):
             parents.append(dockit.Document)
         if parents:
@@ -198,19 +213,23 @@ class Collection(DocumentDesign):
         else:
             return self.__repr__()
 
-class Subsite(dockit.Document):
+class Subsite(dockit.Document, SchemaDefMixin):
     url = dockit.CharField()
     name = dockit.CharField()
     sites = dockit.ModelSetField(Site, blank=True)
+    
+    _mixins = dict()
     
     def __unicode__(self):
         return u'%s - %s' % (self.name, self.url)
 
 Subsite.objects.index('sites').commit()
 
-class ViewPoint(dockit.Document):
+class ViewPoint(dockit.Document, SchemaDefMixin):
     subsite = dockit.ReferenceField(Subsite)
     url = dockit.CharField(help_text='May be a regular expression that the url has to match')
+    
+    _mixins = dict()
     
     @property
     def url_regexp(self):

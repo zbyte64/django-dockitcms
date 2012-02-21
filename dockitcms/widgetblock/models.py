@@ -1,10 +1,10 @@
 import dockit
 
 from django.utils.translation import ugettext_lazy as _
-
 from django.template import Template, Context
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
+from django.contrib.sites.models import Site
 
 class Widget(dockit.Schema):
     block_key = dockit.CharField()
@@ -47,6 +47,12 @@ class BaseTemplateWidget(Widget):
         from forms import BaseTemplateWidgetForm
         return BaseTemplateWidgetForm
 
+class SiteWidgets(dockit.Document):
+    site = dockit.ModelReferenceField(Site)
+    widgets = dockit.ListField(dockit.SchemaField(Widget))
+
+SiteWidgets.objects.index('site').commit()
+
 '''
 class CustomWidgetDefinition(dockit.Document):
     class Meta:
@@ -55,3 +61,4 @@ class CustomWidgetDefinition(dockit.Document):
 Custom widgets
 
 '''
+
