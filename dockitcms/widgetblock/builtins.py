@@ -2,9 +2,11 @@ from models import BaseTemplateWidget, Widget
 
 import dockit
 
-from dockitcms.models import Collection
+from dockitcms.viewpoints.collections.common import CollectionMixin
 
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
+from django.utils.safestring import mark_safe
 
 class TextWidget(Widget):
     text = dockit.TextField()
@@ -14,6 +16,15 @@ class TextWidget(Widget):
     
     def render(self, context):
         return self.text
+
+class ImageWidget(Widget):
+    image = dockit.FileField()
+    
+    class Meta:
+        typed_key = 'widgetblock.imagewidget'
+    
+    def render(self, context):
+        return mark_safe(u'<img src="%s"/>' % self.image.url)
 
 class CTAImage(dockit.Schema):
     image = dockit.FileField(upload_to='ctas')
@@ -40,12 +51,31 @@ class CTAWidget(BaseTemplateWidget):
         from forms import CTAWidgetForm
         return CTAWidgetForm
 
-class CollectionWidget(BaseTemplateWidget):
+class CollectionWidget(BaseTemplateWidget, CollectionMixin):
     '''
     A widget that is powered by another collection
     '''
-    collection = dockit.ReferenceField(Collection)
     
     class Meta:
         typed_key = 'widgetblock.collectionwidget'
+    
+    def get_context(self, context):
+        context = BaseTemplateWidget.get_context(self, context)
+        index = self.get_base_index()
+        index.commit() #TODO perhaps schemas should get a save signal for this to be committed?
+        context['object_list'] = index
+        return context
+
+class ModelWidget(BaseTemplateWidget):
+    model = dockit.ModelReferenceField(ContentType)
+    
+    class Meta:
+        typed_key = 'widgetblock.modelwidget'
+    
+    def get_context(self, context):
+        context = BaseTemplateWidget.get_context(self, context)
+        model = self.model.model_class()
+        context['model'] = model
+        context['object_list'] = model.objects.all()
+        return context
 

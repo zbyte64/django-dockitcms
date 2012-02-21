@@ -8,6 +8,8 @@ from classytags.arguments import Argument
 
 import dockit
 
+from dockitcms.scope import get_site_scope
+
 class WidgetBlock(InclusionTag):
     name = 'widgetblock'
     template = 'widgetblock/widget_holder.html'
@@ -17,12 +19,15 @@ class WidgetBlock(InclusionTag):
     
     def get_widgets(self, context, block_key):
         widgets = list()
-        scopes = context['scopes']
+        if 'scopes' in context:
+            scopes = context['scopes']
+        else:
+            scopes = [get_site_scope()]
         for scope in scopes:
             if 'object' in scope.kwargs:
                 obj = scope.kwargs['object']
                 scope_widgets = list()
-                if isinstance(obj, dockit.Schema) and hasattr(obj, '_widgets'):
+                if hasattr(obj, '_widgets'):
                     for widget in obj._widgets:
                         if widget.block_key == block_key:
                             scope_widgets.append(widget)

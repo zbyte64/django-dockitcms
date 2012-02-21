@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 
 class Scope(object):
     '''
@@ -12,4 +13,8 @@ class Scope(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.kwargs = kwargs
+
+def get_site_scope():
+    obj = Site.objects.get_current()
+    return Scope(name='site', object=obj)
 

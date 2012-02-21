@@ -43,9 +43,11 @@ class FieldEntry(dockit.Schema):
         kwargs.pop('name', None)
         if kwargs.get('verbose_name', None) == '':
             del kwargs['verbose_name']
-        for key in kwargs.keys():
+        for key, value in kwargs.items():
             if key not in self._meta.fields:
                 kwargs.pop(key)
+            else:
+                kwargs[str(key)] = value
         return kwargs
     
     def create_field(self):
