@@ -1,6 +1,6 @@
 from dockit.schema.schema import create_schema, create_document
 from dockit.schema import get_base_document
-import dockit
+from dockit import schema
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import capfirst
@@ -14,7 +14,7 @@ from scope import Scope
 import re
 import urlparse
 
-class SchemaDefMixin(dockit.Schema):
+class SchemaDefMixin(schema.Schema):
     #_mixins = dict() #define on a document that implements mixins
     
     @classmethod
@@ -26,11 +26,11 @@ class SchemaDefMixin(dockit.Schema):
     def get_active_mixins(cls, instance=None):
         return cls._mixins.values()
 
-class FieldEntry(dockit.Schema):
+class FieldEntry(schema.Schema):
     '''
     This schema is extended by others to define a field entry
     '''
-    name = dockit.SlugField()
+    name = schema.SlugField()
     
     field_class = None
     
@@ -100,23 +100,23 @@ class DesignMixin(object):
     def get_document(self, **kwargs):
         params = self.get_document_kwargs(**kwargs)
         doc = create_document(**params)
-        if not issubclass(doc, dockit.Document):
+        if not issubclass(doc, schema.Document):
             raise TypeError("Did not properly create a document")
         return doc
 
 class SchemaEntry(FieldEntry, DesignMixin):
     #inherit_from = SchemaDesignChoiceField(blank=True)
-    fields = dockit.ListField(dockit.SchemaField(FieldEntry))
-    object_label = dockit.CharField(blank=True)
+    fields = schema.ListField(schema.SchemaField(FieldEntry))
+    object_label = schema.CharField(blank=True)
     
     class Meta:
         proxy = True
 
-class DocumentDesign(dockit.Document, DesignMixin):
-    title = dockit.CharField()
+class DocumentDesign(schema.Document, DesignMixin):
+    title = schema.CharField()
     inherit_from = SchemaDesignChoiceField(blank=True)
-    fields = dockit.ListField(dockit.SchemaField(FieldEntry), blank=True)
-    object_label = dockit.CharField(blank=True)
+    fields = schema.ListField(schema.SchemaField(FieldEntry), blank=True)
+    object_label = schema.CharField(blank=True)
     
     def __unicode__(self):
         return self.title or ''
@@ -129,10 +129,10 @@ class DocumentDesign(dockit.Document, DesignMixin):
         if self.inherit_from:
             parent = self._meta.fields['inherit_from'].get_schema(self.inherit_from)
             if parent:
-                if issubclass(parent, dockit.Document):
+                if issubclass(parent, schema.Document):
                     kwargs['parents'] = (parent,)
                 else:
-                    kwargs['parents'] = (parent, dockit.Document)
+                    kwargs['parents'] = (parent, schema.Document)
         return kwargs
 
 from mixins import MIXINS
@@ -143,16 +143,16 @@ def mixin_choices():
         choices.append((key, value._meta.verbose_name))
     return choices
 
-class Application(dockit.Document):
-    name = dockit.CharField()
+class Application(schema.Document):
+    name = schema.CharField()
     
     def __unicode__(self):
         return self.name
 
 class Collection(DocumentDesign, SchemaDefMixin):
-    application = dockit.ReferenceField(Application)
-    key = dockit.SlugField(unique=True)
-    mixins = dockit.SetField(dockit.CharField(), choices=mixin_choices, blank=True)
+    application = schema.ReferenceField(Application)
+    key = schema.SlugField(unique=True)
+    mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
     
     _mixins = dict()
     
@@ -178,8 +178,8 @@ class Collection(DocumentDesign, SchemaDefMixin):
         
         if active_mixins:
             parents.append(SchemaDefMixin)
-        if parents and not any([issubclass(parent, dockit.Document) for parent in parents]):
-            parents.append(dockit.Document)
+        if parents and not any([issubclass(parent, schema.Document) for parent in parents]):
+            parents.append(schema.Document)
         if parents:
             kwargs['parents'] = tuple(parents)
         if active_mixins:
@@ -216,10 +216,10 @@ class Collection(DocumentDesign, SchemaDefMixin):
         else:
             return self.__repr__()
 
-class Subsite(dockit.Document, SchemaDefMixin):
-    url = dockit.CharField()
-    name = dockit.CharField()
-    sites = dockit.ModelSetField(Site, blank=True)
+class Subsite(schema.Document, SchemaDefMixin):
+    url = schema.CharField()
+    name = schema.CharField()
+    sites = schema.ModelSetField(Site, blank=True)
     
     _mixins = dict()
     
@@ -228,9 +228,9 @@ class Subsite(dockit.Document, SchemaDefMixin):
 
 Subsite.objects.index('sites').commit()
 
-class ViewPoint(dockit.Document, SchemaDefMixin):
-    subsite = dockit.ReferenceField(Subsite)
-    url = dockit.CharField(help_text='May be a regular expression that the url has to match')
+class ViewPoint(schema.Document, SchemaDefMixin):
+    subsite = schema.ReferenceField(Subsite)
+    url = schema.CharField(help_text='May be a regular expression that the url has to match')
     
     _mixins = dict()
     

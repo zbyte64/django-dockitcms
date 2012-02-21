@@ -2,7 +2,7 @@ from dockitcms.models import ViewPoint
 from dockitcms.viewpoints.common import AuthenticatedMixin, TEMPLATE_SOURCE_CHOICES
 from common import CollectionMixin, PointListView, PointDetailView
 
-import dockit
+from dockit import schema
 from dockit.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
@@ -12,16 +12,16 @@ from django.utils.translation import ugettext_lazy as _
 
 class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint):
     view_type = ViewPoint._meta.fields['view_type'] #hack around
-    slug_field = dockit.SlugField(blank=True)
-    list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
-    list_template_html = dockit.TextField(blank=True)
-    list_content = dockit.TextField(blank=True)
-    detail_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    detail_template_name = dockit.CharField(default='dockitcms/detail.html', blank=True)
-    detail_template_html = dockit.TextField(blank=True)
-    detail_content = dockit.TextField(blank=True)
-    paginate_by = dockit.IntegerField(blank=True, null=True)
+    slug_field = schema.SlugField(blank=True)
+    list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    list_template_name = schema.CharField(default='dockitcms/list.html', blank=True)
+    list_template_html = schema.TextField(blank=True)
+    list_content = schema.TextField(blank=True)
+    detail_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    detail_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
+    detail_template_html = schema.TextField(blank=True)
+    detail_content = schema.TextField(blank=True)
+    paginate_by = schema.IntegerField(blank=True, null=True)
     
     list_view_class = PointListView
     detail_view_class = PointDetailView

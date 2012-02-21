@@ -1,6 +1,6 @@
 from models import BaseTemplateWidget, Widget
 
-import dockit
+from dockit import schema
 
 from dockitcms.viewpoints.collections.common import CollectionMixin
 
@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 
 class TextWidget(Widget):
-    text = dockit.TextField()
+    text = schema.TextField()
     
     class Meta:
         typed_key = 'widgetblock.textwidget'
@@ -18,7 +18,7 @@ class TextWidget(Widget):
         return self.text
 
 class ImageWidget(Widget):
-    image = dockit.FileField()
+    image = schema.FileField()
     
     class Meta:
         typed_key = 'widgetblock.imagewidget'
@@ -26,9 +26,9 @@ class ImageWidget(Widget):
     def render(self, context):
         return mark_safe(u'<img src="%s"/>' % self.image.url)
 
-class CTAImage(dockit.Schema):
-    image = dockit.FileField(upload_to='ctas')
-    url = dockit.CharField(blank=True)
+class CTAImage(schema.Schema):
+    image = schema.FileField(upload_to='ctas')
+    url = schema.CharField(blank=True)
     
     def __unicode__(self):
         if self.image:
@@ -36,12 +36,12 @@ class CTAImage(dockit.Schema):
         return repr(self)
 
 class CTAWidget(BaseTemplateWidget):
-    default_url = dockit.CharField()
-    width = dockit.CharField()
-    height = dockit.CharField()
-    delay = dockit.DecimalField(help_text=_("Display interval of each item"), max_digits=5, decimal_places=2, default=5)
+    default_url = schema.CharField()
+    width = schema.CharField()
+    height = schema.CharField()
+    delay = schema.DecimalField(help_text=_("Display interval of each item"), max_digits=5, decimal_places=2, default=5)
     
-    images = dockit.ListField(dockit.SchemaField(CTAImage)) #TODO the following will be an inline when supported
+    images = schema.ListField(schema.SchemaField(CTAImage)) #TODO the following will be an inline when supported
     
     class Meta:
         typed_key = 'widgetblock.ctawidget'
@@ -67,7 +67,7 @@ class CollectionWidget(BaseTemplateWidget, CollectionMixin):
         return context
 
 class ModelWidget(BaseTemplateWidget):
-    model = dockit.ModelReferenceField(ContentType)
+    model = schema.ModelReferenceField(ContentType)
     
     class Meta:
         typed_key = 'widgetblock.modelwidget'

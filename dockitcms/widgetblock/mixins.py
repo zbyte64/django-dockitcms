@@ -5,10 +5,10 @@ from dockitcms.models import Subsite, ViewPoint
 
 from models import Widget, SiteWidgets
 
-import dockit
+from dockit import schema
 
 class WidgetMixin(BaseMixin):
-    _widgets = dockit.ListField(dockit.SchemaField(Widget)) #TODO signal admin to exclude
+    _widgets = schema.ListField(schema.SchemaField(Widget)) #TODO signal admin to exclude
     
     class MixinMeta:
         admin_display = 'object_tool'

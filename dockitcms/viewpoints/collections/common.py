@@ -1,4 +1,4 @@
-import dockit
+from dockit import schema
 from dockit.views import ListView, DetailView
 from dockit.backends.queryindex import QueryFilterOperation
 
@@ -6,10 +6,10 @@ from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 from dockitcms.models import Collection
 from dockitcms.scope import Scope
 
-class CollectionFilter(dockit.Schema):
-    key = dockit.CharField()
-    operation = dockit.CharField()
-    value = dockit.CharField()
+class CollectionFilter(schema.Schema):
+    key = schema.CharField()
+    operation = schema.CharField()
+    value = schema.CharField()
     
     def get_query_filter_operation(self):
         return QueryFilterOperation(key=self.key,
@@ -23,9 +23,9 @@ def index_for_filters(index, filters):
     index = index._add_filter_parts(inclusions=inclusions)
     return index
 
-class CollectionMixin(dockit.Schema):
-    collection = dockit.ReferenceField(Collection)
-    filters = dockit.ListField(dockit.SchemaField(CollectionFilter), blank=True)
+class CollectionMixin(schema.Schema):
+    collection = schema.ReferenceField(Collection)
+    filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
     def get_document(self):
         return self.collection.get_document()

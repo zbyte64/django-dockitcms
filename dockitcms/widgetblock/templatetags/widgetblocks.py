@@ -6,8 +6,6 @@ from classytags.core import Options
 from classytags.helpers import InclusionTag
 from classytags.arguments import Argument
 
-import dockit
-
 from dockitcms.scope import get_site_scope
 
 class WidgetBlock(InclusionTag):

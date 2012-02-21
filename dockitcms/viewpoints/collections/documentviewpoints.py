@@ -5,7 +5,7 @@ from common import CollectionMixin, PointListView, PointDetailView
 
 from dockitcms.models import ViewPoint
 
-import dockit
+from dockit import schema
 from dockit.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
@@ -29,7 +29,7 @@ class BaseCollectionViewPoint(CollectionMixin, TemplateMixin, AuthenticatedMixin
         index.commit()
 
 class CollectionListViewPoint(BaseCollectionViewPoint):
-    paginate_by = dockit.IntegerField(blank=True, null=True)
+    paginate_by = schema.IntegerField(blank=True, null=True)
     #TODO order by
     
     view_class = PointListView
@@ -54,7 +54,7 @@ class CollectionListViewPoint(BaseCollectionViewPoint):
         typed_key = 'dockitcms.collectionlistview'
 
 class CollectionDetailViewPoint(BaseCollectionViewPoint):
-    slug_field = dockit.SlugField(blank=True)
+    slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
     

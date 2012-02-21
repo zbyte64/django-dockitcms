@@ -1,4 +1,4 @@
-import dockit
+from dockit import schema
 
 from django.utils.translation import ugettext_lazy as _
 from django.template import Template, Context
@@ -6,8 +6,8 @@ from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 from django.contrib.sites.models import Site
 
-class Widget(dockit.Schema):
-    block_key = dockit.CharField()
+class Widget(schema.Schema):
+    block_key = schema.CharField()
     
     class Meta:
         typed_field = 'widget_type'
@@ -21,9 +21,9 @@ TEMPLATE_SOURCE_CHOICES = [
 ]
 
 class BaseTemplateWidget(Widget):
-    template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    template_name = dockit.CharField(blank=True)
-    template_html = dockit.TextField(blank=True)
+    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    template_name = schema.CharField(blank=True)
+    template_html = schema.TextField(blank=True)
 
     class Meta:
         proxy = True
@@ -47,14 +47,14 @@ class BaseTemplateWidget(Widget):
         from forms import BaseTemplateWidgetForm
         return BaseTemplateWidgetForm
 
-class SiteWidgets(dockit.Document):
-    site = dockit.ModelReferenceField(Site)
-    widgets = dockit.ListField(dockit.SchemaField(Widget))
+class SiteWidgets(schema.Document):
+    site = schema.ModelReferenceField(Site)
+    widgets = schema.ListField(schema.SchemaField(Widget))
 
 SiteWidgets.objects.index('site').commit()
 
 '''
-class CustomWidgetDefinition(dockit.Document):
+class CustomWidgetDefinition(schema.Document):
     class Meta:
         typed_field = 'widget_def_type'
 
