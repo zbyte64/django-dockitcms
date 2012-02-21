@@ -26,20 +26,19 @@ class AdminAwareSchemaAdmin(SchemaAdmin):
             object_tools.append(mixin.get_object_tool())
         return object_tools
     
-    def get_field(self, schema, dotpath, obj=None):
-        if hasattr(schema, 'get_active_mixins'):
-            mixins = schema.get_active_mixins(obj)
-            first_part, remaining_path = dotpath, ''
-            if '.' in dotpath:
-                first_part, remaining_path = dotpath.split('.', 1)
-            for mixin in mixins:
-                if first_part in mixin._meta.fields:
-                    field = mixin._meta.fields[first_part]
-            if remaining_path:
-                pass
-            else:
-                return field
-        return super(AdminAwareSchemaAdmin, self).get_field(schema, dotpath, obj)
+    def get_excludes(self):
+        excludes = super(AdminAwareSchemaAdmin, self).get_excludes()
+        for mixin in self.get_mixins():
+            if mixin.MixinMeta.admin_display in ('object_tool', 'hidden'):
+                excludes.extend(mixin._meta.fields.keys())
+        return excludes
+    
+    def get_default_inline_instances(self, exclude=[]):
+        exclude = set(exclude)
+        for mixin in self.get_mixins():
+            if mixin.MixinMeta.admin_display in ('object_tool', 'hidden'):
+                exclude.update(mixin._meta.fields.keys())
+        return super(AdminAwareSchemaAdmin, self).get_default_inline_instances(exclude=exclude)
 
 class AdminAwareDocumentAdmin(AdminAwareSchemaAdmin, DocumentAdmin):
     default_schema_admin = AdminAwareSchemaAdmin

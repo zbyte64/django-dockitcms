@@ -20,6 +20,7 @@ class SchemaDefMixin(dockit.Schema):
     @classmethod
     def register_schema_mixin(cls, mixin):
         cls._mixins[mixin._meta.schema_key] = mixin
+        cls._meta.fields.update(mixin._meta.fields)
     
     @classmethod
     def get_active_mixins(cls, instance=None):
@@ -170,7 +171,7 @@ class Collection(DocumentDesign, SchemaDefMixin):
         for mixin in self.mixins:
             mixin_cls = MIXINS.get(mixin, None)
             if mixin_cls:
-                #parents.append(mixin_cls)
+                parents.append(mixin_cls)
                 active_mixins[mixin] = mixin_cls
         
         if active_mixins:
