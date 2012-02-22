@@ -14,6 +14,11 @@ class Widget(schema.Schema):
     
     def render(self, context):
         raise NotImplementedError
+    
+    @classmethod
+    def get_admin_class(cls):
+        from admin import WidgetAdmin
+        return WidgetAdmin
 
 TEMPLATE_SOURCE_CHOICES = [
     ('name', _('By Template Name')),

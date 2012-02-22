@@ -53,7 +53,7 @@ class CollectionListViewPoint(BaseCollectionViewPoint):
     class Meta:
         typed_key = 'dockitcms.collectionlistview'
 
-class CollectionDetailViewPoint(CanonicalMixin, BaseCollectionViewPoint):
+class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
     slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
