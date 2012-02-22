@@ -1,5 +1,5 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
-from dockitcms.viewpoints.common import AuthenticatedMixin, TemplateMixin
+from dockitcms.viewpoints.common import CanonicalMixin, AuthenticatedMixin, TemplateMixin
 
 from common import CollectionMixin, PointListView, PointDetailView
 
@@ -53,10 +53,24 @@ class CollectionListViewPoint(BaseCollectionViewPoint):
     class Meta:
         typed_key = 'dockitcms.collectionlistview'
 
-class CollectionDetailViewPoint(BaseCollectionViewPoint):
+class CollectionDetailViewPoint(CanonicalMixin, BaseCollectionViewPoint):
     slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
+    
+    def get_document(self):
+        document = super(CollectionDetailViewPoint, self).get_document()
+        view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.slug_field:
+                return view_point.reverse('detail', instance[view_point.slug_field])
+            return view_point.reverse('detail', instance.pk)
+        
+        if self.canonical:
+            document.get_absolute_url = get_absolute_url_for_instance
+        
+        return document
     
     def get_base_index(self):
         index = super(CollectionDetailViewPoint, self).get_base_index()

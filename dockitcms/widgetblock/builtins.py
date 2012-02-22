@@ -79,3 +79,18 @@ class ModelWidget(BaseTemplateWidget):
         context['object_list'] = model.objects.all()
         return context
 
+class FlatMenuEntry(schema.Schema):
+    title = schema.CharField()
+    url = schema.CharField()
+
+class FlatMenuWidget(BaseTemplateWidget):
+    entries = schema.ListField(schema.SchemaField(FlatMenuEntry))
+    
+    class Meta:
+        typed_key = 'widgetblock.flatmenuwidget'
+    
+    def get_context(self, context):
+        context = BaseTemplateWidget.get_context(self, context)
+        #TODO find the active menu entry
+        return context
+

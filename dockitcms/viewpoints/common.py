@@ -19,5 +19,7 @@ class TemplateMixin(schema.Schema):
     template_html = schema.TextField(blank=True)
     content = schema.TextField(blank=True)
 
+class CanonicalMixin(schema.Schema):
+    canonical = schema.BooleanField(help_text=_('If checked, this view point defines the canonical urls for these collections'))
 
 

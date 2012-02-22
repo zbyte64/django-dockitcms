@@ -1,5 +1,5 @@
 from dockitcms.models import ViewPoint, Collection
-from dockitcms.viewpoints.common import AuthenticatedMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.viewpoints.common import AuthenticatedMixin, CanonicalMixin, TEMPLATE_SOURCE_CHOICES
 #from schema.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
@@ -23,7 +23,7 @@ class CategoryDetailView(PointDetailView): #TODO turn into list view, category=c
 class ItemDetailView(PointDetailView):
     pass
 
-class CategoryViewPoint(ViewPoint):
+class CategoryViewPoint(CanonicalMixin, ViewPoint):
     category_collection = schema.ReferenceField(Collection)
     category_slug_field = schema.CharField(blank=True)
     category_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
@@ -75,11 +75,17 @@ class CategoryViewPoint(ViewPoint):
     def get_category_document(self):
         doc_cls = self.category_collection.get_document()
         view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.category_slug_field:
+                return view_point.reverse('category-detail', instance[view_point.category_slug_field])
+            return view_point.reverse('category-detail', instance.pk)
+        
+        if self.canonical:
+            doc_cls.get_absolute_url = get_absolute_url_for_instance
+        
         class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                if view_point.category_slug_field:
-                    return view_point.reverse('category-detail', self[view_point.category_slug_field])
-                return view_point.reverse('category-detail', self.pk)
+            get_absolute_url = get_absolute_url_for_instance
             
             class Meta:
                 proxy = True
@@ -89,11 +95,17 @@ class CategoryViewPoint(ViewPoint):
     def get_item_document(self):
         doc_cls = self.item_collection.get_document()
         view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.item_slug_field:
+                return view_point.reverse('item-detail', instance[view_point.item_slug_field])
+            return view_point.reverse('item-detail', instance.pk)
+        
+        if self.canonical:
+            doc_cls.get_absolute_url = get_absolute_url_for_instance
+        
         class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                if view_point.item_slug_field:
-                    return view_point.reverse('item-detail', self[view_point.item_slug_field])
-                return view_point.reverse('item-detail', self.pk)
+            get_absolute_url = get_absolute_url_for_instance
             
             class Meta:
                 proxy = True

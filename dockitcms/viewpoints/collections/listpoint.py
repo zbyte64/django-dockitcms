@@ -1,5 +1,5 @@
 from dockitcms.models import ViewPoint
-from dockitcms.viewpoints.common import AuthenticatedMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.viewpoints.common import AuthenticatedMixin, CanonicalMixin, TEMPLATE_SOURCE_CHOICES
 from common import CollectionMixin, PointListView, PointDetailView
 
 from dockit import schema
@@ -10,7 +10,7 @@ from django import forms
 from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint):
+class CollectionListingViewPoint(CanonicalMixin, CollectionMixin, AuthenticatedMixin, ViewPoint):
     view_type = ViewPoint._meta.fields['view_type'] #hack around
     slug_field = schema.SlugField(blank=True)
     list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
@@ -39,11 +39,19 @@ class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint)
     def get_document(self):
         doc_cls = self.collection.get_document()
         view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.slug_field:
+                return view_point.reverse('detail', instance[view_point.slug_field])
+            return view_point.reverse('detail', instance.pk)
+        
+        if self.canonical:
+            #TODO this does not work
+            setattr(doc_cls, 'get_absolute_url', get_absolute_url_for_instance)
+            assert hasattr(doc_cls, 'get_absolute_url')
+        
         class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                if view_point.slug_field:
-                    return view_point.reverse('detail', self[view_point.slug_field])
-                return view_point.reverse('detail', self.pk)
+            get_absolute_url = get_absolute_url_for_instance
             
             class Meta:
                 proxy = True
