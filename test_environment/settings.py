@@ -102,6 +102,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'dockitcms.middleware.DockitCMSMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+    'dockitcms.middleware.DefaultScopeMiddleware',
 )
 
 ROOT_URLCONF = 'urls'
@@ -126,7 +127,7 @@ INSTALLED_APPS = (
     'dockitcms',
     'photoprocessor',
     'dockitcms.contrib.thumbnailfield',
-    'dockitcms.contrib.widgetbucket',
+    'dockitcms.widgetblock',
     #'dockitcms.contrib.dagcategoryviewpoint',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
@@ -156,3 +157,8 @@ LOGGING = {
         },
     }
 }
+
+SCOPE_PROCESSORS = [
+    'dockitcms.widgetblock.scope_processors.widgets',
+]
+

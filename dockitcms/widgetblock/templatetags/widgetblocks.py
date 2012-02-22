@@ -6,8 +6,6 @@ from classytags.core import Options
 from classytags.helpers import InclusionTag
 from classytags.arguments import Argument
 
-from dockitcms.scope import get_site_scope
-
 class WidgetBlock(InclusionTag):
     name = 'widgetblock'
     template = 'widgetblock/widget_holder.html'
@@ -20,15 +18,15 @@ class WidgetBlock(InclusionTag):
         if 'scopes' in context:
             scopes = context['scopes']
         else:
-            scopes = [get_site_scope()]
+            return []
+            #TODO possibly use DefaultScopeMiddleware to populate this
         for scope in scopes:
-            if 'object' in scope.kwargs:
-                obj = scope.kwargs['object']
+            if 'widgets' in scope.data:
                 scope_widgets = list()
-                if hasattr(obj, 'widgets'):
-                    for widget in obj.widgets:
-                        if widget.block_key == block_key:
-                            scope_widgets.append(widget)
+                for widget in scope.data['widgets'].data:
+                    if widget.block_key == block_key:
+                        widget.scope = scope
+                        scope_widgets.append(widget)
                 if scope_widgets: #TODO how to properly merge
                     widgets.extend(scope_widgets)
         return widgets
