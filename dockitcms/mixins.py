@@ -24,7 +24,7 @@ class MixinObjectTool(ObjectTool):
         context = Context(context)
         params = request.GET.copy()
         target_field = self.mixin._meta.fields.keys()[0]
-        if '_dotpath' in params:
+        if params.get('_dotpath', False):
             params['_dotpath'] = '%s.%s' % (params['_dotpath'], target_field)
         else:
             params['_dotpath'] = target_field

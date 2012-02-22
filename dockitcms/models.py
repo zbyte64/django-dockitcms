@@ -185,6 +185,8 @@ class Collection(DocumentDesign, SchemaDefMixin):
         if active_mixins:
             kwargs.setdefault('attrs', dict())
             kwargs['attrs']['_mixins'] = active_mixins
+        if self.application:
+            kwargs['app_label'] = self.application.name
         return kwargs
     
     def register_collection(self):

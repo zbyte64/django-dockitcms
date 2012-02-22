@@ -25,8 +25,8 @@ class WidgetBlock(InclusionTag):
             if 'object' in scope.kwargs:
                 obj = scope.kwargs['object']
                 scope_widgets = list()
-                if hasattr(obj, '_widgets'):
-                    for widget in obj._widgets:
+                if hasattr(obj, 'widgets'):
+                    for widget in obj.widgets:
                         if widget.block_key == block_key:
                             scope_widgets.append(widget)
                 if scope_widgets: #TODO how to properly merge
