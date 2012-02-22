@@ -1,6 +1,6 @@
 <div class="widgetblock" data-block-key="{{block_key}}">
 {% for widget in widgets %}
-<div data-scope-key="{{widget.scope.name}}">
+<div data-scope-key="{{widget.scope.name}}" data-manage-url="{{widget.scope.data.widgets.manage_urls}}">
 {{widget.rendered_content}}
 </div>
 {% endfor %}

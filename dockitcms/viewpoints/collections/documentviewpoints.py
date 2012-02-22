@@ -11,13 +11,10 @@ from dockit.forms import DocumentForm
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 
-class BaseCollectionViewPoint(CollectionMixin, TemplateMixin, AuthenticatedMixin, ViewPoint):
-    view_type = ViewPoint._meta.fields['view_type'] #hack around
+class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin, AuthenticatedMixin):
     view_class = None
     
     class Meta:
-        typed_field = 'view_type'
-        collection = ViewPoint._meta.collection
         proxy = True
     
     @classmethod

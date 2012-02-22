@@ -1,13 +1,14 @@
 from django.contrib import admin
 
-from models import SiteWidgets
+from models import ModelWidgets
 
 from dockitcms.admin.common import AdminAwareDocumentAdmin, AdminAwareSchemaAdmin
 
-class SiteWidgetsAdmin(AdminAwareDocumentAdmin):
-    list_display = ['site']
+class ModelWidgetsAdmin(AdminAwareDocumentAdmin):
+    list_display = ['content_type', 'object_id']
+    #TODO need a get or create view for and object
 
-admin.site.register([SiteWidgets], SiteWidgetsAdmin)
+admin.site.register([ModelWidgets], ModelWidgetsAdmin)
 
 class WidgetAdmin(AdminAwareSchemaAdmin):
     list_display = ['__str__', 'block_key', 'widget_type']

@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template import Template, Context
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
-from django.contrib.sites.models import Site
+from django.contrib.contenttypes.models import ContentType
 
 class Widget(schema.Schema):
     block_key = schema.CharField()
@@ -52,11 +52,12 @@ class BaseTemplateWidget(Widget):
         from forms import BaseTemplateWidgetForm
         return BaseTemplateWidgetForm
 
-class SiteWidgets(schema.Document):
-    site = schema.ModelReferenceField(Site)
+class ModelWidgets(schema.Document):
+    content_type = schema.ModelReferenceField(ContentType)
+    object_id = schema.CharField()
     widgets = schema.ListField(schema.SchemaField(Widget))
 
-SiteWidgets.objects.index('site').commit()
+ModelWidgets.objects.index('content_type', 'object_id').commit()
 
 '''
 class CustomWidgetDefinition(schema.Document):

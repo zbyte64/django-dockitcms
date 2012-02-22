@@ -14,6 +14,7 @@ class Scope(object):
     '''
     def __init__(self, name, **kwargs):
         self.name = name
+        self.manage_urls = kwargs.pop('manage_urls', None)
         self.kwargs = kwargs
         self.data = dict()
         
@@ -26,15 +27,15 @@ class Scope(object):
     def get_scope_processors(self):
         return SCOPE_PROCESSORS
     
-    def add_data(self, key, data, admin_url=None):
-        data = ScopeData(key=key, data=data, admin_url=admin_url)
+    def add_data(self, key, data, manage_urls=None):
+        data = ScopeData(key=key, data=data, manage_urls=manage_urls)
         self.data[key] = data
 
 class ScopeData(object):
-    def __init__(self, key, data, admin_url):
+    def __init__(self, key, data, manage_urls):
         self.key = key
         self.data = data
-        self.admin_url = admin_url
+        self.manage_urls = manage_urls
 
 def get_site_scope():
     obj = Site.objects.get_current()

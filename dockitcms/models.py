@@ -7,12 +7,20 @@ from django.utils.text import capfirst
 from django.utils.datastructures import SortedDict
 from django.db.models import permalink
 from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
 
 from properties import SchemaDesignChoiceField
 from scope import Scope
 
 import re
 import urlparse
+
+class ManageUrlsMixin(schema.Schema):
+    def get_manage_urls(self):
+        admin_name = '_'.join((self._meta.app_label, self._meta.module_name))
+        return {'add': reverse('admin:%s_add' % admin_name),
+                'list': reverse('admin:%s_changelist' % admin_name),
+                'edit': reverse('admin:%s_change' % admin_name, args=[self.pk])}
 
 class SchemaDefMixin(schema.Schema):
     #_mixins = dict() #define on a document that implements mixins
@@ -166,6 +174,7 @@ class Collection(DocumentDesign, SchemaDefMixin):
     
     def get_document_kwargs(self, **kwargs):
         kwargs = super(Collection, self).get_document_kwargs()
+        kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
         
         active_mixins = dict()
@@ -183,10 +192,18 @@ class Collection(DocumentDesign, SchemaDefMixin):
         if parents:
             kwargs['parents'] = tuple(parents)
         if active_mixins:
-            kwargs.setdefault('attrs', dict())
             kwargs['attrs']['_mixins'] = active_mixins
         if self.application:
             kwargs['app_label'] = self.application.name
+        
+        def get_manage_urls(instance):
+            base_url = self.get_admin_manage_url()
+            return {'add': base_url + 'add/',
+                    'list': base_url,
+                    'edit': base_url + instance.pk + '/'}
+        
+        kwargs['attrs']['get_manage_urls'] = get_manage_urls
+        
         return kwargs
     
     def register_collection(self):
@@ -218,7 +235,7 @@ class Collection(DocumentDesign, SchemaDefMixin):
         else:
             return self.__repr__()
 
-class Subsite(schema.Document, SchemaDefMixin):
+class Subsite(schema.Document, SchemaDefMixin, ManageUrlsMixin):
     url = schema.CharField()
     name = schema.CharField()
     sites = schema.ModelSetField(Site, blank=True)
@@ -230,7 +247,7 @@ class Subsite(schema.Document, SchemaDefMixin):
 
 Subsite.objects.index('sites').commit()
 
-class ViewPoint(schema.Document, SchemaDefMixin):
+class ViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
     subsite = schema.ReferenceField(Subsite)
     url = schema.CharField(help_text='May be a regular expression that the url has to match')
     

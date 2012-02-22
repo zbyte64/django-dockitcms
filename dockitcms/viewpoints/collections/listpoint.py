@@ -10,8 +10,7 @@ from django import forms
 from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-class CollectionListingViewPoint(CanonicalMixin, CollectionMixin, AuthenticatedMixin, ViewPoint):
-    view_type = ViewPoint._meta.fields['view_type'] #hack around
+class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin, AuthenticatedMixin):
     slug_field = schema.SlugField(blank=True)
     list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = schema.CharField(default='dockitcms/list.html', blank=True)
@@ -102,8 +101,6 @@ class CollectionListingViewPoint(CanonicalMixin, CollectionMixin, AuthenticatedM
         return urlpatterns
     
     class Meta:
-        typed_field = 'view_type'
-        collection = ViewPoint._meta.collection
         typed_key = 'dockitcms.collectionlisting'
     
     @classmethod
