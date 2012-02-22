@@ -1,2 +1,3 @@
 recursive-include dockitcms/templates *
+recursive-include dockitcms/widgetblock/templates *
 recursive-exclude test_environment *
