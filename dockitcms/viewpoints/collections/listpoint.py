@@ -1,5 +1,5 @@
 from dockitcms.models import ViewPoint
-from dockitcms.viewpoints.common import AuthenticatedMixin, CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
 from common import CollectionMixin, PointListView, PointDetailView
 
 from dockit import schema
@@ -10,7 +10,7 @@ from django import forms
 from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin, AuthenticatedMixin):
+class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
     slug_field = schema.SlugField(blank=True)
     list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = schema.CharField(default='dockitcms/list.html', blank=True)

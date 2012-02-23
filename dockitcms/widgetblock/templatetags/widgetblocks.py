@@ -6,6 +6,8 @@ from classytags.core import Options
 from classytags.helpers import InclusionTag
 from classytags.arguments import Argument
 
+import collections
+
 class WidgetBlock(InclusionTag):
     name = 'widgetblock'
     template = 'widgetblock/widget_holder.html'
@@ -39,3 +41,20 @@ class WidgetBlock(InclusionTag):
                 'block_key':block_key,}
 
 register.tag(WidgetBlock)
+
+class RenderWidgets(InclusionTag):
+    name = 'renderwidgets'
+    template = 'widgetblock/widget_holder.html'
+    options = Options(
+        Argument('widgets', resolve=True),
+    )
+        
+    def get_context(self, context, widgets):
+        if not isinstance(widgets, collections.Iterable):
+            widgets = [widgets]
+        for widget in widgets:
+            widget.rendered_content = widget.render(context)
+        return {'widgets':widgets,}
+
+register.tag(RenderWidgets)
+
