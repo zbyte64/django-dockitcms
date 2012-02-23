@@ -1,13 +1,15 @@
 from models import BaseTemplateWidget, Widget
 
-import dockit
+from dockit import schema
 
-from dockitcms.models import Collection
+from dockitcms.viewpoints.collections.common import CollectionMixin
 
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
+from django.utils.safestring import mark_safe
 
 class TextWidget(Widget):
-    text = dockit.TextField()
+    text = schema.TextField()
     
     class Meta:
         typed_key = 'widgetblock.textwidget'
@@ -15,9 +17,18 @@ class TextWidget(Widget):
     def render(self, context):
         return self.text
 
-class CTAImage(dockit.Schema):
-    image = dockit.FileField(upload_to='ctas')
-    url = dockit.CharField(blank=True)
+class ImageWidget(Widget):
+    image = schema.FileField()
+    
+    class Meta:
+        typed_key = 'widgetblock.imagewidget'
+    
+    def render(self, context):
+        return mark_safe(u'<img src="%s"/>' % self.image.url)
+
+class CTAImage(schema.Schema):
+    image = schema.FileField(upload_to='ctas')
+    url = schema.CharField(blank=True)
     
     def __unicode__(self):
         if self.image:
@@ -25,12 +36,12 @@ class CTAImage(dockit.Schema):
         return repr(self)
 
 class CTAWidget(BaseTemplateWidget):
-    default_url = dockit.CharField()
-    width = dockit.CharField()
-    height = dockit.CharField()
-    delay = dockit.DecimalField(help_text=_("Display interval of each item"), max_digits=5, decimal_places=2, default=5)
+    default_url = schema.CharField()
+    width = schema.CharField()
+    height = schema.CharField()
+    delay = schema.DecimalField(help_text=_("Display interval of each item"), max_digits=5, decimal_places=2, default=5)
     
-    images = dockit.ListField(dockit.SchemaField(CTAImage)) #TODO the following will be an inline when supported
+    images = schema.ListField(schema.SchemaField(CTAImage)) #TODO the following will be an inline when supported
     
     class Meta:
         typed_key = 'widgetblock.ctawidget'
@@ -40,12 +51,46 @@ class CTAWidget(BaseTemplateWidget):
         from forms import CTAWidgetForm
         return CTAWidgetForm
 
-class CollectionWidget(BaseTemplateWidget):
+class CollectionWidget(BaseTemplateWidget, CollectionMixin):
     '''
     A widget that is powered by another collection
     '''
-    collection = dockit.ReferenceField(Collection)
     
     class Meta:
         typed_key = 'widgetblock.collectionwidget'
+    
+    def get_context(self, context):
+        context = BaseTemplateWidget.get_context(self, context)
+        index = self.get_base_index()
+        index.commit() #TODO perhaps schemas should get a save signal for this to be committed?
+        context['object_list'] = index
+        return context
+
+class ModelWidget(BaseTemplateWidget):
+    model = schema.ModelReferenceField(ContentType)
+    
+    class Meta:
+        typed_key = 'widgetblock.modelwidget'
+    
+    def get_context(self, context):
+        context = BaseTemplateWidget.get_context(self, context)
+        model = self.model.model_class()
+        context['model'] = model
+        context['object_list'] = model.objects.all()
+        return context
+
+class FlatMenuEntry(schema.Schema):
+    title = schema.CharField()
+    url = schema.CharField()
+
+class FlatMenuWidget(BaseTemplateWidget):
+    entries = schema.ListField(schema.SchemaField(FlatMenuEntry))
+    
+    class Meta:
+        typed_key = 'widgetblock.flatmenuwidget'
+    
+    def get_context(self, context):
+        context = BaseTemplateWidget.get_context(self, context)
+        #TODO find the active menu entry
+        return context
 

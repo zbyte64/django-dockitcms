@@ -1,8 +1,8 @@
 from dockitcms.models import ViewPoint
-from dockitcms.viewpoints.common import AuthenticatedMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.viewpoints.common import AuthenticatedMixin, CanonicalMixin, TEMPLATE_SOURCE_CHOICES
 from common import CollectionMixin, PointListView, PointDetailView
 
-import dockit
+from dockit import schema
 from dockit.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
@@ -10,18 +10,17 @@ from django import forms
 from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint):
-    view_type = ViewPoint._meta.fields['view_type'] #hack around
-    slug_field = dockit.SlugField(blank=True)
-    list_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    list_template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
-    list_template_html = dockit.TextField(blank=True)
-    list_content = dockit.TextField(blank=True)
-    detail_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    detail_template_name = dockit.CharField(default='dockitcms/detail.html', blank=True)
-    detail_template_html = dockit.TextField(blank=True)
-    detail_content = dockit.TextField(blank=True)
-    paginate_by = dockit.IntegerField(blank=True, null=True)
+class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin, AuthenticatedMixin):
+    slug_field = schema.SlugField(blank=True)
+    list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    list_template_name = schema.CharField(default='dockitcms/list.html', blank=True)
+    list_template_html = schema.TextField(blank=True)
+    list_content = schema.TextField(blank=True)
+    detail_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    detail_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
+    detail_template_html = schema.TextField(blank=True)
+    detail_content = schema.TextField(blank=True)
+    paginate_by = schema.IntegerField(blank=True, null=True)
     
     list_view_class = PointListView
     detail_view_class = PointDetailView
@@ -39,11 +38,19 @@ class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint)
     def get_document(self):
         doc_cls = self.collection.get_document()
         view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.slug_field:
+                return view_point.reverse('detail', instance[view_point.slug_field])
+            return view_point.reverse('detail', instance.pk)
+        
+        if self.canonical:
+            #TODO this does not work
+            setattr(doc_cls, 'get_absolute_url', get_absolute_url_for_instance)
+            assert hasattr(doc_cls, 'get_absolute_url')
+        
         class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                if view_point.slug_field:
-                    return view_point.reverse('detail', self[view_point.slug_field])
-                return view_point.reverse('detail', self.pk)
+            get_absolute_url = get_absolute_url_for_instance
             
             class Meta:
                 proxy = True
@@ -94,8 +101,6 @@ class CollectionListingViewPoint(CollectionMixin, AuthenticatedMixin, ViewPoint)
         return urlpatterns
     
     class Meta:
-        typed_field = 'view_type'
-        collection = ViewPoint._meta.collection
         typed_key = 'dockitcms.collectionlisting'
     
     @classmethod

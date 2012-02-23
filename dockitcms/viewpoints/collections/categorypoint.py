@@ -1,6 +1,7 @@
 from dockitcms.models import ViewPoint, Collection
-from dockitcms.viewpoints.common import AuthenticatedMixin, TEMPLATE_SOURCE_CHOICES
-#from dockit.forms import DocumentForm
+from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.scope import Scope
+#from schema.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
 #from django import forms
@@ -9,37 +10,60 @@ from django.utils.translation import ugettext_lazy as _
 
 from common import PointListView, PointDetailView, CollectionFilter, index_for_filters
 
-import dockit
+from dockit import schema
 
-class CategoryDetailView(PointDetailView): #TODO turn into list view, category=category, object_list=item_list
+class CategoryDetailView(PointListView): #TODO turn into list view, category=category, object_list=item_list
     items_for_category_index = None
     item_category_dot_path = None
+    category = None
+    slug_field = None
+    
+    
+    def get_category(self):
+        if not self.category:
+            if 'slug' in self.kwargs:
+                self.category = self.document.objects.get(**{self.slug_field:self.kwargs['slug']})
+            else:
+                self.category = self.document.objects.get(pk=self.kwargs['pk'])
+        return self.category
+    
+    def get_queryset(self):
+        category = self.get_category()
+        return self.items_for_category_index.filter(**{self.item_category_dot_path: category.pk})
     
     def get_context_data(self, **kwargs):
         context = super(CategoryDetailView, self).get_context_data(**kwargs)
-        context['item_list'] = self.items_for_category_index.filter(**{self.item_category_dot_path: self.object.pk})
+        context['category'] = self.get_category()
         return context
+    
+    def get_scopes(self):
+        scopes = super(PointListView, self).get_scopes()
+        category = self.get_category()
+        object_scope = Scope('object', object=category)
+        object_scope.add_data('object', category, category.get_manage_urls())
+        scopes.append(object_scope)
+        return scopes
 
 class ItemDetailView(PointDetailView):
     pass
 
-class CategoryViewPoint(ViewPoint):
-    category_collection = dockit.ReferenceField(Collection)
-    category_slug_field = dockit.CharField(blank=True)
-    category_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    category_template_name = dockit.CharField(default='dockitcms/detail.html', blank=True)
-    category_template_html = dockit.TextField(blank=True)
-    category_content = dockit.TextField(blank=True)
-    category_filters = dockit.ListField(dockit.SchemaField(CollectionFilter), blank=True)
+class CategoryViewPoint(ViewPoint, CanonicalMixin):
+    category_collection = schema.ReferenceField(Collection)
+    category_slug_field = schema.CharField(blank=True)
+    category_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    category_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
+    category_template_html = schema.TextField(blank=True)
+    category_content = schema.TextField(blank=True)
+    category_filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
-    item_collection = dockit.ReferenceField(Collection)
-    item_slug_field = dockit.CharField(blank=True)
-    item_category_dot_path = dockit.CharField()
-    item_template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    item_template_name = dockit.CharField(default='dockitcms/detail.html', blank=True)
-    item_template_html = dockit.TextField(blank=True)
-    item_content = dockit.TextField(blank=True)
-    item_filters = dockit.ListField(dockit.SchemaField(CollectionFilter), blank=True)
+    item_collection = schema.ReferenceField(Collection)
+    item_slug_field = schema.CharField(blank=True)
+    item_category_dot_path = schema.CharField()
+    item_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    item_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
+    item_template_html = schema.TextField(blank=True)
+    item_content = schema.TextField(blank=True)
+    item_filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
     category_view_class = CategoryDetailView
     item_view_class = ItemDetailView
@@ -75,11 +99,17 @@ class CategoryViewPoint(ViewPoint):
     def get_category_document(self):
         doc_cls = self.category_collection.get_document()
         view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.category_slug_field:
+                return view_point.reverse('category-detail', instance[view_point.category_slug_field])
+            return view_point.reverse('category-detail', instance.pk)
+        
+        if self.canonical:
+            doc_cls.get_absolute_url = get_absolute_url_for_instance
+        
         class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                if view_point.category_slug_field:
-                    return view_point.reverse('category-detail', self[view_point.category_slug_field])
-                return view_point.reverse('category-detail', self.pk)
+            get_absolute_url = get_absolute_url_for_instance
             
             class Meta:
                 proxy = True
@@ -89,11 +119,17 @@ class CategoryViewPoint(ViewPoint):
     def get_item_document(self):
         doc_cls = self.item_collection.get_document()
         view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.item_slug_field:
+                return view_point.reverse('item-detail', instance[view_point.item_slug_field])
+            return view_point.reverse('item-detail', instance.pk)
+        
+        if self.canonical:
+            doc_cls.get_absolute_url = get_absolute_url_for_instance
+        
         class WrappedDoc(doc_cls):
-            def get_absolute_url(self):
-                if view_point.item_slug_field:
-                    return view_point.reverse('item-detail', self[view_point.item_slug_field])
-                return view_point.reverse('item-detail', self.pk)
+            get_absolute_url = get_absolute_url_for_instance
             
             class Meta:
                 proxy = True

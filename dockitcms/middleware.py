@@ -4,6 +4,7 @@ from django.core.urlresolvers import get_script_prefix
 from django.template.response import TemplateResponse
 
 from models import ViewPoint, Subsite
+from scope import get_site_scope, Scope
 
 registered_view_points = set()
 
@@ -40,4 +41,13 @@ class DockitCMSMiddleware(object):
                         if isinstance(response, TemplateResponse):
                             response.render()
                         return response
+        return response
+
+class DefaultScopeMiddleware(object):
+    def process_template_response(self, request, response):
+        context = response.context_data
+        if 'scopes' not in context:
+            context['scopes'] = [get_site_scope()]
+            if 'object' in context and not any([scope.name == 'object' for scope in context['scopes']]):
+                context['scopes'].append(Scope(name='object', object=context['object']))
         return response

@@ -1,0 +1,24 @@
+<div id="viewscope">
+<h3>Scope Information</h3>
+{% for scope in scopes %}
+<div>
+<span class="name">{{scope.name}}</span>
+<ul>
+{% for scope_data in scope.data.itervalues %}
+<li>
+{{scope_data.key}}
+{% if "edit" in scope_data.manage_urls %}
+<a href="{{scope_data.manage_urls.edit}}">Edit</a>
+{% endif %}
+{% if "list" in scope_data.manage_urls %}
+<a href="{{scope_data.manage_urls.list}}">List</a>
+{% endif %}
+{% if "add" in scope_data.manage_urls %}
+<a href="{{scope_data.manage_urls.add}}">Add</a>
+{% endif %}
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endfor %}
+</div>

@@ -3,7 +3,7 @@ from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 
 from dockitcms.models import ViewPoint
 
-import dockit
+from dockit import schema
 from dockit.forms import DocumentForm
 
 from django.views.generic import ListView, DetailView
@@ -24,11 +24,11 @@ class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     pass
 
 class BaseModelViewPoint(ViewPoint):
-    model = dockit.ModelReferenceField(ContentType)
-    template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    template_name = dockit.CharField(default='dockitcms/list.html', blank=True)
-    template_html = dockit.TextField(blank=True)
-    content = dockit.TextField(blank=True)
+    model = schema.ModelReferenceField(ContentType)
+    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    template_name = schema.CharField(default='dockitcms/list.html', blank=True)
+    template_html = schema.TextField(blank=True)
+    content = schema.TextField(blank=True)
     #TODO filters
     
     view_class = None
@@ -41,7 +41,7 @@ class BaseModelViewPoint(ViewPoint):
         return BaseModelViewPointForm
 
 class ModelListViewPoint(BaseModelViewPoint):
-    paginate_by = dockit.IntegerField(blank=True, null=True)
+    paginate_by = schema.IntegerField(blank=True, null=True)
     #TODO order by
     
     view_class = PointListView
@@ -63,7 +63,7 @@ class ModelListViewPoint(BaseModelViewPoint):
         typed_key = 'dockitcms.modellistview'
 
 class ModelDetailViewPoint(BaseModelViewPoint):
-    slug_field = dockit.SlugField(blank=True)
+    slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
     

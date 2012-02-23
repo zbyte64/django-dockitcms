@@ -2,15 +2,15 @@ from django.contrib.contenttypes.models import ContentType
 
 from models import SchemaEntry, FieldEntry, Collection
 
-import dockit
+from dockit import schema
 
 class BaseFieldEntry(FieldEntry):
-    verbose_name = dockit.CharField(blank=True, null=True)
-    blank = dockit.BooleanField(default=True)
-    null = dockit.BooleanField(default=True)
+    verbose_name = schema.CharField(blank=True, null=True)
+    blank = schema.BooleanField(default=True)
+    null = schema.BooleanField(default=True)
     
-    default = dockit.CharField(blank=True, null=True)
-    help_text = dockit.CharField(blank=True, null=True)
+    default = schema.CharField(blank=True, null=True)
+    help_text = schema.CharField(blank=True, null=True)
     
     scaffold_template_name = 'dockitcms/scaffold/field.html'
     
@@ -19,7 +19,7 @@ class BaseFieldEntry(FieldEntry):
 
 
 class ListFieldMixin(object):
-    list_field_class = dockit.ListField
+    list_field_class = schema.ListField
     
     def get_list_field_kwargs(self):
         raise NotImplementedError
@@ -29,13 +29,13 @@ class ListFieldMixin(object):
         return self.list_field_class(**kwargs)
 
 class BooleanField(BaseFieldEntry):
-    field_class = dockit.BooleanField
+    field_class = schema.BooleanField
     
     class Meta:
         typed_key = 'BooleanField'
 
 class CharField(BaseFieldEntry):
-    field_class = dockit.CharField
+    field_class = schema.CharField
     
     class Meta:
         typed_key = 'CharField'
@@ -49,7 +49,7 @@ class ListCharField(ListFieldMixin, CharField):
         typed_key = 'ListCharField'
 
 class TextField(BaseFieldEntry):
-    field_class = dockit.TextField
+    field_class = schema.TextField
     
     class Meta:
         typed_key = 'TextField'
@@ -62,16 +62,16 @@ class ListTextField(ListFieldMixin, TextField):
     class Meta:
         typed_key = 'ListTextField'
 
-class ChoiceOptionSchema(dockit.Schema):
-    label = dockit.CharField()
-    value = dockit.CharField()
+class ChoiceOptionSchema(schema.Schema):
+    label = schema.CharField()
+    value = schema.CharField()
     
     def __unicode__(self):
         return self.label
 
 class ChoiceField(BaseFieldEntry):
-    choices = dockit.ListField(dockit.SchemaField(ChoiceOptionSchema))
-    field_class = dockit.CharField
+    choices = schema.ListField(schema.SchemaField(ChoiceOptionSchema))
+    field_class = schema.CharField
     
     def get_field_kwargs(self):
         kwargs = super(ChoiceField, self).get_field_kwargs()
@@ -92,13 +92,13 @@ class ListChoiceField(ListFieldMixin, ChoiceField):
 class MultipleChoiceField(ChoiceField):
     def create_field(self):
         kwargs = self.get_field_kwargs()
-        return dockit.ListField(self.field_class(**kwargs))
+        return schema.ListField(self.field_class(**kwargs))
     
     class Meta:
         typed_key = 'MultipleChoiceField'
 
 class DateField(BaseFieldEntry):
-    field_class = dockit.DateField
+    field_class = schema.DateField
     
     class Meta:
         typed_key = 'DateField'
@@ -112,7 +112,7 @@ class ListDateField(ListFieldMixin, DateField):
         typed_key = 'ListDateField'
 
 class DateTimeField(BaseFieldEntry):
-    field_class = dockit.DateTimeField
+    field_class = schema.DateTimeField
     
     class Meta:
         typed_key = 'DateTimeField'
@@ -126,12 +126,12 @@ class ListDateTimeField(ListFieldMixin, DateTimeField):
         typed_key = 'ListDateTimeField'
 
 class DecimalField(BaseFieldEntry):
-    max_value = dockit.IntegerField(blank=True, null=True)
-    min_value = dockit.IntegerField(blank=True, null=True)
-    max_digits = dockit.IntegerField(blank=True, null=True)
-    decimal_places = dockit.IntegerField(blank=True, null=True)
+    max_value = schema.IntegerField(blank=True, null=True)
+    min_value = schema.IntegerField(blank=True, null=True)
+    max_digits = schema.IntegerField(blank=True, null=True)
+    decimal_places = schema.IntegerField(blank=True, null=True)
     
-    field_class = dockit.DecimalField
+    field_class = schema.DecimalField
 
     class Meta:
         typed_key = 'DecimalField'
@@ -145,7 +145,7 @@ class ListDecimalField(ListFieldMixin, DecimalField):
         typed_key = 'ListDecimalField'
 
 class EmailField(BaseFieldEntry):
-    field_class = dockit.EmailField
+    field_class = schema.EmailField
     
     class Meta:
         typed_key = 'EmailField'
@@ -159,7 +159,7 @@ class ListEmailField(ListFieldMixin, EmailField):
         typed_key = 'ListEmailField'
 
 class FileField(BaseFieldEntry):
-    field_class = dockit.FileField
+    field_class = schema.FileField
     
     class Meta:
         typed_key = 'FileField'
@@ -173,8 +173,8 @@ class ListFileField(ListFieldMixin, FileField):
         typed_key = 'ListFileField'
 
 class ImageField(BaseFieldEntry):
-    #TODO dockit.ImageField
-    field_class = dockit.FileField
+    #TODO schema.ImageField
+    field_class = schema.FileField
     scaffold_template_name = 'dockitcms/scaffold/image.html'
 
     class Meta:
@@ -189,9 +189,9 @@ class ListImageField(ListFieldMixin, ImageField):
         typed_key = 'ListImageField'
 
 class FloatField(BaseFieldEntry):
-    field_class = dockit.FloatField
-    #max_value = dockit.IntegerField(blank=True, null=True)
-    #min_value = dockit.IntegerField(blank=True, null=True)
+    field_class = schema.FloatField
+    #max_value = schema.IntegerField(blank=True, null=True)
+    #min_value = schema.IntegerField(blank=True, null=True)
     
     class Meta:
         typed_key = 'FloatField'
@@ -205,11 +205,11 @@ class ListFloatField(ListFieldMixin, FloatField):
         typed_key = 'ListFloatField'
 
 class IntegerField(BaseFieldEntry):
-    field_class = dockit.IntegerField
-    #max_value = dockit.IntegerField(blank=True, null=True)
-    #min_value = dockit.IntegerField(blank=True, null=True)
+    field_class = schema.IntegerField
+    #max_value = schema.IntegerField(blank=True, null=True)
+    #min_value = schema.IntegerField(blank=True, null=True)
 
-    field_class = dockit.IntegerField
+    field_class = schema.IntegerField
     
     class Meta:
         typed_key = 'IntegerField'
@@ -224,29 +224,29 @@ class ListIntegerField(ListFieldMixin, IntegerField):
 
 
 class IPAddressField(BaseFieldEntry):
-    field_class = dockit.IPAddressField
+    field_class = schema.IPAddressField
 
     class Meta:
         typed_key = 'IPAddressField'
 
 '''
 class NullBooleanField(BaseField):
-    field = dockit.NullBooleanField
+    field = schema.NullBooleanField
 
 registry.register_field('NullBooleanField', NullBooleanField)
 '''
 '''
 class RegexFieldSchema(CharFieldSchema):
-    regex = dockit.CharField()
+    regex = schema.CharField()
 
 class RegexField(BaseField):
     schema = RegexFieldSchema
-    field = dockit.RegexField
+    field = schema.RegexField
 
 registry.register_field('RegexField', RegexField)
 '''
 class SlugField(BaseFieldEntry):
-    field_class = dockit.SlugField
+    field_class = schema.SlugField
 
     class Meta:
         typed_key = 'SlugField'
@@ -260,7 +260,7 @@ class ListSlugField(ListFieldMixin, SlugField):
         typed_key = 'ListSlugField'
 
 class TimeField(BaseFieldEntry):
-    field_class = dockit.TimeField
+    field_class = schema.TimeField
 
     class Meta:
         typed_key = 'TimeField'
@@ -275,27 +275,27 @@ class ListTimeField(ListFieldMixin, TimeField):
 
 '''
 class URLFieldSchema(BaseFieldSchema):
-    max_length = dockit.IntegerField(blank=True, null=True)
-    min_length = dockit.IntegerField(blank=True, null=True)
-    verify_exists = dockit.BooleanField(initial=False)
-    validator_user_agent = dockit.CharField(blank=True)
+    max_length = schema.IntegerField(blank=True, null=True)
+    min_length = schema.IntegerField(blank=True, null=True)
+    verify_exists = schema.BooleanField(initial=False)
+    validator_user_agent = schema.CharField(blank=True)
 
 class URLField(BaseField):
     form = URLFieldSchema
-    field = dockit.URLField
+    field = schema.URLField
 
 registry.register_field('URLField', URLField)
 '''
 
 class CollectionReferenceField(BaseFieldEntry):
-    collection = dockit.ReferenceField(Collection)
+    collection = schema.ReferenceField(Collection)
 
-    field_class = dockit.ReferenceField
+    field_class = schema.ReferenceField
     
     def get_field_kwargs(self):
         kwargs = dict(super(CollectionReferenceField, self).get_field_kwargs())
         kwargs['document'] = self.collection.get_document()
-        assert issubclass(kwargs['document'], dockit.Document)
+        assert issubclass(kwargs['document'], schema.Document)
         kwargs.pop('collection', None)
         return kwargs
 
@@ -303,16 +303,16 @@ class CollectionReferenceField(BaseFieldEntry):
         typed_key = 'CollectionReferenceField'
 
 class CollectionSetField(CollectionReferenceField):
-    field_class = dockit.DocumentSetField
+    field_class = schema.DocumentSetField
     
     class Meta:
         typed_key = 'CollectionSetField'
 
 
 class ModelReferenceField(BaseFieldEntry):
-    model = dockit.ModelReferenceField(ContentType)
+    model = schema.ModelReferenceField(ContentType)
 
-    field_class = dockit.ModelReferenceField
+    field_class = schema.ModelReferenceField
     
     def get_field_kwargs(self):
         kwargs = super(ModelReferenceField, self).get_field_kwargs()
@@ -329,7 +329,7 @@ class ModelReferenceField(BaseFieldEntry):
 
 '''
 class ListFieldMixin(object):
-    list_field_class = dockit.ListField
+    list_field_class = schema.ListField
     
     def get_list_field_kwargs(self):
         raise NotImplementedError
@@ -340,13 +340,13 @@ class ListFieldMixin(object):
 '''
 
 class ModelSetField(ModelReferenceField):
-    field_class = dockit.ModelSetField
+    field_class = schema.ModelSetField
     
     class Meta:
         typed_key = 'ModelSetField'
 
 class SchemaField(SchemaEntry):
-    field_class = dockit.SchemaField
+    field_class = schema.SchemaField
     scaffold_template_name = 'dockitcms/scaffold/schema.html'
     
     def get_field_kwargs(self):
@@ -364,14 +364,14 @@ class SchemaField(SchemaEntry):
         typed_key = 'SchemaField'
 
 class ComplexListField(SchemaEntry):
-    field_class = dockit.ListField
+    field_class = schema.ListField
     saffold_template_name = 'dockitcms/scaffold/list.html'
     
     def get_field_kwargs(self):
         schema = self.get_schema()
         schema._meta.verbose_name = self.name
         schema._meta.verbose_name_plural = self.name + 's'
-        kwargs = {'subfield':dockit.SchemaField(schema)}
+        kwargs = {'subfield':schema.SchemaField(schema)}
         return kwargs
     
     def get_scaffold_example(self, data, context, varname):
@@ -385,8 +385,8 @@ class ComplexListField(SchemaEntry):
         typed_key = 'ComplexListField'
 '''
 class ListField(FieldEntry):
-    subfield = dockit.SchemaField(FieldEntry)
-    field_class = dockit.ListField
+    subfield = schema.SchemaField(FieldEntry)
+    field_class = schema.ListField
     
     def get_field_kwargs(self):
         subfield = self.subfield.create_field()

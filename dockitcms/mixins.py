@@ -1,4 +1,4 @@
-import dockit
+from dockit import schema
 from dockit.admin.objecttools import ObjectTool
 
 from django.template.loader import get_template
@@ -24,7 +24,7 @@ class MixinObjectTool(ObjectTool):
         context = Context(context)
         params = request.GET.copy()
         target_field = self.mixin._meta.fields.keys()[0]
-        if '_dotpath' in params:
+        if params.get('_dotpath', False):
             params['_dotpath'] = '%s.%s' % (params['_dotpath'], target_field)
         else:
             params['_dotpath'] = target_field
@@ -32,7 +32,7 @@ class MixinObjectTool(ObjectTool):
         context['link_display'] = 'Edit %s' % self.mixin._meta.verbose_name
         return template.render(context)
 
-class BaseMixin(dockit.Schema):
+class BaseMixin(schema.Schema):
     object_tool_class = MixinObjectTool
     
     @classmethod
@@ -43,8 +43,8 @@ class BaseMixin(dockit.Schema):
         admin_display = 'hidden'
 
 class AuthMixin(BaseMixin):
-    authenticated_users_only = dockit.BooleanField(default=False)
-    staff_only = dockit.BooleanField(default=False)
+    authenticated_users_only = schema.BooleanField(default=False)
+    staff_only = schema.BooleanField(default=False)
     
     class MixinMeta:
         admin_display = 'form'

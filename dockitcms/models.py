@@ -1,35 +1,46 @@
 from dockit.schema.schema import create_schema, create_document
 from dockit.schema import get_base_document
-import dockit
+from dockit import schema
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import capfirst
 from django.utils.datastructures import SortedDict
 from django.db.models import permalink
 from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
 
 from properties import SchemaDesignChoiceField
-from scope import Scope
+from scope import Scope, get_site_scope
 
 import re
 import urlparse
 
-class SchemaDefMixin(dockit.Schema):
+class ManageUrlsMixin(schema.Schema):
+    def get_manage_urls(self):
+        admin_name = '_'.join((self._meta.app_label, self._meta.module_name))
+        urls = {'add': reverse('admin:%s_add' % admin_name),
+                'list': reverse('admin:%s_changelist' % admin_name),}
+        if self.pk:
+            urls['edit'] = reverse('admin:%s_change' % admin_name, args=[self.pk])
+        return urls
+
+class SchemaDefMixin(schema.Schema):
     #_mixins = dict() #define on a document that implements mixins
     
     @classmethod
     def register_schema_mixin(cls, mixin):
         cls._mixins[mixin._meta.schema_key] = mixin
+        cls._meta.fields.update(mixin._meta.fields)
     
     @classmethod
     def get_active_mixins(cls, instance=None):
         return cls._mixins.values()
 
-class FieldEntry(dockit.Schema):
+class FieldEntry(schema.Schema):
     '''
     This schema is extended by others to define a field entry
     '''
-    name = dockit.SlugField()
+    name = schema.SlugField()
     
     field_class = None
     
@@ -42,9 +53,11 @@ class FieldEntry(dockit.Schema):
         kwargs.pop('name', None)
         if kwargs.get('verbose_name', None) == '':
             del kwargs['verbose_name']
-        for key in kwargs.keys():
+        for key, value in kwargs.items():
             if key not in self._meta.fields:
                 kwargs.pop(key)
+            else:
+                kwargs[str(key)] = value
         return kwargs
     
     def create_field(self):
@@ -97,23 +110,23 @@ class DesignMixin(object):
     def get_document(self, **kwargs):
         params = self.get_document_kwargs(**kwargs)
         doc = create_document(**params)
-        if not issubclass(doc, dockit.Document):
+        if not issubclass(doc, schema.Document):
             raise TypeError("Did not properly create a document")
         return doc
 
 class SchemaEntry(FieldEntry, DesignMixin):
     #inherit_from = SchemaDesignChoiceField(blank=True)
-    fields = dockit.ListField(dockit.SchemaField(FieldEntry))
-    object_label = dockit.CharField(blank=True)
+    fields = schema.ListField(schema.SchemaField(FieldEntry))
+    object_label = schema.CharField(blank=True)
     
     class Meta:
         proxy = True
 
-class DocumentDesign(dockit.Document, DesignMixin):
-    title = dockit.CharField()
+class DocumentDesign(schema.Document, DesignMixin):
+    title = schema.CharField()
     inherit_from = SchemaDesignChoiceField(blank=True)
-    fields = dockit.ListField(dockit.SchemaField(FieldEntry), blank=True)
-    object_label = dockit.CharField(blank=True)
+    fields = schema.ListField(schema.SchemaField(FieldEntry), blank=True)
+    object_label = schema.CharField(blank=True)
     
     def __unicode__(self):
         return self.title or ''
@@ -126,10 +139,10 @@ class DocumentDesign(dockit.Document, DesignMixin):
         if self.inherit_from:
             parent = self._meta.fields['inherit_from'].get_schema(self.inherit_from)
             if parent:
-                if issubclass(parent, dockit.Document):
+                if issubclass(parent, schema.Document):
                     kwargs['parents'] = (parent,)
                 else:
-                    kwargs['parents'] = (parent, dockit.Document)
+                    kwargs['parents'] = (parent, schema.Document)
         return kwargs
 
 from mixins import MIXINS
@@ -140,16 +153,16 @@ def mixin_choices():
         choices.append((key, value._meta.verbose_name))
     return choices
 
-class Application(dockit.Document):
-    name = dockit.CharField()
+class Application(schema.Document):
+    name = schema.CharField()
     
     def __unicode__(self):
         return self.name
 
 class Collection(DocumentDesign, SchemaDefMixin):
-    application = dockit.ReferenceField(Application)
-    key = dockit.SlugField(unique=True)
-    mixins = dockit.SetField(dockit.CharField(), choices=mixin_choices, blank=True)
+    application = schema.ReferenceField(Application)
+    key = schema.SlugField(unique=True)
+    mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
     
     _mixins = dict()
     
@@ -163,6 +176,7 @@ class Collection(DocumentDesign, SchemaDefMixin):
     
     def get_document_kwargs(self, **kwargs):
         kwargs = super(Collection, self).get_document_kwargs()
+        kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
         
         active_mixins = dict()
@@ -170,18 +184,30 @@ class Collection(DocumentDesign, SchemaDefMixin):
         for mixin in self.mixins:
             mixin_cls = MIXINS.get(mixin, None)
             if mixin_cls:
-                #parents.append(mixin_cls)
+                parents.append(mixin_cls)
                 active_mixins[mixin] = mixin_cls
         
         if active_mixins:
             parents.append(SchemaDefMixin)
-        if parents and not any([issubclass(parent, dockit.Document) for parent in parents]):
-            parents.append(dockit.Document)
+        if parents and not any([issubclass(parent, schema.Document) for parent in parents]):
+            parents.append(schema.Document)
         if parents:
             kwargs['parents'] = tuple(parents)
         if active_mixins:
-            kwargs.setdefault('attrs', dict())
             kwargs['attrs']['_mixins'] = active_mixins
+        if self.application:
+            kwargs['app_label'] = self.application.name
+        
+        def get_manage_urls(instance):
+            base_url = self.get_admin_manage_url()
+            urls = {'add': base_url + 'add/',
+                    'list': base_url,}
+            if instance.pk:
+                urls['edit'] = base_url + instance.pk + '/'
+            return urls
+        
+        kwargs['attrs']['get_manage_urls'] = get_manage_urls
+        
         return kwargs
     
     def register_collection(self):
@@ -213,10 +239,10 @@ class Collection(DocumentDesign, SchemaDefMixin):
         else:
             return self.__repr__()
 
-class Subsite(dockit.Document, SchemaDefMixin):
-    url = dockit.CharField()
-    name = dockit.CharField()
-    sites = dockit.ModelSetField(Site, blank=True)
+class Subsite(schema.Document, SchemaDefMixin, ManageUrlsMixin):
+    url = schema.CharField()
+    name = schema.CharField()
+    sites = schema.ModelSetField(Site, blank=True)
     
     _mixins = dict()
     
@@ -225,9 +251,9 @@ class Subsite(dockit.Document, SchemaDefMixin):
 
 Subsite.objects.index('sites').commit()
 
-class ViewPoint(dockit.Document, SchemaDefMixin):
-    subsite = dockit.ReferenceField(Subsite)
-    url = dockit.CharField(help_text='May be a regular expression that the url has to match')
+class ViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
+    subsite = schema.ReferenceField(Subsite)
+    url = schema.CharField(help_text='May be a regular expression that the url has to match')
     
     _mixins = dict()
     
@@ -247,9 +273,15 @@ class ViewPoint(dockit.Document, SchemaDefMixin):
         pass
     
     def get_scopes(self):
-        return [Scope('site', object=Site.objects.get_current()),
-                Scope('subsite', object=self.subsite),
-                Scope('viewpoint', object=self)]
+        site_scope = get_site_scope()
+        
+        subsite_scope = Scope('subsite', object=self.subsite)
+        subsite_scope.add_data('object', self.subsite, self.subsite.get_manage_urls())
+        
+        viewpoint_scope = Scope('viewpoint', object=self)
+        viewpoint_scope.add_data('object', self, self.get_manage_urls())
+        
+        return [site_scope, subsite_scope, viewpoint_scope]
     
     def get_admin_view(self, **kwargs):
         from dockitcms.admin.views import ViewPointDesignerFragmentView
@@ -272,7 +304,7 @@ class ViewPoint(dockit.Document, SchemaDefMixin):
     
     def reverse(self, name, *args, **kwargs):
         resolver = self.get_resolver()
-        return resolver.reverse(name, *args, **kwargs)
+        return self.full_url + resolver.reverse(name, *args, **kwargs)
     
     def save(self, *args, **kwargs):
         super(ViewPoint, self).save(*args, **kwargs)

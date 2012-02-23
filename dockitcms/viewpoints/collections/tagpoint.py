@@ -7,12 +7,12 @@ from django.utils.translation import ugettext_lazy as _
 from dockitcms.common import BaseViewPointClass, register_view_point_class
 from dockitcms.utils import ConfigurableTemplateResponseMixin
 
-import dockit
+from dockit import schema
 from dockit.views import ListView
 
 
 class TagListViewPointForm(ListViewPoint):
-    tag_field = dockit.CharField(help_text=_('Dotpoint notation to the tag field'))
+    tag_field = schema.CharField(help_text=_('Dotpoint notation to the tag field'))
 
 class TagPointListView(ConfigurableTemplateResponseMixin, ListView):
     pass

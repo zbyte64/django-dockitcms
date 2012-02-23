@@ -9,7 +9,7 @@ from classytags.arguments import Argument
 from dockitcms.contrib.widgetbucket.models import BaseWidget
 
 from django.db.models import Model
-from dockit import Document
+from dockit.schema import Document
 
 class WidgetBucket(InclusionTag):
     name = 'widgetbucket'

@@ -1,23 +1,20 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
-from dockitcms.viewpoints.common import AuthenticatedMixin, TemplateMixin
+from dockitcms.viewpoints.common import CanonicalMixin, AuthenticatedMixin, TemplateMixin
 
 from common import CollectionMixin, PointListView, PointDetailView
 
 from dockitcms.models import ViewPoint
 
-import dockit
+from dockit import schema
 from dockit.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 
-class BaseCollectionViewPoint(CollectionMixin, TemplateMixin, AuthenticatedMixin, ViewPoint):
-    view_type = ViewPoint._meta.fields['view_type'] #hack around
+class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin, AuthenticatedMixin):
     view_class = None
     
     class Meta:
-        typed_field = 'view_type'
-        collection = ViewPoint._meta.collection
         proxy = True
     
     @classmethod
@@ -29,7 +26,7 @@ class BaseCollectionViewPoint(CollectionMixin, TemplateMixin, AuthenticatedMixin
         index.commit()
 
 class CollectionListViewPoint(BaseCollectionViewPoint):
-    paginate_by = dockit.IntegerField(blank=True, null=True)
+    paginate_by = schema.IntegerField(blank=True, null=True)
     #TODO order by
     
     view_class = PointListView
@@ -53,10 +50,24 @@ class CollectionListViewPoint(BaseCollectionViewPoint):
     class Meta:
         typed_key = 'dockitcms.collectionlistview'
 
-class CollectionDetailViewPoint(BaseCollectionViewPoint):
-    slug_field = dockit.SlugField(blank=True)
+class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
+    slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
+    
+    def get_document(self):
+        document = super(CollectionDetailViewPoint, self).get_document()
+        view_point = self
+        
+        def get_absolute_url_for_instance(instance):
+            if view_point.slug_field:
+                return view_point.reverse('detail', instance[view_point.slug_field])
+            return view_point.reverse('detail', instance.pk)
+        
+        if self.canonical:
+            document.get_absolute_url = get_absolute_url_for_instance
+        
+        return document
     
     def get_base_index(self):
         index = super(CollectionDetailViewPoint, self).get_base_index()

@@ -5,6 +5,8 @@ from common import AdminAwareDocumentAdmin
 from dockitcms.models import Collection
 from dockitcms.common import CMSURLResolver
 
+from dockit.admin.breadcrumbs import Breadcrumb
+
 class VirtualDocumentAdmin(AdminAwareDocumentAdmin):
     def __init__(self, document, admin_site, base_url):
         AdminAwareDocumentAdmin.__init__(self, document, admin_site)
@@ -14,6 +16,17 @@ class VirtualDocumentAdmin(AdminAwareDocumentAdmin):
     def reverse(self, name, *args, **kwargs):
         ret = self.resolver.reverse(name, *args, **kwargs)
         return self.base_url + ret
+    
+    def get_base_breadcrumbs(self):
+        admin_name = self.admin_site.name
+        model_name = self.model._meta.verbose_name
+        opts = self.model._meta
+        breadcrumbs = [
+            Breadcrumb('Home', ['%s:index' % admin_name]),
+            Breadcrumb(opts.app_label, ['%s:index' % admin_name]), #TODO app listing support
+            Breadcrumb(opts.verbose_name_plural, self.reverse('%s_changelist' % self.app_name)),
+        ]
+        return breadcrumbs
 
 class ManageCollectionView(View):
     admin = None

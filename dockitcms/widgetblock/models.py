@@ -1,19 +1,24 @@
-import dockit
+from dockit import schema
 
 from django.utils.translation import ugettext_lazy as _
 from django.template import Template, Context
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
-from django.contrib.sites.models import Site
+from django.contrib.contenttypes.models import ContentType
 
-class Widget(dockit.Schema):
-    block_key = dockit.CharField()
+class Widget(schema.Schema):
+    block_key = schema.CharField()
     
     class Meta:
         typed_field = 'widget_type'
     
     def render(self, context):
         raise NotImplementedError
+    
+    @classmethod
+    def get_admin_class(cls):
+        from admin import WidgetAdmin
+        return WidgetAdmin
 
 TEMPLATE_SOURCE_CHOICES = [
     ('name', _('By Template Name')),
@@ -21,9 +26,9 @@ TEMPLATE_SOURCE_CHOICES = [
 ]
 
 class BaseTemplateWidget(Widget):
-    template_source = dockit.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    template_name = dockit.CharField(blank=True)
-    template_html = dockit.TextField(blank=True)
+    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    template_name = schema.CharField(blank=True)
+    template_html = schema.TextField(blank=True)
 
     class Meta:
         proxy = True
@@ -47,14 +52,15 @@ class BaseTemplateWidget(Widget):
         from forms import BaseTemplateWidgetForm
         return BaseTemplateWidgetForm
 
-class SiteWidgets(dockit.Document):
-    site = dockit.ModelReferenceField(Site)
-    widgets = dockit.ListField(dockit.SchemaField(Widget))
+class ModelWidgets(schema.Document):
+    content_type = schema.ModelReferenceField(ContentType)
+    object_id = schema.CharField()
+    widgets = schema.ListField(schema.SchemaField(Widget))
 
-SiteWidgets.objects.index('site').commit()
+ModelWidgets.objects.index('content_type', 'object_id').commit()
 
 '''
-class CustomWidgetDefinition(dockit.Document):
+class CustomWidgetDefinition(schema.Document):
     class Meta:
         typed_field = 'widget_def_type'
 
