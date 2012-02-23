@@ -1,5 +1,6 @@
 from dockitcms.models import ViewPoint, Collection
-from dockitcms.viewpoints.common import AuthenticatedMixin, CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.scope import Scope
 #from schema.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
@@ -11,19 +12,42 @@ from common import PointListView, PointDetailView, CollectionFilter, index_for_f
 
 from dockit import schema
 
-class CategoryDetailView(PointDetailView): #TODO turn into list view, category=category, object_list=item_list
+class CategoryDetailView(PointListView): #TODO turn into list view, category=category, object_list=item_list
     items_for_category_index = None
     item_category_dot_path = None
+    category = None
+    slug_field = None
+    
+    
+    def get_category(self):
+        if not self.category:
+            if 'slug' in self.kwargs:
+                self.category = self.document.objects.get(**{self.slug_field:self.kwargs['slug']})
+            else:
+                self.category = self.document.objects.get(pk=self.kwargs['pk'])
+        return self.category
+    
+    def get_queryset(self):
+        category = self.get_category()
+        return self.items_for_category_index.filter(**{self.item_category_dot_path: category.pk})
     
     def get_context_data(self, **kwargs):
         context = super(CategoryDetailView, self).get_context_data(**kwargs)
-        context['item_list'] = self.items_for_category_index.filter(**{self.item_category_dot_path: self.object.pk})
+        context['category'] = self.get_category()
         return context
+    
+    def get_scopes(self):
+        scopes = super(PointListView, self).get_scopes()
+        category = self.get_category()
+        object_scope = Scope('object', object=category)
+        object_scope.add_data('object', category, category.get_manage_urls())
+        scopes.append(object_scope)
+        return scopes
 
 class ItemDetailView(PointDetailView):
     pass
 
-class CategoryViewPoint(CanonicalMixin, ViewPoint):
+class CategoryViewPoint(ViewPoint, CanonicalMixin):
     category_collection = schema.ReferenceField(Collection)
     category_slug_field = schema.CharField(blank=True)
     category_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')

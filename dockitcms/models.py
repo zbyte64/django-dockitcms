@@ -10,7 +10,7 @@ from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 
 from properties import SchemaDesignChoiceField
-from scope import Scope
+from scope import Scope, get_site_scope
 
 import re
 import urlparse
@@ -273,7 +273,7 @@ class ViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
         pass
     
     def get_scopes(self):
-        site_scope = Scope('site', object=Site.objects.get_current())
+        site_scope = get_site_scope()
         
         subsite_scope = Scope('subsite', object=self.subsite)
         subsite_scope.add_data('object', self.subsite, self.subsite.get_manage_urls())
@@ -304,7 +304,7 @@ class ViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
     
     def reverse(self, name, *args, **kwargs):
         resolver = self.get_resolver()
-        return resolver.reverse(name, *args, **kwargs)
+        return self.full_url + resolver.reverse(name, *args, **kwargs)
     
     def save(self, *args, **kwargs):
         super(ViewPoint, self).save(*args, **kwargs)
