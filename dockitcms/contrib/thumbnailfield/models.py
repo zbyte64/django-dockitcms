@@ -1,4 +1,4 @@
-import dockit
+from dockit import schema
 
 import os
 
@@ -8,10 +8,10 @@ from photoprocessor.utils import img_to_fobj
 from photoprocessor.processors import process_image, process_image_info
 from photoprocessor.lib import Image
 
-class GeneratedThumbnailSchema(dockit.Schema):
-    image = dockit.FileField()
-    info = dockit.DictField()
-    config = dockit.DictField()
+class GeneratedThumbnailSchema(schema.Schema):
+    image = schema.FileField()
+    info = schema.DictField()
+    config = schema.DictField()
     
     @property
     def url(self):
@@ -32,7 +32,7 @@ class GeneratedThumbnailSchema(dockit.Schema):
         return repr(self)
 
 class ThumbnailsSchema(GeneratedThumbnailSchema):
-    thumbnails = dockit.DictField(value_subfield=dockit.SchemaField(GeneratedThumbnailSchema))
+    thumbnails = schema.DictField(value_subfield=schema.SchemaField(GeneratedThumbnailSchema))
     
     def pil_image(self):
         file_obj = self.image
