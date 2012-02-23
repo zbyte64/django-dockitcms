@@ -27,7 +27,7 @@ class Scope(object):
     def get_scope_processors(self):
         return SCOPE_PROCESSORS
     
-    def add_data(self, key, data, manage_urls=None):
+    def add_data(self, key, data, manage_urls={}):
         data = ScopeData(key=key, data=data, manage_urls=manage_urls)
         self.data[key] = data
 
@@ -36,6 +36,8 @@ class ScopeData(object):
         self.key = key
         self.data = data
         self.manage_urls = manage_urls
+        
+        #TODO flag the scope data status (was it used? was it overriden?)
 
 def get_site_scope():
     obj = Site.objects.get_current()

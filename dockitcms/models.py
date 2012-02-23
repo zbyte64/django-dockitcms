@@ -18,9 +18,11 @@ import urlparse
 class ManageUrlsMixin(schema.Schema):
     def get_manage_urls(self):
         admin_name = '_'.join((self._meta.app_label, self._meta.module_name))
-        return {'add': reverse('admin:%s_add' % admin_name),
-                'list': reverse('admin:%s_changelist' % admin_name),
-                'edit': reverse('admin:%s_change' % admin_name, args=[self.pk])}
+        urls = {'add': reverse('admin:%s_add' % admin_name),
+                'list': reverse('admin:%s_changelist' % admin_name),}
+        if self.pk:
+            urls['edit'] = reverse('admin:%s_change' % admin_name, args=[self.pk])
+        return urls
 
 class SchemaDefMixin(schema.Schema):
     #_mixins = dict() #define on a document that implements mixins
@@ -198,9 +200,11 @@ class Collection(DocumentDesign, SchemaDefMixin):
         
         def get_manage_urls(instance):
             base_url = self.get_admin_manage_url()
-            return {'add': base_url + 'add/',
-                    'list': base_url,
-                    'edit': base_url + instance.pk + '/'}
+            urls = {'add': base_url + 'add/',
+                    'list': base_url,}
+            if instance.pk:
+                urls['edit'] = base_url + instance.pk + '/'
+            return urls
         
         kwargs['attrs']['get_manage_urls'] = get_manage_urls
         
@@ -269,9 +273,15 @@ class ViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
         pass
     
     def get_scopes(self):
-        return [Scope('site', object=Site.objects.get_current()),
-                Scope('subsite', object=self.subsite),
-                Scope('viewpoint', object=self)]
+        site_scope = Scope('site', object=Site.objects.get_current())
+        
+        subsite_scope = Scope('subsite', object=self.subsite)
+        subsite_scope.add_data('object', self.subsite, self.subsite.get_manage_urls())
+        
+        viewpoint_scope = Scope('viewpoint', object=self)
+        viewpoint_scope.add_data('object', self, self.get_manage_urls())
+        
+        return [site_scope, subsite_scope, viewpoint_scope]
     
     def get_admin_view(self, **kwargs):
         from dockitcms.admin.views import ViewPointDesignerFragmentView

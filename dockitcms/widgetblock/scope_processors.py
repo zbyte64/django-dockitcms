@@ -10,8 +10,10 @@ def widgets(scope):
         if hasattr(obj, 'widgets'):
             manage_urls = {}
             if hasattr(obj, 'get_manage_urls'):
-                base_url = obj.get_manage_urls()['edit']
-                manage_urls['list'] = base_url + '?_dotpath=widgets'
+                urls = obj.get_manage_urls()
+                if 'edit' in urls:
+                    base_url = urls['edit']
+                    manage_urls['list'] = base_url + '?_dotpath=widgets'
             scope.add_data('widgets', obj.widgets, manage_urls)
 
 def modelwidgets(scope):
