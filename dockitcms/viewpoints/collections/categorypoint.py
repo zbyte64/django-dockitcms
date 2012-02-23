@@ -7,12 +7,13 @@ from django.conf.urls.defaults import patterns, url
 #from django import forms
 #from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 
 from common import PointListView, PointDetailView, CollectionFilter, index_for_filters
 
 from dockit import schema
 
-class CategoryDetailView(PointListView): #TODO turn into list view, category=category, object_list=item_list
+class CategoryDetailView(PointListView):
     items_for_category_index = None
     item_category_dot_path = None
     category = None
@@ -47,13 +48,25 @@ class CategoryDetailView(PointListView): #TODO turn into list view, category=cat
 class ItemDetailView(PointDetailView):
     pass
 
+CATEGORY_CONTEXT_DESCRIPTION = mark_safe('''
+Context:<br/>
+<em>category</em> <span>The category object</span><br/>
+<em>object_list</em> <span>The list of items belonging to the category</span>
+
+''')
+
+ITEM_CONTEXT_DESCRIPTION = mark_safe('''
+Context: <br/>
+<em>object</em> <span>The item object</span>
+''')
+
 class CategoryViewPoint(ViewPoint, CanonicalMixin):
     category_collection = schema.ReferenceField(Collection)
     category_slug_field = schema.CharField(blank=True)
     category_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     category_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
     category_template_html = schema.TextField(blank=True)
-    category_content = schema.TextField(blank=True)
+    category_content = schema.TextField(blank=True, help_text=CATEGORY_CONTEXT_DESCRIPTION)
     category_filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
     item_collection = schema.ReferenceField(Collection)
@@ -62,7 +75,7 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
     item_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     item_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
     item_template_html = schema.TextField(blank=True)
-    item_content = schema.TextField(blank=True)
+    item_content = schema.TextField(blank=True, help_text=ITEM_CONTEXT_DESCRIPTION)
     item_filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
     category_view_class = CategoryDetailView

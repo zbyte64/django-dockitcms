@@ -6,15 +6,36 @@ from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 from dockitcms.models import Collection
 from dockitcms.scope import Scope
 
+FILTER_OPERATION_CHOICES = [
+    ('exact', 'Exact'),
+]
+
+VALUE_TYPE_CHOICES = [
+    ('string', 'String'),
+    ('integer', 'Integer'),
+    ('boolean', 'Boolean'),
+]
+
 class CollectionFilter(schema.Schema):
     key = schema.CharField()
-    operation = schema.CharField()
+    operation = schema.CharField(choices=FILTER_OPERATION_CHOICES, default='exact')
     value = schema.CharField()
+    value_type = schema.CharField(choices=VALUE_TYPE_CHOICES, default='string')
+    
+    def get_value(self):
+        #TODO this is cheesy
+        value = self.value
+        if self.value_type == 'integer':
+            value = int(value)
+        elif self.value_type == 'boolean':
+            value = bool(value.lower() in ('1', 'true'))
+        return value
     
     def get_query_filter_operation(self):
+        value = self.get_value()
         return QueryFilterOperation(key=self.key,
                                     operation=self.operation,
-                                    value=self.value)
+                                    value=value)
 
 def index_for_filters(index, filters):
     inclusions = list()
