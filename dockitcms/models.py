@@ -175,7 +175,7 @@ class Collection(DocumentDesign, SchemaDefMixin):
         return 'dockitcms.virtual.%s' % self.key
     
     def get_document_kwargs(self, **kwargs):
-        kwargs = super(Collection, self).get_document_kwargs()
+        kwargs = super(Collection, self).get_document_kwargs(**kwargs)
         kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
         
@@ -207,7 +207,6 @@ class Collection(DocumentDesign, SchemaDefMixin):
             return urls
         
         kwargs['attrs']['get_manage_urls'] = get_manage_urls
-        
         return kwargs
     
     def register_collection(self):

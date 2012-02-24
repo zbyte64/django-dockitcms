@@ -119,7 +119,8 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
             return view_point.reverse('category-detail', instance.pk)
         
         if self.canonical:
-            doc_cls.get_absolute_url = get_absolute_url_for_instance
+            setattr(doc_cls, 'get_absolute_url', get_absolute_url_for_instance)
+            #doc_cls.get_absolute_url = get_absolute_url_for_instance
         
         class WrappedDoc(doc_cls):
             get_absolute_url = get_absolute_url_for_instance
