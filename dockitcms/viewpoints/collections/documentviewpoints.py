@@ -1,5 +1,5 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
-from dockitcms.viewpoints.common import CanonicalMixin, AuthenticatedMixin, TemplateMixin
+from dockitcms.viewpoints.common import CanonicalMixin, TemplateMixin
 
 from common import CollectionMixin, PointListView, PointDetailView
 
@@ -11,7 +11,7 @@ from dockit.forms import DocumentForm
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 
-class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin, AuthenticatedMixin):
+class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin):
     view_class = None
     
     class Meta:
