@@ -350,8 +350,8 @@ class SchemaField(SchemaEntry):
     scaffold_template_name = 'dockitcms/scaffold/schema.html'
     
     def get_field_kwargs(self):
-        schema = self.get_schema()
-        kwargs = {'schema':schema}
+        field_schema = self.get_schema()
+        kwargs = {'schema':field_schema}
         return kwargs
     
     def get_scaffold_example(self, data, context, varname):
@@ -368,14 +368,14 @@ class ComplexListField(SchemaEntry):
     saffold_template_name = 'dockitcms/scaffold/list.html'
     
     def get_field_kwargs(self):
-        schema = self.get_schema()
-        schema._meta.verbose_name = self.name
-        schema._meta.verbose_name_plural = self.name + 's'
-        kwargs = {'subfield':schema.SchemaField(schema)}
+        field_schema = self.get_schema()
+        field_schema._meta.verbose_name = self.name
+        field_schema._meta.verbose_name_plural = self.name + 's'
+        kwargs = {'subfield':schema.SchemaField(field_schema)}
         return kwargs
     
     def get_scaffold_example(self, data, context, varname):
-        schema = data.get_schema()
+        field_schema = data.get_schema()
         #TODO
         context['subschema'] = ''
         context['subvarname'] = 'subitem'
