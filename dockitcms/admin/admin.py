@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
-from dockitcms.models import Collection, ViewPoint, DocumentDesign, Subsite, Application
+from dockitcms.models import Collection, BaseViewPoint, DocumentDesign, Subsite, Application
 
 from views import ManageCollectionView
 
@@ -42,6 +42,6 @@ class SubsiteAdmin(AdminAwareDocumentAdmin):
 admin.site.register([Subsite], SubsiteAdmin)
 
 class ViewPointAdmin(AdminAwareDocumentAdmin):
-    list_display = ['url', 'subsite', 'view_type']
+    list_display = ['base_url', 'subsite', 'view_type']
 
-admin.site.register([ViewPoint], ViewPointAdmin)
+admin.site.register([BaseViewPoint], ViewPointAdmin)

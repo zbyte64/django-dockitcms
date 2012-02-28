@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.urlresolvers import get_script_prefix
 from django.template.response import TemplateResponse
 
-from models import ViewPoint, Subsite
+from models import BaseViewPoint, Subsite
 from scope import get_site_scope, Scope
 
 registered_view_points = set()
@@ -27,9 +27,9 @@ class DockitCMSMiddleware(object):
         #TODO find a more efficient way to do this
         subsites = Subsite.objects.filter(sites=settings.SITE_ID)
         for subsite in subsites:
-            view_points = ViewPoint.objects.filter(subsite=subsite)
+            view_points = BaseViewPoint.objects.filter(subsite=subsite)
             for view_point in view_points:
-                if view_point.url_regexp.match(chomped_url):
+                if view_point.contains_url(chomped_url):
                     if view_point.pk not in registered_view_points:
                         view_point.register_view_point()
                         registered_view_points.add(view_point.pk)
