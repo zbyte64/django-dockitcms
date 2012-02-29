@@ -1,4 +1,4 @@
-from models import BaseTemplateWidget, Widget
+from models import BaseTemplateWidget, Widget, ReusableWidget
 
 from dockit import schema
 
@@ -93,4 +93,18 @@ class FlatMenuWidget(BaseTemplateWidget):
         context = BaseTemplateWidget.get_context(self, context)
         #TODO find the active menu entry
         return context
+
+class PredefinedWidget(Widget):
+    widget = schema.ReferenceField(ReusableWidget)
+    
+    def render(self, context):
+        return self.widget.render(context)
+    
+    def __unicode__(self):
+        if self.widget:
+            return unicode(self.widget)
+        return repr(self)
+    
+    class Meta:
+        typed_key = 'widgetblock.predefinedwidget'
 

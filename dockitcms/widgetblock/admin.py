@@ -3,7 +3,7 @@ from django.views.generic import View
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 
-from models import ModelWidgets
+from models import ModelWidgets, ReusableWidget
 
 from dockitcms.admin.common import AdminAwareDocumentAdmin, AdminAwareSchemaAdmin
 
@@ -32,6 +32,14 @@ class ModelWidgetsAdmin(AdminAwareDocumentAdmin):
 
 admin.site.register([ModelWidgets], ModelWidgetsAdmin)
 
+class ReusableWidgetAdmin(AdminAwareDocumentAdmin):
+    list_display = ['__str__', 'widget_type']
+
+admin.site.register([ReusableWidget], ReusableWidgetAdmin)
+
 class WidgetAdmin(AdminAwareSchemaAdmin):
+    list_display = ['__str__', 'widget_type']
+
+class BlockWidgetAdmin(AdminAwareSchemaAdmin):
     list_display = ['__str__', 'block_key', 'widget_type']
 

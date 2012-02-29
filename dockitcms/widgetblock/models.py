@@ -6,9 +6,9 @@ from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 from django.contrib.contenttypes.models import ContentType
 
+from common import ExpandedSchemas
+
 class Widget(schema.Schema):
-    block_key = schema.CharField()
-    
     class Meta:
         typed_field = 'widget_type'
     
@@ -19,6 +19,22 @@ class Widget(schema.Schema):
     def get_admin_class(cls):
         from admin import WidgetAdmin
         return WidgetAdmin
+
+block_widget_schemas = ExpandedSchemas(None, Widget._meta.fields['widget_type'].schemas)
+
+class BlockWidget(Widget):
+    block_key = schema.CharField()
+    widget_type = schema.SchemaTypeField(block_widget_schemas, editable=False)
+    
+    @classmethod
+    def get_admin_class(cls):
+        from admin import BlockWidgetAdmin
+        return BlockWidgetAdmin
+    
+    class Meta:
+        proxy = True
+
+block_widget_schemas.base_schema = BlockWidget
 
 TEMPLATE_SOURCE_CHOICES = [
     ('name', _('By Template Name')),
@@ -55,16 +71,26 @@ class BaseTemplateWidget(Widget):
 class ModelWidgets(schema.Document):
     content_type = schema.ModelReferenceField(ContentType)
     object_id = schema.CharField()
-    widgets = schema.ListField(schema.SchemaField(Widget))
+    widgets = schema.ListField(schema.SchemaField(BlockWidget))
 
 ModelWidgets.objects.index('content_type', 'object_id').commit()
 
-'''
-class CustomWidgetDefinition(schema.Document):
+reusable_widget_schemas = ExpandedSchemas(None, Widget._meta.fields['widget_type'].schemas)
+
+class ReusableWidget(schema.Document):
+    '''
+    Stores already configured widgets for quick reuse throughout the site
+    '''
+    name = schema.CharField()
+    widget_type = schema.SchemaTypeField(reusable_widget_schemas, editable=False)
+    
     class Meta:
-        typed_field = 'widget_def_type'
+        typed_field = 'widget_type'
+    
+    def __unicode__(self):
+        if self.name:
+            return self.name
+        return repr(self)
 
-Custom widgets
-
-'''
+reusable_widget_schemas.base_schema = ReusableWidget
 

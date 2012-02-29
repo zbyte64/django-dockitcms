@@ -18,6 +18,9 @@ class URLDetailView(PointDetailView):
         return queryset.get(**{self.url_field: url})
 
 class PagesViewPoint(BaseViewPoint, CollectionMixin, CanonicalMixin, TemplateMixin):
+    '''
+    View point whose collection represent pages with their own urls
+    '''
     url_field = schema.CharField()
     
     view_class = URLDetailView
