@@ -1,5 +1,7 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
 from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
+from dockitcms.viewpoints.common import TemplateMixin
+
 
 from dockitcms.models import ViewPoint
 
@@ -9,13 +11,8 @@ from dockit.forms import DocumentForm
 from django.views.generic import ListView, DetailView
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes.models import ContentType
 
-
-TEMPLATE_SOURCE_CHOICES = [
-    ('name', _('By Template Name')),
-    ('html', _('By Template HTML')),
-]
+from common import ModelMixin
 
 class PointListView(ConfigurableTemplateResponseMixin, ListView):
     pass
@@ -23,14 +20,7 @@ class PointListView(ConfigurableTemplateResponseMixin, ListView):
 class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     pass
 
-class BaseModelViewPoint(ViewPoint):
-    model = schema.ModelReferenceField(ContentType)
-    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    template_name = schema.CharField(default='dockitcms/list.html', blank=True)
-    template_html = schema.TextField(blank=True)
-    content = schema.TextField(blank=True)
-    #TODO filters
-    
+class BaseModelViewPoint(ViewPoint, ModelMixin, TemplateMixin):
     view_class = None
     
     class Meta:
@@ -50,7 +40,8 @@ class ModelListViewPoint(BaseModelViewPoint):
         params = self.to_primitive(self)
         urlpatterns = patterns('',
             url(r'^$', 
-                self.view_class.as_view(model=self.model.model_class(),
+                self.view_class.as_view(model=self.get_model(),
+                                      queryset=self.get_base_queryset(),
                                       configuration=params,
                                       view_point=self,
                                       paginate_by=self.paginate_by),
@@ -72,7 +63,8 @@ class ModelDetailViewPoint(BaseModelViewPoint):
         if self.slug_field:
             return patterns('',
                 url(r'^(?P<slug>.+)/$',
-                    self.view_class.as_view(model=self.model.model_class(),
+                    self.view_class.as_view(model=self.get_model(),
+                                          queryset=self.get_base_queryset(),
                                           configuration=params,
                                           view_point=self,
                                           slug_field=self.slug_field,),
@@ -82,7 +74,8 @@ class ModelDetailViewPoint(BaseModelViewPoint):
         else:
             return patterns('',
                 url(r'^(?P<pk>.+)/$',
-                    self.view_class.as_view(model=self.model.model_class(),
+                    self.view_class.as_view(model=self.get_model(),
+                                          queryset=self.get_base_queryset(),
                                           view_point=self,
                                           configuration=params,),
                     name='index',

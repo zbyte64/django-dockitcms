@@ -3,9 +3,9 @@ from models import BaseTemplateWidget, Widget, ReusableWidget
 from dockit import schema
 
 from dockitcms.viewpoints.collections.common import CollectionMixin
+from dockitcms.viewpoints.models.common import ModelMixin
 
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 
 class TextWidget(Widget):
@@ -66,17 +66,15 @@ class CollectionWidget(BaseTemplateWidget, CollectionMixin):
         context['object_list'] = index
         return context
 
-class ModelWidget(BaseTemplateWidget):
-    model = schema.ModelReferenceField(ContentType)
-    
+class ModelWidget(BaseTemplateWidget, ModelMixin):
     class Meta:
         typed_key = 'widgetblock.modelwidget'
     
     def get_context(self, context):
         context = BaseTemplateWidget.get_context(self, context)
-        model = self.model.model_class()
+        model = self.get_model()
         context['model'] = model
-        context['object_list'] = model.objects.all()
+        context['object_list'] = self.get_base_queryset()
         return context
 
 class FlatMenuEntry(schema.Schema):
