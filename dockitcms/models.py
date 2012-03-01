@@ -266,6 +266,20 @@ class BaseViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
     def register_view_point(self):
         pass
     
+    def send_view_point_event(self, event, view, kwargs):
+        '''
+        The view calls this to notify the mixins that an event has happened
+        '''
+        mixins = self.get_active_mixins(self)
+        results = []
+        for mixin_cls in mixins:
+            if not hasattr(mixin_cls, 'handle_view_point_event'):
+                continue
+            mixin = mixin_cls(_primitive_data=self._primitive_data)
+            val = mixin.handle_view_point_event(event, view, kwargs)
+            results.append((mixin, val))
+        return results
+    
     def get_scopes(self):
         site_scope = get_site_scope()
         

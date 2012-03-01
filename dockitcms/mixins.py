@@ -42,27 +42,3 @@ class BaseMixin(schema.Schema):
     class MixinMeta:
         admin_display = 'hidden'
 
-class AuthMixin(BaseMixin):
-    authenticated_users_only = schema.BooleanField(default=False)
-    staff_only = schema.BooleanField(default=False)
-    
-    class MixinMeta:
-        admin_display = 'form'
-
-register_mixin(AuthMixin)
-#from models import ViewPoint
-#attach_mixin(AuthMixin, ViewPoint)
-
-#TODO roll widget buckets in, this will power much of the layout
-
-'''
-1) Collection will need to see what the active mixins are and their fields
-2) Send a warning if there are any overlapping fields
-3) Mixin to define admin handling, whether to be displayed in the form, as an object tool link, or hidden 
-** Perhaps a new options class
-** New options class may also be made for collection?
-
-CONSIDER: what of mixins that require configuration? does such a thing exist?
-
-'''
-
