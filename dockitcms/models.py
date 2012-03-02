@@ -159,10 +159,17 @@ class Application(schema.Document):
     def __unicode__(self):
         return self.name
 
+class AdminOptions(schema.Schema):
+    list_display = schema.ListField(schema.CharField(), blank=True)
+    list_per_page = schema.IntegerField(default=100)
+    #raw_id_fields = schema.ListField(schema.CharField(), blank=True)
+    #readonly_fields = schema.ListField(schema.CharField(), blank=True)
+
 class Collection(DocumentDesign, SchemaDefMixin):
     application = schema.ReferenceField(Application)
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
+    admin_options = schema.SchemaField(AdminOptions)
     
     _mixins = dict()
     

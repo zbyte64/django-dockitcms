@@ -8,10 +8,15 @@ from dockitcms.common import CMSURLResolver
 from dockit.admin.breadcrumbs import Breadcrumb
 
 class VirtualDocumentAdmin(AdminAwareDocumentAdmin):
-    def __init__(self, document, admin_site, base_url):
+    def __init__(self, document, admin_site, base_url, admin_options):
         AdminAwareDocumentAdmin.__init__(self, document, admin_site)
         self.base_url = base_url
         self.resolver = CMSURLResolver(r'^'+base_url, self.get_urls())
+        
+        if admin_options.list_display:
+            self.list_display = admin_options.list_display
+        if admin_options.list_per_page:
+            self.list_per_page = admin_options.list_per_page
     
     def reverse(self, name, *args, **kwargs):
         ret = self.resolver.reverse(name, *args, **kwargs)
@@ -42,7 +47,7 @@ class ManageCollectionView(View):
     def get_document_admin(self):
         collection = self.get_collection()
         base_url = self.admin.reverse(self.admin.app_name+'_manage', *self.args, **self.kwargs)
-        return VirtualDocumentAdmin(collection.get_document(), self.admin_site, base_url)
+        return VirtualDocumentAdmin(collection.get_document(), self.admin_site, base_url, collection.admin_options)
     
     def get_collection(self):
         return Collection.objects.get(pk=self.kwargs['pk'])
