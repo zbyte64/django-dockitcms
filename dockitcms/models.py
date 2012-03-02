@@ -48,15 +48,14 @@ class FieldEntry(schema.Schema):
         return u'%s (%s)' % (self.name, self.field_type)
     
     def get_field_kwargs(self):
-        kwargs = self.to_primitive(self)
-        kwargs.pop('field_type', None)
-        kwargs.pop('name', None)
-        if kwargs.get('verbose_name', None) == '':
-            del kwargs['verbose_name']
-        for key, value in kwargs.items():
-            if key not in self._meta.fields:
-                kwargs.pop(key)
-            else:
+        params = self.to_primitive(self)
+        params.pop('field_type', None)
+        params.pop('name', None)
+        if params.get('verbose_name', None) == '':
+            del params['verbose_name']
+        kwargs = dict()
+        for key, value in params.items():
+            if key in self._meta.fields:
                 kwargs[str(key)] = value
         return kwargs
     
