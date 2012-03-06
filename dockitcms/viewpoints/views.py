@@ -60,6 +60,9 @@ class VPViewMixin(object): #should be mixed into all view classes by view points
         'get_scopes':
             {'event': 'scopes',
              'keyword': 'scopes',},
+         'get_template_names':
+            {'event': 'template_names',
+             'keyword': 'template_names'},
     }
     
     def __getattribute__(self, name):

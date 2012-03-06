@@ -20,13 +20,16 @@ class BaseViewPointMixin(BaseMixin):
             return func(event, view, **kwargs)
         return None
 
-class AuthMixin(BaseViewPointMixin):
+class AuthConfiguration(schema.Schema):
     authenticated_users_only = schema.BooleanField(default=False)
     staff_only = schema.BooleanField(default=False)
     required_permissions = schema.ListField(schema.CharField(), blank=True) #object or app permissions required for the user
+
+class AuthMixin(BaseViewPointMixin):
+    _auth = schema.SchemaField(AuthConfiguration)
     
     class MixinMeta:
-        admin_display = 'form'
+        admin_display = 'inline'
     
     #view point events
     event_handlers = {
@@ -36,22 +39,26 @@ class AuthMixin(BaseViewPointMixin):
     
     def on_dispatch(self, event, view, **kwargs):
         user = kwargs['request'].user
-        if self.authenticated_users_only and not user.is_authenticated():
+        if self._auth.authenticated_users_only and not user.is_authenticated():
             raise HttpForbidden()
-        if self.staff_only and not user.is_staff:
+        if self._auth.staff_only and not user.is_staff:
             raise HttpForbidden()
-        for perm in self.required_permissions:
+        for perm in self._auth.required_permissions:
             if not user.has_perm(perm):
                 raise HttpForbidden()
     
     def on_object(self, event, view, **kwargs):
         obj = kwargs['object']
         user = view.request.user
-        if getattr(obj, 'authenticated_users_only', False) and not user.is_authenticated():
-            raise HttpForbidden()
-        if getattr(obj, 'staff_only', False) and not user.is_staff:
-            raise HttpForbidden()
-        required_perms = set(self.required_permissions + getattr(obj, 'required_permissions', []))
+        auth_info = getattr(obj, '_auth', None)
+        required_perms = set(self._auth.required_permissions)
+        
+        if auth_info:
+            if auth_info.authenticated_users_only and not user.is_authenticated():
+                raise HttpForbidden()
+            if auth_info.staff_only and not user.is_staff:
+                raise HttpForbidden()
+            required_perms.update(auth_info.required_permissions)
         for perm in required_perms:
             if not user.has_perm(perm, obj):
                 raise HttpForbidden()
