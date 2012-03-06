@@ -1,7 +1,7 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
 from dockitcms.viewpoints.common import CanonicalMixin, TemplateMixin
 
-from common import CollectionMixin, PointListView, PointDetailView
+from common import CollectionMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockitcms.models import ViewPoint
 
@@ -10,6 +10,8 @@ from dockit.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
+from django import forms
 
 class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin):
     view_class = None
@@ -49,6 +51,10 @@ class CollectionListViewPoint(BaseCollectionViewPoint):
     
     class Meta:
         typed_key = 'dockitcms.collectionlistview'
+    
+    @classmethod
+    def get_admin_form_class(cls):
+        return CollectionListViewPointForm
 
 class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
     slug_field = schema.SlugField(blank=True)
@@ -103,8 +109,20 @@ class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
     
     class Meta:
         typed_key = 'dockitcms.collectiondetailview'
+    
+    @classmethod
+    def get_admin_form_class(cls):
+        return CollectionDetailViewPointForm
 
 class BaseCollectionViewPointForm(TemplateFormMixin, DocumentForm):
     class Meta:
         document = BaseCollectionViewPoint
+
+class CollectionListViewPointForm(BaseCollectionViewPointForm):
+    template_name = forms.CharField(initial='dockitcms/list.html', required=False)
+    content = forms.CharField(help_text=LIST_CONTEXT_DESCRIPTION, required=False, widget=forms.Textarea)
+
+class CollectionDetailViewPointForm(BaseCollectionViewPointForm):
+    template_name = forms.CharField(initial='dockitcms/detail.html', required=False)
+    content = forms.CharField(help_text=DETAIL_CONTEXT_DESCRIPTION, required=False, widget=forms.Textarea)
 

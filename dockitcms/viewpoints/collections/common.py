@@ -6,6 +6,9 @@ from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 from dockitcms.models import Collection
 from dockitcms.scope import Scope
 
+from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
+
 FILTER_OPERATION_CHOICES = [
     ('exact', 'Exact'),
 ]
@@ -15,6 +18,18 @@ VALUE_TYPE_CHOICES = [
     ('integer', 'Integer'),
     ('boolean', 'Boolean'),
 ]
+
+LIST_CONTEXT_DESCRIPTION = mark_safe(_('''
+Context:<br/>
+<em>object_list</em> <span>The list of items</span><br/>
+<em>page</em> <span>Page object if paginate by is supplied</span><br/>
+<em>paginator</em> <span>Paginator object if paginate by is supplied</span><br/>
+'''))
+
+DETAIL_CONTEXT_DESCRIPTION = mark_safe(_('''
+Context:<br/>
+<em>object</em> <span>The currently viewed object</span><br/>
+'''))
 
 class CollectionFilter(schema.Schema):
     key = schema.CharField()

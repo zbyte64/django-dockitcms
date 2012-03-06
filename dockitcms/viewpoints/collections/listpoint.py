@@ -1,6 +1,6 @@
 from dockitcms.models import ViewPoint
 from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
-from common import CollectionMixin, PointListView, PointDetailView
+from common import CollectionMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockit import schema
 from dockit.forms import DocumentForm
@@ -15,11 +15,11 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
     list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = schema.CharField(default='dockitcms/list.html', blank=True)
     list_template_html = schema.TextField(blank=True)
-    list_content = schema.TextField(blank=True)
+    list_content = schema.TextField(blank=True, help_text=LIST_CONTEXT_DESCRIPTION)
     detail_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     detail_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
     detail_template_html = schema.TextField(blank=True)
-    detail_content = schema.TextField(blank=True)
+    detail_content = schema.TextField(blank=True, help_text=DETAIL_CONTEXT_DESCRIPTION)
     paginate_by = schema.IntegerField(blank=True, null=True)
     
     list_view_class = PointListView
