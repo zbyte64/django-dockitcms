@@ -7,6 +7,8 @@ from dockitcms.viewpoints.models.common import ModelMixin
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
+from django.template import Context
+from django.template.loader import get_template
 
 class TextWidget(Widget):
     text = schema.TextField()
@@ -19,12 +21,22 @@ class TextWidget(Widget):
 
 class ImageWidget(Widget):
     image = schema.FileField()
+    alt = schema.CharField(blank=True)
+    link = schema.CharField(blank=True)
     
     class Meta:
         typed_key = 'widgetblock.imagewidget'
     
+    def get_template(self):
+        return get_template('widgetblock/image_widget.html')
+    
+    def get_context(self, context):
+        return Context({'widget': self})
+    
     def render(self, context):
-        return mark_safe(u'<img src="%s"/>' % self.image.url)
+        template = self.get_template()
+        context = self.get_context(context)
+        return mark_safe(template.render(context))
 
 class CTAImage(schema.Schema):
     image = schema.FileField(upload_to='ctas')
