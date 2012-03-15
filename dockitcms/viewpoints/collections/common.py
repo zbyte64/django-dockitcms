@@ -1,23 +1,12 @@
 from dockit import schema
 from dockit.views import ListView, DetailView
-from dockit.backends.queryindex import QueryFilterOperation
 
 from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
-from dockitcms.models import Collection
+from dockitcms.models import CollectionIndex
 from dockitcms.scope import Scope
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
-
-FILTER_OPERATION_CHOICES = [
-    ('exact', 'Exact'),
-]
-
-VALUE_TYPE_CHOICES = [
-    ('string', 'String'),
-    ('integer', 'Integer'),
-    ('boolean', 'Boolean'),
-]
 
 LIST_CONTEXT_DESCRIPTION = mark_safe(_('''
 Context:<br/>
@@ -31,26 +20,6 @@ Context:<br/>
 <em>object</em> <span>The currently viewed object</span><br/>
 '''))
 
-class CollectionFilter(schema.Schema):
-    key = schema.CharField()
-    operation = schema.CharField(choices=FILTER_OPERATION_CHOICES, default='exact')
-    value = schema.CharField()
-    value_type = schema.CharField(choices=VALUE_TYPE_CHOICES, default='string')
-    
-    def get_value(self):
-        #TODO this is cheesy
-        value = self.value
-        if self.value_type == 'integer':
-            value = int(value)
-        elif self.value_type == 'boolean':
-            value = bool(value.lower() in ('1', 'true'))
-        return value
-    
-    def get_query_filter_operation(self):
-        value = self.get_value()
-        return QueryFilterOperation(key=self.key,
-                                    operation=self.operation,
-                                    value=value)
 
 def index_for_filters(index, filters):
     inclusions = list()
@@ -60,16 +29,13 @@ def index_for_filters(index, filters):
     return index
 
 class CollectionMixin(schema.Schema):
-    collection = schema.ReferenceField(Collection)
-    filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
+    index = schema.ReferenceField(CollectionIndex)
     
     def get_document(self):
-        return self.collection.get_document()
+        return self.index.get_document()
     
-    def get_base_index(self):
-        document = self.get_document()
-        index = document.objects.all()
-        return index_for_filters(index, self.filters)
+    def get_index(self):
+        return self.index.get_index()
 
 class PointListView(ConfigurableTemplateResponseMixin, ListView):
     pass

@@ -22,10 +22,6 @@ class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin):
     @classmethod
     def get_admin_form_class(cls):
         return BaseCollectionViewPointForm
-    
-    def register_view_point(self):
-        index = self.get_base_index()
-        index.commit()
 
 class CollectionListViewPoint(BaseCollectionViewPoint):
     paginate_by = schema.IntegerField(blank=True, null=True)
@@ -75,16 +71,10 @@ class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
         
         return document
     
-    def get_base_index(self):
-        index = super(CollectionDetailViewPoint, self).get_base_index()
-        if self.slug_field:
-            index = index.index(self.slug_field)
-        return index
-    
     def get_urls(self):
         params = self.to_primitive(self)
         document = self.get_document()
-        index = self.get_base_index()
+        index = self.get_index()
         if self.slug_field:
             return patterns('',
                 url(r'^(?P<slug>.+)/$',

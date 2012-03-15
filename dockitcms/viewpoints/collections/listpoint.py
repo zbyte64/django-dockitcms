@@ -25,18 +25,8 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
     list_view_class = PointListView
     detail_view_class = PointDetailView
     
-    def get_base_index(self):
-        index = super(CollectionListingViewPoint, self).get_base_index()
-        if self.slug_field:
-            index = index.index(self.slug_field)
-        return index
-    
-    def register_view_point(self):
-        index = self.get_base_index()
-        index.commit()
-    
     def get_document(self):
-        doc_cls = self.collection.get_document()
+        doc_cls = self.index.get_document()
         view_point = self
         
         def get_absolute_url_for_instance(instance):
@@ -66,7 +56,7 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
     def get_urls(self):
         document = self.get_document()
         params = self.to_primitive(self)
-        index = self.get_base_index()
+        index = self.get_index()
         urlpatterns = patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,

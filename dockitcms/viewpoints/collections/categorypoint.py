@@ -1,4 +1,4 @@
-from dockitcms.models import ViewPoint, Collection
+from dockitcms.models import ViewPoint, Collection, CollectionIndex
 from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
 from dockitcms.scope import Scope
 #from schema.forms import DocumentForm
@@ -9,13 +9,16 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 
-from common import PointListView, PointDetailView, CollectionFilter, index_for_filters
+from common import PointListView, PointDetailView
 
 from dockit import schema
 
 class CategoryDetailView(PointListView):
-    items_for_category_index = None
-    item_category_dot_path = None
+    #indexes to be set
+    category_index = None
+    item_category_index = None
+    item_category_index_param = None
+    
     category = None
     slug_field = None
     
@@ -23,14 +26,14 @@ class CategoryDetailView(PointListView):
     def get_category(self):
         if not self.category:
             if 'slug' in self.kwargs:
-                self.category = self.document.objects.get(**{self.slug_field:self.kwargs['slug']})
+                self.category = self.category_index.get(**{self.slug_field:self.kwargs['slug']})
             else:
-                self.category = self.document.objects.get(pk=self.kwargs['pk'])
+                self.category = self.category_index.get(pk=self.kwargs['pk'])
         return self.category
     
     def get_queryset(self):
         category = self.get_category()
-        return self.items_for_category_index.filter(**{self.item_category_dot_path: category.pk})
+        return self.item_category_index.filter(**{self.item_category_index_param: category.pk})
     
     def get_context_data(self, **kwargs):
         context = super(CategoryDetailView, self).get_context_data(**kwargs)
@@ -61,22 +64,25 @@ Context: <br/>
 ''')
 
 class CategoryViewPoint(ViewPoint, CanonicalMixin):
-    category_collection = schema.ReferenceField(Collection)
+    category_index = schema.ReferenceField(CollectionIndex)
+    #category_index_param = schema.CharField()
     category_slug_field = schema.CharField(blank=True)
+    
     category_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     category_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
     category_template_html = schema.TextField(blank=True)
     category_content = schema.TextField(blank=True, help_text=CATEGORY_CONTEXT_DESCRIPTION)
-    category_filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
-    item_collection = schema.ReferenceField(Collection)
+    item_index = schema.ReferenceField(CollectionIndex)
+    #item_index_param = schema.CharField()
     item_slug_field = schema.CharField(blank=True)
-    item_category_dot_path = schema.CharField()
+    item_category_index = schema.ReferenceField(CollectionIndex) #dot_path = schema.CharField()
+    item_category_index_param = schema.CharField()
+    
     item_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     item_template_name = schema.CharField(default='dockitcms/detail.html', blank=True)
     item_template_html = schema.TextField(blank=True)
     item_content = schema.TextField(blank=True, help_text=ITEM_CONTEXT_DESCRIPTION)
-    item_filters = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
     category_view_class = CategoryDetailView
     item_view_class = ItemDetailView
@@ -85,32 +91,16 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         typed_key = 'dockitcms.collectioncategoryview'
     
     def get_category_index(self):
-        document = self.get_category_document()
-        index = document.objects.all()
-        if self.category_slug_field:
-            index = index.index(self.category_slug_field)
-        return index_for_filters(index, self.category_filters)
+        return self.category_index.get_index()
         
     def get_item_index(self):
-        document = self.get_item_document()
-        index = document.objects.all()
-        if self.item_slug_field:
-            index = index.index(self.item_slug_field)
-        return index_for_filters(index, self.item_filters)
+        return self.item_index.get_index()
     
-    def get_items_for_category_index(self):
-        document = self.get_item_document()
-        index = document.objects.all()
-        index = index.index(self.item_category_dot_path)
-        return index 
-    
-    def register_view_point(self):
-        self.get_category_index().commit()
-        self.get_item_index().commit()
-        self.get_items_for_category_index().commit()
+    def get_item_category_index(self):
+        return self.item_category_index.get_index()
     
     def get_category_document(self):
-        doc_cls = self.category_collection.get_document()
+        doc_cls = self.category_index.get_document()
         view_point = self
         
         def get_absolute_url_for_instance(instance):
@@ -131,7 +121,7 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         return WrappedDoc
     
     def get_item_document(self):
-        doc_cls = self.item_collection.get_document()
+        doc_cls = self.item_index.get_document()
         view_point = self
         
         def get_absolute_url_for_instance(instance):
@@ -161,7 +151,7 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         item_document = self.get_item_document()
         category_index = self.get_category_index()
         item_index = self.get_item_index()
-        items_for_category_index = self.get_items_for_category_index()
+        item_category_index = self.get_item_category_index()
         params = self.to_primitive(self)
         urlpatterns = patterns('',
             #url(r'^$', 
@@ -174,12 +164,12 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         if self.category_slug_field:
             urlpatterns += patterns('',
                 url(r'^c/(?P<slug>.+)/$', 
-                    self.category_view_class.as_view(document=category_document,
+                    self.category_view_class.as_view(document=item_document,
                                             slug_field=self.category_slug_field,
-                                            queryset=category_index,
                                             view_point=self,
-                                            item_category_dot_path=self.item_category_dot_path,
-                                            items_for_category_index=items_for_category_index,
+                                            categoy_index=category_index,
+                                            item_category_index=item_category_index,
+                                            item_category_index_param=self.item_category_index_param,
                                             configuration=self._configuration_from_prefix(params, 'category'),),
                     name='category-detail',
                 ),
@@ -187,11 +177,11 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         else:
             urlpatterns += patterns('',
                 url(r'^c/(?P<pk>.+)/$', 
-                    self.category_view_class.as_view(document=category_document,
-                                            queryset=category_index,
+                    self.category_view_class.as_view(document=item_document,
                                             view_point=self,
-                                            item_category_dot_path=self.item_category_dot_path,
-                                            items_for_category_index=items_for_category_index,
+                                            categoy_index=category_index,
+                                            item_category_index=item_category_index,
+                                            item_category_index_param=self.item_category_index_param,
                                             configuration=self._configuration_from_prefix(params, 'category'),),
                     name='category-detail',
                 ),
