@@ -27,6 +27,10 @@ setup(name='django-dockitcms',
       url='http://github.com/zbyte64/django-dockitcms',
       license='New BSD License',
       packages=find_packages(exclude=['test_environment']),
-      #test_suite='tests.runtests.runtests',
+      test_suite='setuptest.SetupTestSuite',
+      tests_require=(
+        'django-setuptest',
+        'django-dockit',
+      ),
       include_package_data = True,
       )

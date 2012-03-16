@@ -1,3 +1,2 @@
-from listpoint import *
-from categorypoint import *
+from collections import *
 

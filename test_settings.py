@@ -14,7 +14,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'sqlite.db',                      # Or path to database file if using sqlite3.
+        'NAME': '::memory::',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -100,9 +100,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'dockitcms.middleware.DockitCMSMiddleware',
-    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    'dockitcms.middleware.DefaultScopeMiddleware',
 )
 
 ROOT_URLCONF = 'urls'
@@ -111,29 +108,32 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_DIR, 'templates'),
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.flatpages',
     'dockit',
     'dockit.backends.djangodocument',
-    'dockitcms',
-    'photoprocessor',
-    'dockitcms.contrib.thumbnailfield',
-    'dockitcms.widgetblock',
-    #'dockitcms.contrib.dagcategoryviewpoint',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-)
+    'dockitcms',
+    'dockitcms.widgetblock',
+]
+
+try:
+    import pymongo
+except ImportError:
+    pass
+else:
+    INSTALLED_APPS.append('dockit.backends.mongo')
+
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -157,8 +157,3 @@ LOGGING = {
         },
     }
 }
-
-SCOPE_PROCESSORS = [
-    'dockitcms.widgetblock.scope_processors.widgets',
-]
-
