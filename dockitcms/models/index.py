@@ -12,11 +12,6 @@ INDEX_MIXINS = {}
 class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     name = schema.CharField()
     
-    def save(self, *args, **kwargs):
-        ret = super(Index, self).save(*args, **kwargs)
-        self.get_index().commit()
-        return ret
-    
     def get_index(self):
         raise NotImplementedError
     
@@ -109,6 +104,11 @@ class FilteredCollectionIndex(CollectionIndex):
         index = index._add_filter_parts(inclusions=inclusions, exclusions=exclusions, indexes=params)
         return index
     
+    def save(self, *args, **kwargs):
+        ret = super(FilteredCollectionIndex, self).save(*args, **kwargs)
+        self.get_index().commit()
+        return ret
+    
     class Meta:
         typed_key = 'dockitcms.filteredcollection'
 
@@ -129,7 +129,7 @@ class ModelFilter(schema.Schema):
     
     def get_query_filter_operation(self):
         value = self.get_value()
-        return Q(**{'%s_%s' % (self.key, self.operation): value})
+        return Q(**{'%s__%s' % (self.key, self.operation): value})
 
 class ModelParam(schema.Schema):
     key = schema.CharField()
@@ -151,7 +151,10 @@ class FilteredModelIndex(ModelIndex):
             inclusions.append(collection_filter.get_query_filter_operation())
         for collection_filter in self.exclusions:
             exclusions.append(collection_filter.get_query_filter_operation())
-        index = index._add_filter_parts(inclusions=inclusions, exclusions=exclusions, indexes=params)
+        if inclusions:
+            index = index.filter(*inclusions)
+        if exclusions:
+            index = index.exclude(*exclusions)
         return index
     
     class Meta:
