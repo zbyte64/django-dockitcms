@@ -15,7 +15,9 @@ class WidgetMixinSchema(schema.Schema):
 
 class WidgetMixin(AdminObjectToolMixin):
     schema_class = WidgetMixinSchema
+    label = _('Widgets')
 
 Collection.register_mixin('widgetblock.widgets', WidgetMixin)
-#Subsite.register_mixin(WidgetMixin)
+Subsite.register_mixin('widgetblock.widgets', WidgetMixin)
 BaseViewPoint.register_mixin('widgetblock.widgets', WidgetMixin)
+

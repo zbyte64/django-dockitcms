@@ -90,17 +90,20 @@ def create_document_mixin(MIXINS):
         @classmethod
         def to_python(cls, val, parent=None):
             #chicken and egg problem
-            self = schema.Document.to_python(cls, val, parent)
+            #hack because super(cls).to_python does not work
+            original_to_python = schema.Document.to_python.im_func
+            self = original_to_python(cls, val, parent)
             original_fields = self._meta.fields.keys()
             document_kwargs = {
-                'fields':copy(self._meta.fields),
+                'fields':{},#copy(self._meta.fields.fields), #fields => uber dictionary, fields.fields => fields we defined
                 'proxy': True,
                 'name': cls.__name__,
             }
             self.send_mixin_event('document_kwargs', {'document_kwargs':document_kwargs})
             if original_fields != document_kwargs['fields'].keys():
                 new_cls = create_document(**document_kwargs)
-                return schema.Document.to_python(new_cls, val, parent)
+                assert self._meta.fields.keys() == original_fields
+                return original_to_python(new_cls, val, parent)
             return self
     
     return MixinSchema
