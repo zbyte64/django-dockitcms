@@ -1,41 +1,21 @@
-from dockitcms.mixins import BaseMixin, register_mixin
-from dockitcms.models import BaseViewPoint
+from dockitcms.mixins import AdminInlineMixin
+from dockitcms.models import BaseViewPoint, Collection
 
 from dockit import schema
 
 from exceptions import HttpForbidden
-
-class BaseViewPointMixin(BaseMixin):
-    event_handlers = {}
-    
-    def handle_view_point_event(self, event, view, kwargs):
-        '''
-        event: a string clasifying the event, ie 'dispatch', 'response', 'queryset'
-        kwargs: keywords args associated to the event
-        '''
-        if event in self.event_handlers:
-            func = self.event_handlers[event]
-            if isinstance(func, basestring):
-                func = getattr(self, func)
-            return func(event, view, **kwargs)
-        return None
 
 class AuthConfiguration(schema.Schema):
     authenticated_users_only = schema.BooleanField(default=False)
     staff_only = schema.BooleanField(default=False)
     required_permissions = schema.ListField(schema.CharField(), blank=True) #object or app permissions required for the user
 
-class AuthMixin(BaseViewPointMixin):
+class AuthMixinSchema(schema.Schema):
     _auth = schema.SchemaField(AuthConfiguration)
-    
-    class MixinMeta:
-        admin_display = 'inline'
-    
-    #view point events
-    event_handlers = {
-        'dispatch': 'on_dispatch',
-        'object': 'on_object',
-    }
+
+class AuthMixin(AdminInlineMixin):
+    schema_class = AuthMixinSchema
+    label = 'Auth Mixin'
     
     def on_dispatch(self, event, view, **kwargs):
         user = kwargs['request'].user
@@ -69,6 +49,5 @@ class AuthMixin(BaseViewPointMixin):
         obj = getattr(view, 'object', None)
         context['object_user_perms'] = user.get_all_permissions(obj)
 
-register_mixin(AuthMixin)
-BaseViewPoint.register_schema_mixin(AuthMixin)
-
+Collection.register_mixin('dockitcms.auth', AuthMixin)
+BaseViewPoint.register_mixin('dockitcms.auth', AuthMixin)

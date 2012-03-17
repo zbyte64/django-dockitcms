@@ -8,9 +8,12 @@ from django.core.urlresolvers import reverse
 import re
 import urlparse
 
-from mixin import SchemaDefMixin
+from mixin import create_document_mixin
 
-class ManageUrlsMixin(schema.Schema):
+SUBSITE_MIXINS = {}
+VIEW_POINT_MIXINS = {}
+
+class ManageUrlsMixin(object):
     def get_manage_urls(self):
         admin_name = '_'.join((self._meta.app_label, self._meta.module_name))
         urls = {'add': reverse('admin:%s_add' % admin_name),
@@ -19,22 +22,18 @@ class ManageUrlsMixin(schema.Schema):
             urls['edit'] = reverse('admin:%s_change' % admin_name, args=[self.pk])
         return urls
 
-class Subsite(schema.Document, SchemaDefMixin, ManageUrlsMixin):
+class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MIXINS)):
     url = schema.CharField()
     name = schema.CharField()
     sites = schema.ModelSetField(Site, blank=True)
-    
-    _mixins = dict()
     
     def __unicode__(self):
         return u'%s - %s' % (self.name, self.url)
 
 Subsite.objects.index('sites').commit()
 
-class BaseViewPoint(schema.Document, SchemaDefMixin, ManageUrlsMixin):
+class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
     subsite = schema.ReferenceField(Subsite)
-    
-    _mixins = dict()
     
     def contains_url(self, url):
         raise NotImplementedError

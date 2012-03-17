@@ -5,7 +5,9 @@ from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
 
 from design import DocumentDesign
-from mixin import SchemaDefMixin, COLLECTION_MIXINS
+from mixin import EventMixin
+
+COLLECTION_MIXINS = {}
 
 class Application(schema.Document):
     name = schema.CharField()
@@ -22,16 +24,41 @@ class AdminOptions(schema.Schema):
 def mixin_choices():
     choices = list()
     for key, value in COLLECTION_MIXINS.iteritems():
-        choices.append((key, value._meta.verbose_name))
+        choices.append((key, value.label))
     return choices
 
-class Collection(DocumentDesign, SchemaDefMixin):
+class Collection(DocumentDesign, EventMixin):
     application = schema.ReferenceField(Application)
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
     admin_options = schema.SchemaField(AdminOptions)
     
-    _mixins = dict()
+    mixin_function_events = {
+        'get_document_kwargs': {'event':'document_kwargs', 'keyword':'document_kwargs'},
+    }
+    
+    @classmethod
+    def register_mixin(self, key, mixin_class):
+        COLLECTION_MIXINS[key] = mixin_class
+    
+    @classmethod
+    def get_available_mixins(self):
+        return COLLECTION_MIXINS
+    
+    def __getattribute__(self, name):
+        function_events = object.__getattribute__(self, 'mixin_function_events')
+        if name in function_events:
+            return EventMixin.__getattribute__(self, name)
+        return DocumentDesign.__getattribute__(self, name)
+    
+    def get_active_mixins(self):
+        mixins = list()
+        available_mixins = self.get_available_mixins()
+        for mixin_key in self.mixins:
+            if mixin_key in available_mixins:
+                mixin_cls = available_mixins[mixin_key]
+                mixins.append(mixin_cls(self))
+        return mixins
     
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
@@ -46,22 +73,10 @@ class Collection(DocumentDesign, SchemaDefMixin):
         kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
         
-        active_mixins = dict()
-        
-        for mixin in self.mixins:
-            mixin_cls = COLLECTION_MIXINS.get(mixin, None)
-            if mixin_cls:
-                parents.append(mixin_cls)
-                active_mixins[mixin] = mixin_cls
-        
-        if active_mixins:
-            parents.append(SchemaDefMixin)
         if parents and not any([issubclass(parent, schema.Document) for parent in parents]):
             parents.append(schema.Document)
         if parents:
             kwargs['parents'] = tuple(parents)
-        if active_mixins:
-            kwargs['attrs']['_mixins'] = active_mixins
         if self.application:
             kwargs['app_label'] = self.application.name
         
@@ -74,6 +89,7 @@ class Collection(DocumentDesign, SchemaDefMixin):
             return urls
         
         kwargs['attrs']['get_manage_urls'] = get_manage_urls
+        kwargs['attrs']['_collection_document'] = self
         return kwargs
     
     def register_collection(self):

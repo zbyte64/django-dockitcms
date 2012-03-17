@@ -1,6 +1,17 @@
 from dockit.admin.documentadmin import DocumentAdmin, SchemaAdmin
 
 class AdminAwareSchemaAdmin(SchemaAdmin):
+    def __init__(self, *args, **kwargs):
+        super(AdminAwareSchemaAdmin, self).__init__(*args, **kwargs)
+        self.send_mixin_event('admin.init', {'admin':self})
+    
+    def send_mixin_event(self, event, kwargs):
+        if hasattr(self.schema, 'send_mixin_event'):
+            return self.schema.send_mixin_event(event, kwargs)
+        if hasattr(self.schema, '_collection_document'):
+            return self.schema._collection_document.send_mixin_event(event, kwargs)
+        return []
+    
     def get_form_class(self, request, obj=None):
         if hasattr(self.schema, 'get_admin_form_class'):
             form_class = self.schema.get_admin_form_class()
@@ -8,37 +19,23 @@ class AdminAwareSchemaAdmin(SchemaAdmin):
                 return form_class
         return super(AdminAwareSchemaAdmin, self).get_form_class(request, obj)
     
-    def get_mixins(self, obj=None):
-        if hasattr(self.schema, 'get_active_mixins'):
-            return self.schema.get_active_mixins(obj)
-        return []
-    
-    def get_object_tool_mixins(self, obj=None):
-        mixins = list()
-        for mixin in self.get_mixins(obj):
-            if mixin.MixinMeta.admin_display == 'object_tool':
-                mixins.append(mixin)
-        return mixins
-    
     def get_object_tools(self, request, obj=None):
         object_tools = super(AdminAwareSchemaAdmin, self).get_object_tools(request, obj)
-        for mixin in self.get_object_tool_mixins(obj):
-            object_tools.append(mixin.get_object_tool())
+        self.send_mixin_event('admin.object_tools', 
+                              {'object_tools':object_tools, 'admin':self, 'request':request, 'object':obj})
         return object_tools
     
     def get_excludes(self):
         excludes = super(AdminAwareSchemaAdmin, self).get_excludes()
-        for mixin in self.get_mixins():
-            if mixin.MixinMeta.admin_display in ('object_tool', 'hidden'):
-                excludes.extend(mixin._meta.fields.keys())
+        self.send_mixin_event('admin.excludes',
+                              {'excludes':excludes, 'admin':self})
         return excludes
     
-    def get_default_inline_instances(self, exclude=[]):
-        exclude = set(exclude)
-        for mixin in self.get_mixins():
-            if mixin.MixinMeta.admin_display in ('object_tool', 'hidden'):
-                exclude.update(mixin._meta.fields.keys())
-        return super(AdminAwareSchemaAdmin, self).get_default_inline_instances(exclude=exclude)
+    def get_inline_instances(self):
+        inline_instances = super(AdminAwareSchemaAdmin, self).get_inline_instances()
+        self.send_mixin_event('admin.inline_instances',
+                              {'inline_instances':inline_instances, 'admin':self})
+        return inline_instances
 
 class AdminAwareDocumentAdmin(AdminAwareSchemaAdmin, DocumentAdmin):
     default_schema_admin = AdminAwareSchemaAdmin
