@@ -1,6 +1,5 @@
 from dockitcms.models import ViewPoint
-from mixins import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
-from common import IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from .common import IndexMixin, PointListView, PointDetailView, CanonicalMixin, TEMPLATE_SOURCE_CHOICES, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockit import schema
 from dockit.forms import DocumentForm

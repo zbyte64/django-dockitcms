@@ -40,3 +40,17 @@ class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
         scopes.append(object_scope)
         return scopes
 
+TEMPLATE_SOURCE_CHOICES = [
+    ('name', _('By Template Name')),
+    ('html', _('By Template HTML')),
+]
+
+class TemplateMixin(schema.Schema):
+    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    template_name = schema.CharField(default='dockitcms/list.html', blank=True)
+    template_html = schema.TextField(blank=True)
+    content = schema.TextField(blank=True)
+
+class CanonicalMixin(schema.Schema):
+    canonical = schema.BooleanField(help_text=_('If checked, this view point defines the canonical urls for these collections'))
+

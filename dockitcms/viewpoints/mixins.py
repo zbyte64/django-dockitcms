@@ -54,33 +54,3 @@ class AuthMixin(AdminInlineMixin):
 Collection.register_mixin('dockitcms.auth', AuthMixin)
 BaseViewPoint.register_mixin('dockitcms.auth', AuthMixin)
 
-TEMPLATE_SOURCE_CHOICES = [
-    ('name', _('By Template Name')),
-    ('html', _('By Template HTML')),
-]
-
-class TemplateMixinSchema(schema.Schema):
-    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
-    template_name = schema.CharField(default='dockitcms/list.html', blank=True)
-    template_html = schema.TextField(blank=True)
-    content = schema.TextField(blank=True)
-
-class TemplateMixin(AdminInlineMixin):
-    schema_class = TemplateMixinSchema
-    label = 'Template Mixin'
-    
-    def on_template_names(self, **kwargs):
-        pass
-
-#Collection.register_mixin('dockitcms.template', TemplateMixin)
-#BaseViewPoint.register_mixin('dockitcms.template', TemplateMixin)
-
-class CanonicalMixinSchema(schema.Schema):
-    canonical = schema.BooleanField(help_text=_('If checked, this view point defines the canonical urls for these collections'))
-
-class CanonicalMixin(AdminInlineMixin):
-    schema_class = TemplateMixinSchema
-    label = 'Canonical Mixin'
-
-#BaseViewPoint.register_mixin('dockitcms.canonical', CanonicalMixin)
-

@@ -13,7 +13,8 @@ class VPViewMixin(EventMixin): #should be mixed into all view classes by view po
         return self.view_point.get_scopes()
     
     def send_mixin_event(self, event, kwargs):
-        return self.view_point.send_mixin_event(event, self, kwargs)
+        kwargs['view'] = self
+        return self.view_point.send_mixin_event(event, kwargs)
     
     def dispatch(self, request, *args, **kwargs):
         # Try to dispatch to the right method; if a method doesn't exist,

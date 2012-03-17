@@ -46,7 +46,7 @@ class ModelIndex(Index):
         return self.model.model_class()
     
     def get_object_class(self):
-        return self.get_document()
+        return self.get_model()
     
     def __unicode__(self):
         return u'%s - %s' % (self.model, self.name)

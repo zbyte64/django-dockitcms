@@ -1,6 +1,5 @@
 from .forms import TemplateFormMixin
-from .mixins import CanonicalMixin, TemplateMixin
-from .common import IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from .common import CanonicalMixin, TemplateMixin, IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockitcms.models import ViewPoint
 
@@ -22,7 +21,7 @@ class BaseViewPoint(ViewPoint, IndexMixin, TemplateMixin):
     def get_admin_form_class(cls):
         return BaseViewPointForm
 
-class ListViewPoint(BaseViewPoint):
+class ListViewPoint(BaseViewPoint, TemplateMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)
     #order_by = schema.CharField(blank=True)
     
@@ -52,7 +51,7 @@ class ListViewPoint(BaseViewPoint):
     def get_admin_form_class(cls):
         return ListViewPointForm
 
-class DetailViewPoint(BaseViewPoint):#, CanonicalMixin):
+class DetailViewPoint(BaseViewPoint, TemplateMixin, CanonicalMixin):
     slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
