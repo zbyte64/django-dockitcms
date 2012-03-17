@@ -1,10 +1,7 @@
 from dockit.schema.schema import create_document
 from dockit import schema
 
-from copy import copy
-
 SCHEMA_MIXINS = {}
-INDEX_MIXINS = {}
 
 class MixinEventFunction(object):
     def __init__(self, instance, func, definition):
@@ -98,6 +95,7 @@ def create_document_mixin(MIXINS):
                 'fields':{},#copy(self._meta.fields.fields), #fields => uber dictionary, fields.fields => fields we defined
                 'proxy': True,
                 'name': cls.__name__,
+                'parents': (cls,),
             }
             self.send_mixin_event('document_kwargs', {'document_kwargs':document_kwargs})
             if original_fields != document_kwargs['fields'].keys():

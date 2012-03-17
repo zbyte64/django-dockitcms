@@ -45,7 +45,7 @@ class CollectionTest(unittest.TestCase):
     
     def get_admin_for_document(self, document):
         from django.contrib.admin import site
-        from dockitcms.admin import AdminAwareSchemaAdmin, AdminAwareDocumentAdmin
+        from dockitcms.admin import AdminAwareDocumentAdmin
         return AdminAwareDocumentAdmin(document, site, schema=document)
     
     def create_test_collection(self, **kwargs):

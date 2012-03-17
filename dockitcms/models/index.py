@@ -5,8 +5,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
 from collection import Collection
+from mixin import create_document_mixin
 
-class Index(schema.Document):
+INDEX_MIXINS = {}
+
+class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     name = schema.CharField()
     
     def save(self, *args, **kwargs):
