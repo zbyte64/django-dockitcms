@@ -22,11 +22,13 @@ class ListViewPointTest(unittest.TestCase):
         index.save()
         return index
     
-    def get_view_point_kwargs(self):
-        return {'subsite':self.subsite,
-                'index': self.create_model_index(),
-                'template_source':'html',
-                'template_html':'',}
+    def get_view_point_kwargs(self, **kwargs):
+        params = {'subsite':self.subsite,
+                  'index': self.create_model_index(),
+                  'template_source':'html',
+                  'template_html':'',}
+        params.update(kwargs)
+        return params
     
     def test_list_view_point(self):
         view_point = ListViewPoint(**self.get_view_point_kwargs())
