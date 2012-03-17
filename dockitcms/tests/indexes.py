@@ -35,7 +35,7 @@ class IndexTest(unittest.TestCase):
         index.save()
         document = collection.get_document()
         document(title='foo', published=True, featured=True).save()
-        self.assertTrue(index.get_index())
+        self.assertTrue(index.get_index().count())
     
     def test_filtered_model_index(self):
         index = FilteredModelIndex(model=ContentType.objects.get_for_model(User),

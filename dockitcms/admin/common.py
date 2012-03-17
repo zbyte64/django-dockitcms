@@ -1,5 +1,8 @@
 from dockit.admin.documentadmin import DocumentAdmin, SchemaAdmin
 
+def isbound(method):
+    return getattr(method, 'im_self', None) is not None
+
 class AdminAwareSchemaAdmin(SchemaAdmin):
     def __init__(self, *args, **kwargs):
         super(AdminAwareSchemaAdmin, self).__init__(*args, **kwargs)
@@ -7,8 +10,8 @@ class AdminAwareSchemaAdmin(SchemaAdmin):
     
     def send_mixin_event(self, event, kwargs):
         if hasattr(self.schema, 'send_mixin_event'):
-            #TODO if classmethod
-            return self.schema.send_mixin_event(event, kwargs)
+            if isbound(self.schema.send_mixin_event):
+                return self.schema.send_mixin_event(event, kwargs)
         if hasattr(self.schema, '_collection_document'):
             return self.schema._collection_document.send_mixin_event(event, kwargs)
         return []

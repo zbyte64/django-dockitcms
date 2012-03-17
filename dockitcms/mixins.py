@@ -13,13 +13,13 @@ class MixinObjectTool(ObjectTool):
         template = get_template(self.template_name)
         context = Context(context)
         params = request.GET.copy()
-        target_field = self.mixin.get_schema()._meta.fields.keys()[0]
+        target_field = self.mixin.get_schema_class()._meta.fields.keys()[0]
         if params.get('_dotpath', False):
             params['_dotpath'] = '%s.%s' % (params['_dotpath'], target_field)
         else:
             params['_dotpath'] = target_field
         context['link_url'] = './?%s' % params.urlencode()
-        context['link_display'] = 'Edit %s' % self.mixin.get_object_tool_label()
+        context['link_display'] = self.mixin.get_object_tool_label()
         return template.render(context)
 
 class EventRouterMixin(object):
@@ -72,7 +72,7 @@ class AdminObjectToolMixin(SchemaExtensionMixin):
         return u'Edit %s' % schema_class._meta.verbose_name
     
     def on_admin_object_tools(self, object_tools, **kwargs):
-        return self.object_tool_class(self)
+        object_tools.append(self.object_tool_class(self))
 
 class AdminInlineMixin(SchemaExtensionMixin):
     def on_admin_inline_instances(self, inline_instances, **kwargs):
