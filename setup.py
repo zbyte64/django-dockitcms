@@ -31,6 +31,7 @@ setup(name='django-dockitcms',
       tests_require=(
         'django-setuptest',
         'django-dockit',
+        #'-e git+git://github.com/zbyte64/django-dockit.git#egg=django-dockit',
       ),
       include_package_data = True,
       )

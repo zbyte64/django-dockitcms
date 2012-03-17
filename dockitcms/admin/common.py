@@ -7,6 +7,7 @@ class AdminAwareSchemaAdmin(SchemaAdmin):
     
     def send_mixin_event(self, event, kwargs):
         if hasattr(self.schema, 'send_mixin_event'):
+            #TODO if classmethod
             return self.schema.send_mixin_event(event, kwargs)
         if hasattr(self.schema, '_collection_document'):
             return self.schema._collection_document.send_mixin_event(event, kwargs)
@@ -39,6 +40,11 @@ class AdminAwareSchemaAdmin(SchemaAdmin):
 
 class AdminAwareDocumentAdmin(AdminAwareSchemaAdmin, DocumentAdmin):
     default_schema_admin = AdminAwareSchemaAdmin
+    
+    def create_admin_for_schema(self, schema, obj=None):
+        if obj and hasattr(obj, 'make_bound_schema'):
+            schema = obj.make_bound_schema()
+        return super(AdminAwareDocumentAdmin, self).create_admin_for_schema(schema, obj)
     
     def get_admin_class_for_schema(self, schema):
         for cls, admin_class in self.schema_inlines:

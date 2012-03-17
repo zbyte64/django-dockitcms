@@ -84,25 +84,36 @@ def create_document_mixin(MIXINS):
                     mixins.append(mixin_cls(self))
             return mixins
         
+        def make_bound_schema(self):
+            original_fields = self._meta.fields.keys()
+            
+            def get_active_mixins(*args):
+                return self.get_active_mixins()
+            
+            def send_mixin_event(kls, event, kwargs):
+                return self.send_mixin_event(event, kwargs)
+            
+            document_kwargs = {
+                'fields':{},#copy(self._meta.fields.fields), #fields => uber dictionary, fields.fields => fields we defined
+                'proxy': True,
+                'name': type(self).__name__,
+                'parents': (type(self),),
+                'attrs': {'get_active_mixins':classmethod(get_active_mixins),
+                          'send_mixin_event':classmethod(send_mixin_event),},
+            }
+            self.send_mixin_event('document_kwargs', {'document_kwargs':document_kwargs})
+            new_cls = create_document(**document_kwargs)
+            assert self._meta.fields.keys() == original_fields
+            return new_cls
+        
         @classmethod
         def to_python(cls, val, parent=None):
             #chicken and egg problem
             #hack because super(cls).to_python does not work
             original_to_python = schema.Document.to_python.im_func
             self = original_to_python(cls, val, parent)
-            original_fields = self._meta.fields.keys()
-            document_kwargs = {
-                'fields':{},#copy(self._meta.fields.fields), #fields => uber dictionary, fields.fields => fields we defined
-                'proxy': True,
-                'name': cls.__name__,
-                'parents': (cls,),
-            }
-            self.send_mixin_event('document_kwargs', {'document_kwargs':document_kwargs})
-            if original_fields != document_kwargs['fields'].keys():
-                new_cls = create_document(**document_kwargs)
-                assert self._meta.fields.keys() == original_fields
-                return original_to_python(new_cls, val, parent)
-            return self
+            new_cls = self.make_bound_schema()
+            return original_to_python(new_cls, val, parent)
     
     return MixinSchema
 
