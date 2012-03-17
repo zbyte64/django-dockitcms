@@ -33,7 +33,7 @@ class BaseCollection(schema.Document):
     class Meta:
         typed_field = 'collection_type'
 
-class Collection(BaseCollection, EventMixin):
+class Collection(BaseCollection, DocumentDesign, EventMixin):
     application = schema.ReferenceField(Application)
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
@@ -53,8 +53,9 @@ class Collection(BaseCollection, EventMixin):
     def __getattribute__(self, name):
         function_events = object.__getattribute__(self, 'mixin_function_events')
         if name in function_events:
-            return EventMixin.__getattribute__(self, name)
-        return DocumentDesign.__getattribute__(self, name)
+            ret = object.__getattribute__(self, name)
+            return self._mixin_function(ret, function_events[name])
+        return BaseCollection.__getattribute__(self, name)
     
     def get_active_mixins(self):
         mixins = list()

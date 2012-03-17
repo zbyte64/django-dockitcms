@@ -2,8 +2,7 @@ from models import BaseTemplateWidget, Widget, ReusableWidget
 
 from dockit import schema
 
-from dockitcms.viewpoints.collections.common import CollectionMixin
-from dockitcms.viewpoints.models.common import ModelMixin
+from dockitcms.viewpoints.common import IndexMixin
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
@@ -63,30 +62,18 @@ class CTAWidget(BaseTemplateWidget):
         from forms import CTAWidgetForm
         return CTAWidgetForm
 
-class CollectionWidget(BaseTemplateWidget, CollectionMixin):
+class IndexWidget(BaseTemplateWidget, IndexMixin):
     '''
-    A widget that is powered by another collection
+    A widget that is powered by an index
     '''
     
     class Meta:
-        typed_key = 'widgetblock.collectionwidget'
+        typed_key = 'widgetblock.indexwidget'
     
     def get_context(self, context):
         context = BaseTemplateWidget.get_context(self, context)
-        index = self.get_base_index()
-        index.commit() #TODO perhaps schemas should get a save signal for this to be committed?
+        index = self.get_index()
         context['object_list'] = index
-        return context
-
-class ModelWidget(BaseTemplateWidget, ModelMixin):
-    class Meta:
-        typed_key = 'widgetblock.modelwidget'
-    
-    def get_context(self, context):
-        context = BaseTemplateWidget.get_context(self, context)
-        model = self.get_model()
-        context['model'] = model
-        context['object_list'] = self.get_base_queryset()
         return context
 
 class FlatMenuEntry(schema.Schema):

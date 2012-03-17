@@ -16,7 +16,6 @@ class MockedCollection(Collection):
         return result
     
     def get_active_mixins(self):
-        print self.active_mixins
         return [mixin(self) for mixin in self.active_mixins]
     
     class Meta:
@@ -49,6 +48,7 @@ class CollectionTest(unittest.TestCase):
         return AdminAwareDocumentAdmin(document, site, schema=document)
     
     def create_test_collection(self, **kwargs):
+        MockedCollection.active_mixins = []
         active_mixins = kwargs.pop('active_mixins', [])
         params = {'application':self.application,
                   'key':'testcollection',

@@ -44,11 +44,14 @@ class EventMixin(object):
             results.append((mixin, val))
         return results
     
+    def _mixin_function(self, ret, func):
+        return MixinEventFunction(self, ret, func)
+    
     def __getattribute__(self, name):
         function_events = object.__getattribute__(self, 'mixin_function_events')
         ret = object.__getattribute__(self, name)
         if name in function_events:
-            return MixinEventFunction(self, ret, function_events[name])
+            self._mixin_function(ret, function_events[name])
         return ret
 
 def create_document_mixin(MIXINS):
@@ -85,6 +88,9 @@ def create_document_mixin(MIXINS):
             return mixins
         
         def make_bound_schema(self):
+            if getattr(self, '_mixin_bound', False):
+                return type(self)
+            
             original_fields = self._meta.fields.keys()
             
             def get_active_mixins(*args):
@@ -99,7 +105,8 @@ def create_document_mixin(MIXINS):
                 'name': type(self).__name__,
                 'parents': (type(self),),
                 'attrs': {'get_active_mixins':classmethod(get_active_mixins),
-                          'send_mixin_event':classmethod(send_mixin_event),},
+                          'send_mixin_event':classmethod(send_mixin_event),
+                          '_mixin_bound':True},
             }
             self.send_mixin_event('document_kwargs', {'document_kwargs':document_kwargs})
             new_cls = create_document(**document_kwargs)
@@ -112,8 +119,11 @@ def create_document_mixin(MIXINS):
             #hack because super(cls).to_python does not work
             original_to_python = schema.Document.to_python.im_func
             self = original_to_python(cls, val, parent)
-            new_cls = self.make_bound_schema()
-            return original_to_python(new_cls, val, parent)
+            if getattr(cls, '_mixin_bound', False):
+                return self
+            else:
+                new_cls = self.make_bound_schema()
+                return original_to_python(new_cls, val, parent)
     
     return MixinSchema
 
