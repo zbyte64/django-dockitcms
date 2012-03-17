@@ -39,22 +39,22 @@ class VPViewMixin(EventMixin): #should be mixed into all view classes by view po
     #on the return of the following functions at the top level, fire the event
     mixin_function_events = {
         'get_object':
-            {'event': 'object',
+            {'event': 'view.object',
              'keyword': 'object',},
         'get_context_data':
-            {'event': 'context',
+            {'event': 'view.context',
              'keyword': 'context',},
         'render_to_response':
-            {'event': 'response',
+            {'event': 'view.response',
              'keyword': 'response',},
         'get_queryset':
-            {'event': 'queryset',
+            {'event': 'view.queryset',
              'keyword': 'queryset',},
         'get_scopes':
-            {'event': 'scopes',
+            {'event': 'view.scopes',
              'keyword': 'scopes',},
         'get_template_names':
-            {'event': 'template_names',
+            {'event': 'view.template_names',
              'keyword': 'template_names'},
     }
 

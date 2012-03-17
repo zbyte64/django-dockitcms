@@ -28,13 +28,25 @@ def mixin_choices():
     return choices
 
 class BaseCollection(schema.Document):
+    application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
+    title = None
+    
+    @permalink
+    def get_admin_manage_url(self):
+        return ('admin:models_basecollection_manage', [self.pk], {}) #TODO fix applabel detection in dockit
+    
+    def admin_manage_link(self):
+        url = self.get_admin_manage_url()
+        return u'<a href="%s">%s</a>' % (url, _('Manage'))
+    admin_manage_link.short_description = _('Manage')
+    admin_manage_link.allow_tags = True
     
     class Meta:
         typed_field = 'collection_type'
+        verbose_name = 'collection'
 
 class Collection(BaseCollection, DocumentDesign, EventMixin):
-    application = schema.ReferenceField(Application)
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
     
@@ -110,16 +122,6 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
         except KeyError:
             doc = self.register_collection()
             return doc
-    
-    @permalink
-    def get_admin_manage_url(self):
-        return ('admin:dockitcms_collection_manage', [self.pk], {})
-    
-    def admin_manage_link(self):
-        url = self.get_admin_manage_url()
-        return u'<a href="%s">%s</a>' % (url, _('Manage'))
-    admin_manage_link.short_description = _('Manage')
-    admin_manage_link.allow_tags = True
     
     def __unicode__(self):
         if self.title:

@@ -6,7 +6,7 @@ from dockitcms.models import BaseCollection, BaseViewPoint, DocumentDesign, Subs
 
 from views import ManageCollectionView
 
-from common import AdminAwareDocumentAdmin
+from common import AdminAwareDocumentAdmin, AdminAwareSchemaAdmin
 
 class ApplicationAdmin(AdminAwareDocumentAdmin):
     pass
@@ -18,7 +18,12 @@ class DocumentDesignAdmin(AdminAwareDocumentAdmin):
 
 admin.site.register([DocumentDesign], DocumentDesignAdmin)
 
+class CollectionSchemaAdmin(AdminAwareSchemaAdmin):
+    def send_mixin_event(self, event, kwargs):
+        pass #these events are meant for the collection we build
+
 class CollectionAdmin(AdminAwareDocumentAdmin):
+    default_schema_admin = CollectionSchemaAdmin
     manage_collection = ManageCollectionView
     list_display = ['title', 'application', 'admin_manage_link']
     
@@ -28,6 +33,7 @@ class CollectionAdmin(AdminAwareDocumentAdmin):
                 return self.as_view(view, cacheable)(*args, **kwargs)
             return update_wrapper(wrapper, view)
         init = {'admin':self, 'admin_site':self.admin_site}
+        print self.app_name+'_manage'
         return patterns('',
             url(r'^(?P<pk>.+)/manage/',
                 wrap(self.manage_collection.as_view(**init)),

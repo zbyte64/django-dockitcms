@@ -18,7 +18,7 @@ class SchemaDesignChoiceField(BaseField):
         self.choices = True
     
     def get_all_schemas(self):
-        from models import DocumentDesign
+        from design import DocumentDesign
         schemas = list()
         for document_design in DocumentDesign.objects.all():
             schemas.append(('documentdesign.%s' % document_design.pk, document_design.title, document_design.get_schema))
