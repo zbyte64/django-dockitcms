@@ -1,7 +1,8 @@
-from dockitcms.models import ViewPoint, Collection, CollectionIndex
-from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.models import ViewPoint, CollectionIndex
 from dockitcms.scope import Scope
 #from schema.forms import DocumentForm
+
+from .mixins import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
 
 from django.conf.urls.defaults import patterns, url
 #from django import forms
@@ -100,7 +101,7 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         return self.item_category_index.get_index()
     
     def get_category_document(self):
-        doc_cls = self.category_index.get_document()
+        doc_cls = self.category_index.get_object_class()
         view_point = self
         
         def get_absolute_url_for_instance(instance):
@@ -121,7 +122,7 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
         return WrappedDoc
     
     def get_item_document(self):
-        doc_cls = self.item_index.get_document()
+        doc_cls = self.item_index.get_object_class()
         view_point = self
         
         def get_absolute_url_for_instance(instance):

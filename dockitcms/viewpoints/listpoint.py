@@ -1,6 +1,6 @@
 from dockitcms.models import ViewPoint
-from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
-from common import CollectionMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from mixins import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from common import IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockit import schema
 from dockit.forms import DocumentForm
@@ -10,7 +10,7 @@ from django import forms
 from django.template import Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
+class ListingViewPoint(ViewPoint, CanonicalMixin, IndexMixin):
     slug_field = schema.SlugField(blank=True)
     list_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     list_template_name = schema.CharField(default='dockitcms/list.html', blank=True)
@@ -25,8 +25,8 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
     list_view_class = PointListView
     detail_view_class = PointDetailView
     
-    def get_document(self):
-        doc_cls = self.index.get_document()
+    def get_object_class(self):
+        doc_cls = self.index.get_object_class()
         view_point = self
         
         def get_absolute_url_for_instance(instance):
@@ -39,6 +39,7 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
             setattr(doc_cls, 'get_absolute_url', get_absolute_url_for_instance)
             assert hasattr(doc_cls, 'get_absolute_url')
         
+        #TODO support model or do this gently
         class WrappedDoc(doc_cls):
             get_absolute_url = get_absolute_url_for_instance
             
@@ -54,7 +55,7 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
         return config
     
     def get_urls(self):
-        document = self.get_document()
+        document = self.get_object_class()
         params = self.to_primitive(self)
         index = self.get_index()
         urlpatterns = patterns('',
@@ -91,15 +92,15 @@ class CollectionListingViewPoint(ViewPoint, CanonicalMixin, CollectionMixin):
         return urlpatterns
     
     class Meta:
-        typed_key = 'dockitcms.collectionlisting'
+        typed_key = 'dockitcms.listing'
     
     @classmethod
     def get_admin_form_class(cls):
-        return CollectionListingViewPointForm
+        return ListingViewPointForm
 
-class CollectionListingViewPointForm(DocumentForm):
+class ListingViewPointForm(DocumentForm):
     class Meta:
-        document = CollectionListingViewPoint
+        document = ListingViewPoint
     
     def _clean_template_html(self, content):
         if not content:

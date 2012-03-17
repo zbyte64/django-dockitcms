@@ -1,7 +1,6 @@
-from dockitcms.viewpoints.forms import TemplateFormMixin
-from dockitcms.viewpoints.common import CanonicalMixin, TemplateMixin
-
-from common import CollectionMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from .forms import TemplateFormMixin
+from .mixins import CanonicalMixin, TemplateMixin
+from .common import IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockitcms.models import ViewPoint
 
@@ -13,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django import forms
 
-class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin):
+class BaseViewPoint(ViewPoint, IndexMixin, TemplateMixin):
     view_class = None
     
     class Meta:
@@ -21,44 +20,45 @@ class BaseCollectionViewPoint(ViewPoint, CollectionMixin, TemplateMixin):
     
     @classmethod
     def get_admin_form_class(cls):
-        return BaseCollectionViewPointForm
+        return BaseViewPointForm
 
-class CollectionListViewPoint(BaseCollectionViewPoint):
+class ListViewPoint(BaseViewPoint):
     paginate_by = schema.IntegerField(blank=True, null=True)
-    #TODO order by
+    #order_by = schema.CharField(blank=True)
     
     view_class = PointListView
     
     def get_urls(self):
         params = self.to_primitive(self)
-        document = self.get_document()
-        index = self.get_base_index()
+        object_class = self.get_object_class()
+        index = self.get_index()
         urlpatterns = patterns('',
             url(r'^$', 
-                self.view_class.as_view(document=document,
+                self.view_class.as_view(document=object_class,
                                       queryset=index,
                                       view_point=self,
                                       configuration=params,
                                       paginate_by=self.paginate_by),
+                                      #order_by=self.order_by),
                 name='index',
             ),
         )
         return urlpatterns
     
     class Meta:
-        typed_key = 'dockitcms.collectionlistview'
+        typed_key = 'dockitcms.listview'
     
     @classmethod
     def get_admin_form_class(cls):
-        return CollectionListViewPointForm
+        return ListViewPointForm
 
-class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
+class DetailViewPoint(BaseViewPoint):#, CanonicalMixin):
     slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
     
-    def get_document(self):
-        document = super(CollectionDetailViewPoint, self).get_document()
+    def get_object_class(self):
+        object_class = super(DetailViewPoint, self).get_object_class()
         view_point = self
         
         def get_absolute_url_for_instance(instance):
@@ -67,18 +67,18 @@ class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
             return view_point.reverse('detail', instance.pk)
         
         if self.canonical:
-            document.get_absolute_url = get_absolute_url_for_instance
+            object_class.get_absolute_url = get_absolute_url_for_instance
         
-        return document
+        return object_class
     
     def get_urls(self):
         params = self.to_primitive(self)
-        document = self.get_document()
+        object_class = self.get_object_class()
         index = self.get_index()
         if self.slug_field:
             return patterns('',
                 url(r'^(?P<slug>.+)/$',
-                    self.view_class.as_view(document=document,
+                    self.view_class.as_view(document=object_class,
                                           queryset=index,
                                           view_point=self,
                                           configuration=params,
@@ -89,7 +89,7 @@ class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
         else:
             return patterns('',
                 url(r'^(?P<pk>.+)/$',
-                    self.view_class.as_view(document=document,
+                    self.view_class.as_view(document=object_class,
                                           queryset=index,
                                           view_point=self,
                                           configuration=params,),
@@ -98,21 +98,21 @@ class CollectionDetailViewPoint(BaseCollectionViewPoint, CanonicalMixin):
             )
     
     class Meta:
-        typed_key = 'dockitcms.collectiondetailview'
+        typed_key = 'dockitcms.detailview'
     
     @classmethod
     def get_admin_form_class(cls):
-        return CollectionDetailViewPointForm
+        return DetailViewPointForm
 
-class BaseCollectionViewPointForm(TemplateFormMixin, DocumentForm):
+class BaseViewPointForm(TemplateFormMixin, DocumentForm):
     class Meta:
-        document = BaseCollectionViewPoint
+        document = BaseViewPoint
 
-class CollectionListViewPointForm(BaseCollectionViewPointForm):
+class ListViewPointForm(BaseViewPointForm):
     template_name = forms.CharField(initial='dockitcms/list.html', required=False)
     content = forms.CharField(help_text=LIST_CONTEXT_DESCRIPTION, required=False, widget=forms.Textarea)
 
-class CollectionDetailViewPointForm(BaseCollectionViewPointForm):
+class DetailViewPointForm(BaseViewPointForm):
     template_name = forms.CharField(initial='dockitcms/detail.html', required=False)
     content = forms.CharField(help_text=DETAIL_CONTEXT_DESCRIPTION, required=False, widget=forms.Textarea)
 

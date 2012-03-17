@@ -27,11 +27,16 @@ def mixin_choices():
         choices.append((key, value.label))
     return choices
 
-class Collection(DocumentDesign, EventMixin):
+class BaseCollection(schema.Document):
+    admin_options = schema.SchemaField(AdminOptions)
+    
+    class Meta:
+        typed_field = 'collection_type'
+
+class Collection(BaseCollection, EventMixin):
     application = schema.ReferenceField(Application)
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
-    admin_options = schema.SchemaField(AdminOptions)
     
     mixin_function_events = {
         'get_document_kwargs': {'event':'document_kwargs', 'keyword':'document_kwargs'},
@@ -120,4 +125,7 @@ class Collection(DocumentDesign, EventMixin):
             return self.title
         else:
             return self.__repr__()
+    
+    class Meta:
+        typed_key = 'document'
 
