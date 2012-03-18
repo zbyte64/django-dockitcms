@@ -19,21 +19,25 @@ class AuthMixin(AdminInlineMixin):
     schema_class = AuthMixinSchema
     label = 'Auth Mixin'
     
-    def on_dispatch(self, event, view, **kwargs):
+    @property
+    def auth(self):
+        return self.target._auth
+    
+    def on_dispatch(self, view, **kwargs):
         user = kwargs['request'].user
-        if self._auth.authenticated_users_only and not user.is_authenticated():
+        if self.auth.authenticated_users_only and not user.is_authenticated():
             raise HttpForbidden()
-        if self._auth.staff_only and not user.is_staff:
+        if self.auth.staff_only and not user.is_staff:
             raise HttpForbidden()
-        for perm in self._auth.required_permissions:
+        for perm in self.auth.required_permissions:
             if not user.has_perm(perm):
                 raise HttpForbidden()
     
-    def on_object(self, event, view, **kwargs):
+    def on_object(self, view, **kwargs):
         obj = kwargs['object']
         user = view.request.user
         auth_info = getattr(obj, '_auth', None)
-        required_perms = set(self._auth.required_permissions)
+        required_perms = set(self.auth.required_permissions)
         
         if auth_info:
             if auth_info.authenticated_users_only and not user.is_authenticated():
@@ -45,7 +49,7 @@ class AuthMixin(AdminInlineMixin):
             if not user.has_perm(perm, obj):
                 raise HttpForbidden()
     
-    def on_context(self, event, view, **kwargs):
+    def on_context(self, view, **kwargs):
         context = kwargs['context']
         user = view.request.user
         obj = getattr(view, 'object', None)

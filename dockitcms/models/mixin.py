@@ -78,13 +78,14 @@ def create_document_mixin(MIXINS):
                 return EventMixin.__getattribute__(self, name)
             return schema.Schema.__getattribute__(self, name)
         
-        def get_active_mixins(self): #CONSIDER: this modifies the fields we have
+        def get_active_mixins(self, target=None): #CONSIDER: this modifies the fields we have
             mixins = list()
+            target = target or self
             available_mixins = self.get_available_mixins()
             for mixin_key in self.mixins:
                 if mixin_key in available_mixins:
                     mixin_cls = available_mixins[mixin_key]
-                    mixins.append(mixin_cls(self))
+                    mixins.append(mixin_cls(target))
             return mixins
         
         def make_bound_schema(self):
@@ -93,8 +94,8 @@ def create_document_mixin(MIXINS):
             
             original_fields = self._meta.fields.keys()
             
-            def get_active_mixins(*args):
-                return self.get_active_mixins()
+            def get_active_mixins(kls, target=None):
+                return self.get_active_mixins(target=target)
             
             def send_mixin_event(kls, event, kwargs):
                 return self.send_mixin_event(event, kwargs)
