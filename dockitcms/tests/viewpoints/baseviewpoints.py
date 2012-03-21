@@ -23,15 +23,15 @@ class ListViewPointTest(unittest.TestCase):
         return index
     
     def get_view_point_kwargs(self, **kwargs):
-        params = {'subsite':self.subsite,
-                  'index': self.create_model_index(),
+        params = {'subsite':self.subsite.pk,
+                  'index': self.create_model_index().pk,
                   'template_source':'html',
                   'template_html':'',}
         params.update(kwargs)
         return params
     
     def test_list_view_point(self):
-        view_point = ListViewPoint(**self.get_view_point_kwargs())
+        view_point = ListViewPoint.to_python(self.get_view_point_kwargs())
         view_point.save()
         view_point.get_urls()
         ListViewPoint.get_admin_form_class()
@@ -40,7 +40,7 @@ class ListViewPointTest(unittest.TestCase):
         response = view_point.dispatch(request)
     
     def test_detail_view_point(self):
-        view_point = DetailViewPoint(**self.get_view_point_kwargs())
+        view_point = DetailViewPoint.to_python(self.get_view_point_kwargs())
         view_point.save()
         view_point.get_urls()
         DetailViewPoint.get_admin_form_class()
@@ -50,5 +50,4 @@ class ListViewPointTest(unittest.TestCase):
             view_point.dispatch(request)
         except Http404:
             pass
-    
-    
+

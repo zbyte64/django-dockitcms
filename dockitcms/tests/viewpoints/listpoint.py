@@ -23,8 +23,8 @@ class ListingViewPointTest(unittest.TestCase):
         return index
     
     def get_view_point_kwargs(self, **kwargs):
-        params = {'subsite':self.subsite,
-                  'index': self.create_model_index(),
+        params = {'subsite':self.subsite.pk,
+                  'index': self.create_model_index().pk,
                   'list_template_source':'html',
                   'list_template_html':'',
                   'detail_template_source':'html',
@@ -33,7 +33,7 @@ class ListingViewPointTest(unittest.TestCase):
         return params
     
     def test_listing_view_point(self):
-        view_point = ListingViewPoint(**self.get_view_point_kwargs())
+        view_point = ListingViewPoint.to_python(self.get_view_point_kwargs())
         view_point.save()
         view_point.get_urls()
         ListingViewPoint.get_admin_form_class()
@@ -41,4 +41,3 @@ class ListingViewPointTest(unittest.TestCase):
         request = self.factory.get('/')
         response = view_point.dispatch(request)
 
-    
