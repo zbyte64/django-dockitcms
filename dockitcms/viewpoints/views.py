@@ -2,7 +2,7 @@ from django.views.generic.base import TemplateResponseMixin
 from django.template import Template, Context
 from django.utils.safestring import mark_safe
 
-from dockitcms.models.mixin import EventMixin
+from dockitcms.models.mixin import EventMixin, PreEventFunction, CollectEventFunction, PostEventFunction
 
 from exceptions import HttpException
 
@@ -43,24 +43,25 @@ class VPViewMixin(EventMixin): #should be mixed into all view classes by view po
     
     #on the return of the following functions at the top level, fire the event
     mixin_function_events = {
-        'get_object':
-            {'event': 'view.object',
-             'keyword': 'object',},
-        'get_context_data':
-            {'event': 'view.context',
-             'keyword': 'context',},
-        'render_to_response':
-            {'event': 'view.response',
-             'keyword': 'response',},
-        'get_queryset':
-            {'event': 'view.queryset',
-             'keyword': 'queryset',},
-        'get_scopes':
-            {'event': 'view.scopes',
-             'keyword': 'scopes',},
-        'get_template_names':
-            {'event': 'view.template_names',
-             'keyword': 'template_names'},
+        'get_object': {
+            'post': PostEventFunction(event='view.object', keyword='object'),
+        },
+        'get_context_data': {
+            'post': PostEventFunction(event='view.context', keyword='context'),
+        },
+        'render_to_response':{
+            'post': PostEventFunction(event='view.response', keyword='response'),
+        },
+        'get_queryset':{
+            'post': PostEventFunction(event='view.queryset', keyword='queryset'),
+        },
+        'get_scopes':{
+            'collect': CollectEventFunction(event='view.collect_scopes'),
+            'post': PostEventFunction(event='view.scopes', keyword='scopes'),
+        },
+        'get_template_names':{
+            'post': PostEventFunction(event='view.template_names', keyword='template_names'),
+        },
     }
 
 class ConfigurableTemplateResponseMixin(VPViewMixin, TemplateResponseMixin):

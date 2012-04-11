@@ -3,22 +3,70 @@ from dockit import schema
 
 SCHEMA_MIXINS = {}
 
-class MixinEventFunction(object):
+class MixinEventWrapper(object):
     def __init__(self, instance, func, definition):
         self.instance = instance
         self.func = func
         self.definition = definition
     
     def __call__(self, *args, **kwargs):
+        if 'pre' in self.definition:
+            self.definition['pre'].call(self.instance, args, kwargs)
         ret = self.func(*args, **kwargs)
+        if 'collect' in self.definition:
+            ret = self.definition['collect'].call(self.instance, args, kwargs, ret)
+        if 'post' in self.definition:
+            c_ret = self.definition['post'].call(self.instance, args, kwargs, ret)
+            if c_ret is not None:
+                ret = c_ret
+        return ret
+        
         event = self.definition['event']
         event_kwargs = {self.definition['keyword']: ret}
         self.instance.send_mixin_event(event, event_kwargs)
         return ret
 
-class EventMixin(object):
-    mixin_function_events = {} #function: {event: '', keyword: ''}
+class BaseEventFunction(object):
+    def __init__(self, event):
+        self.event = event
+
+class PreEventFunction(BaseEventFunction):
+    def call(self, instance, args, kwargs):
+        event_kwargs = dict(kwargs)
+        instance.send_mixin_event(self.event, event_kwargs)
+
+class CollectEventFunction(BaseEventFunction):
+    def __init__(self, event, extend_function='extend'):
+        super(CollectEventFunction, self).__init__(event)
+        self.extend_function_name = extend_function
     
+    def call(self, instance, args, kwargs, ret):
+        event_kwargs = dict(kwargs)
+        results = instance.send_mixin_event(self.event, event_kwargs)
+        for mixin, val in results:
+            if val is not None:
+                getattr(ret, self.extend_function_name)(val)
+        return ret
+
+class PostEventFunction(BaseEventFunction):
+    def __init__(self, event, keyword=None):
+        super(PostEventFunction, self).__init__(event)
+        self.keyword = keyword
+    
+    def call(self, instance, args, kwargs, ret):
+        event_kwargs = dict(kwargs)
+        if self.keyword:
+            event_kwargs[self.keyword] = ret
+        instance.send_mixin_event(self.event, event_kwargs)
+
+class EventMixin(object):
+    mixin_function_events = {}
+    '''
+    function: {pre: PreEventFunction(event=''), #passes in function kwargs to event
+               collect: CollectEventFunction(event='', extend_function='extends'), #extends the return function
+               post: PostEventFunction(event='', keyword=''),
+               TODO: post: ChainedEventFuncion(PostEventFunction(event='', keyword=''), PostEventFunction(event='', keyword=''))} #two event slots
+    '''
     @classmethod
     def register_mixin(self, key, mixin_class):
         raise NotImplementedError
@@ -45,13 +93,13 @@ class EventMixin(object):
         return results
     
     def _mixin_function(self, ret, func):
-        return MixinEventFunction(self, ret, func)
+        return MixinEventWrapper(self, ret, func)
     
     def __getattribute__(self, name):
         function_events = object.__getattribute__(self, 'mixin_function_events')
         ret = object.__getattribute__(self, name)
         if name in function_events:
-            self._mixin_function(ret, function_events[name])
+            return self._mixin_function(ret, function_events[name])
         return ret
 
 def create_document_mixin(MIXINS):

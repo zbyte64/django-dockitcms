@@ -5,7 +5,7 @@ from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
 
 from design import DocumentDesign
-from mixin import EventMixin
+from mixin import EventMixin, PostEventFunction
 
 COLLECTION_MIXINS = {}
 
@@ -51,7 +51,9 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
     
     mixin_function_events = {
-        'get_document_kwargs': {'event':'document_kwargs', 'keyword':'document_kwargs'},
+        'get_document_kwargs': {
+            'post': PostEventFunction(event='document_kwargs', keyword='document_kwargs')
+        },
     }
     
     @classmethod
