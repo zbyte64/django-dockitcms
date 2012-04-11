@@ -3,6 +3,7 @@ from collection import Application, Collection, BaseCollection
 from index import Index, CollectionIndex, FilteredCollectionIndex, ModelIndex, FilteredModelIndex, CollectionFilter, ModelFilter, CollectionParam, ModelParam
 from view_point import Subsite, BaseViewPoint, ViewPoint
 from mixin import EventMixin, create_document_mixin
+from recipe import BaseRecipe, Recipe
 
 
 from dockitcms import fields
