@@ -14,7 +14,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '::memory::',                      # Or path to database file if using sqlite3.
+        'NAME': ':memory:',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -102,7 +102,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'tests.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -130,15 +130,20 @@ INSTALLED_APPS = [
 DOCKIT_BACKENDS = {
     'default': {
         'ENGINE': 'dockit.backends.djangodocument.backend.ModelDocumentStorage',
-    }
+    },
+    'djangodocument': {
+        'ENGINE': 'dockit.backends.djangodocument.backend.ModelDocumentStorage',
+    },
 }
 
-try:
-    import pymongo
-except ImportError:
-    pass
-else:
-    INSTALLED_APPS.append('dockit.backends.mongo')
+DOCKIT_INDEX_BACKENDS = {
+    'default': {
+        'ENGINE': 'dockit.backends.djangodocument.backend.ModelIndexStorage',
+    },
+    'djangodocument': {
+        'ENGINE': 'dockit.backends.djangodocument.backend.ModelIndexStorage',
+    },
+}
 
 if 'TRAVIS' in os.environ:
     if os.environ['DB'] == 'mysql':
@@ -150,9 +155,12 @@ if 'TRAVIS' in os.environ:
                                     'DB':'mydb_test',
                                     'HOST':'127.0.0.1',
                                     'PORT':27017,}
-        DOCKIT_BACKENDS['default'] = DOCKIT_BACKENDS['mongo'] #TODO make tests smart enough to specifically use the mongo backend
-        if 'dockit.backends.mongo' not in INSTALLED_APPS:
-            INSTALLED_APPS.append('dockit.backends.mongo')
+        DOCKIT_INDEX_BACKENDS['mongo'] = {'ENGINE':'dockit.backends.mongo.backend.MongoIndexStorage',
+                                'USER':'travis',
+                                'PASSWORD':'test',
+                                'DB':'mydb_test',
+                                'HOST':'127.0.0.1',
+                                'PORT':27017,}
     elif os.environ['DB'] == 'sqlite':
         pass
 

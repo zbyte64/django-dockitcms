@@ -8,3 +8,8 @@ from recipe import BaseRecipe, Recipe
 
 from dockitcms import fields
 from dockitcms import viewpoints
+
+def suite(): #returns a test suite for dockitcms
+    from dockitcms import tests as test_module
+    from django.utils import unittest
+    return unittest.defaultTestLoader.loadTestsFromModule(test_module)

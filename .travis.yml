@@ -11,7 +11,7 @@ env:
 install:
   - pip install -q Django==$DJANGO_VERSION
 #  - pip install -q pymongo
-  - pip install -q -e git+git://github.com/zbyte64/django-dockit.git#egg=django-dockit
+  - pip install -q -r requirements.txt
   - python setup.py -q install
 #before_script:
 # - mysql -e 'create database myapp_test;'
