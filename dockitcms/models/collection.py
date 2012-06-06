@@ -1,5 +1,6 @@
 from dockit import schema
 from dockit.schema import get_base_document
+from dockit.schema.loading import force_register_documents
 
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
@@ -114,6 +115,7 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
     
     def register_collection(self):
         doc = DocumentDesign.get_document(self, virtual=False, verbose_name=self.title, collection=self.get_collection_name())
+        force_register_documents(doc._meta.app_label, doc)
         return doc
     
     def get_document(self):

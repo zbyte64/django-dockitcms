@@ -1,7 +1,7 @@
 from dockitcms.models import FilteredCollectionIndex, CollectionFilter, CollectionParam, FilteredModelIndex, ModelFilter, ModelParam, Collection, Application
 from dockitcms import fields
 
-from dockit import schema
+from dockit import backends
 
 from django.utils import unittest
 from django.contrib.auth.models import User
@@ -24,6 +24,11 @@ class IndexTest(unittest.TestCase):
         params.update(kwargs)
         collection = Collection(**params)
         collection.save()
+        
+        document = collection.get_document()
+        document = collection.register_collection()
+        assert 'published' in document._meta.fields, str(document._meta.fields.keys()) + str(collection.fields)
+        
         return collection
     
     def test_filtered_collection_index(self):
@@ -33,9 +38,22 @@ class IndexTest(unittest.TestCase):
                                         exclusions=[CollectionFilter(key='published', value='false', operation='exact', value_type='boolean')],
                                         parameters=[CollectionParam(key='title', operation='exact')],)
         index.save()
+        query_hash = index.get_index()._index_hash()
+        collection_name = collection.get_document()._meta.collection
+        
+        #assert the backend was notified of the index
+        self.assertTrue(query_hash in backends.INDEX_ROUTER.registered_querysets[collection_name], str(backends.INDEX_ROUTER.registered_querysets[collection_name]))
+        
         document = collection.get_document()
-        document(title='foo', published=True, featured=True).save()
-        self.assertTrue(index.get_index().count())
+        document.objects.all().delete() #why did i get 2?
+        
+        doc = document(title='foo', published=True, featured=True)
+        doc.save()
+        self.assertEqual(document.objects.all().count(), 1)
+        
+        query = index.get_index()
+        msg = str(query.queryset.query.queryset.query)
+        self.assertEqual(query.count(), 1, msg)
     
     def test_filtered_model_index(self):
         index = FilteredModelIndex(model=ContentType.objects.get_for_model(User),
