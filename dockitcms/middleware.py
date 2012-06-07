@@ -2,7 +2,7 @@ from scope import get_site_scope, Scope
 
 class DefaultScopeMiddleware(object):
     def process_template_response(self, request, response):
-        if hasattr(response, 'context_data'): #TODO this shouldn't happen
+        if hasattr(response, 'context_data') and response.context_data is not None: #TODO this shouldn't happen
             context = response.context_data
             if 'scopes' not in context:
                 context['scopes'] = [get_site_scope()]
