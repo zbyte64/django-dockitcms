@@ -35,7 +35,7 @@ class BaseCollection(schema.Document):
     
     @permalink
     def get_admin_manage_url(self):
-        return ('admin:models_basecollection_manage', [self.pk], {}) #TODO fix applabel detection in dockit
+        return ('admin:dockitcms_basecollection_manage', [self.pk], {})
     
     def admin_manage_link(self):
         url = self.get_admin_manage_url()
