@@ -29,6 +29,8 @@ class DockitCMSSite(object):
     
     def index(self, request, path):
         subsites = Subsite.objects.filter(sites=settings.SITE_ID)
+        if not path.startswith('/'):
+            path = '/'+path
         for subsite in subsites:
             view_points = BaseViewPoint.objects.filter(subsite=subsite)
             for view_point in view_points:
