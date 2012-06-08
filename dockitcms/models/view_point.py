@@ -1,6 +1,6 @@
 from dockit import schema
 
-from dockitcms.scope import Scope, get_site_scope
+from dockitcms.scope import ScopeList, Scope, get_site_scope
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
@@ -69,7 +69,7 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         viewpoint_scope = Scope('viewpoint', object=self)
         viewpoint_scope.add_data('object', self, self.get_manage_urls())
         
-        return [site_scope, subsite_scope, viewpoint_scope]
+        return ScopeList([site_scope, subsite_scope, viewpoint_scope])
     
     def get_admin_view(self, **kwargs):
         from dockitcms.admin.views import ViewPointDesignerFragmentView

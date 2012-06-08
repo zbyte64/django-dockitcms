@@ -2,6 +2,11 @@ from django.contrib.sites.models import Site
 
 from app_settings import SCOPE_PROCESSORS
 
+class ScopeList(list):
+    def __init__(self, *args, **kwargs):
+        super(ScopeList, self).__init__(*args, **kwargs)
+        self.info = dict()
+
 class Scope(object):
     '''
     As a request travels through the application, the code creates and chains scopes.

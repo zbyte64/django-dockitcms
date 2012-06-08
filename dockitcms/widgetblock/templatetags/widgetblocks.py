@@ -6,6 +6,8 @@ from classytags.core import Options
 from classytags.helpers import InclusionTag
 from classytags.arguments import Argument
 
+from dockitcms.widgetblock.common import WidgetBlockScopeDisplay
+
 import collections
 
 class WidgetBlock(InclusionTag):
@@ -22,6 +24,11 @@ class WidgetBlock(InclusionTag):
         else:
             return []
             #TODO possibly use DefaultScopeMiddleware to populate this
+        
+        if 'widgetblocks' not in scopes.info:
+            scopes.info['widgetblocks'] = WidgetBlockScopeDisplay()
+        scopes.info['widgetblocks'].add_block(block_key)
+        
         for scope in scopes:
             if 'widgets' in scope.data:
                 scope_widgets = list()

@@ -1,24 +1,32 @@
+{% load scopes i18n %}
 <div id="viewscope">
-<h3>Scope Information</h3>
+<h3>{% trans 'Scopes' %}</h3>
+<h4>{% trans 'Scope Levels' %}</h4>
 {% for scope in scopes %}
-<div>
+<div class="scopelevel">
 <span class="name">{{scope.name}}</span>
 <ul>
 {% for scope_data in scope.data.itervalues %}
 <li>
 {{scope_data.key}}
 {% if "edit" in scope_data.manage_urls %}
-<a href="{{scope_data.manage_urls.edit}}">Edit</a>
+<a href="{{scope_data.manage_urls.edit}}">{% trans 'Edit' %}</a>
 {% endif %}
 {% if "list" in scope_data.manage_urls %}
-<a href="{{scope_data.manage_urls.list}}">List</a>
+<a href="{{scope_data.manage_urls.list}}">{% trans 'List' %}</a>
 {% endif %}
 {% if "add" in scope_data.manage_urls %}
-<a href="{{scope_data.manage_urls.add}}">Add</a>
+<a href="{{scope_data.manage_urls.add}}">{% trans 'Add' %}</a>
 {% endif %}
 </li>
 {% endfor %}
 </ul>
+</div>
+{% endfor %}
+<h4>{% trans 'Scope Information' %}</h4>
+{% for key, value in scopes.info.iteritems %}
+<div class="scopeinfo {{key}}">
+{% renderscopedisplay value %}
 </div>
 {% endfor %}
 </div>

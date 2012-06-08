@@ -1,5 +1,7 @@
 from dockit.schema.schema import create_schema
 
+from django.template.loader import render_to_string
+
 class ExpandedSchemas(object):
     def __init__(self, base_schema, original_schemas):
         self.base_schema = base_schema
@@ -21,3 +23,15 @@ class ExpandedSchemas(object):
     
     def keys(self):
         return self.original_schemas.keys()
+
+class WidgetBlockScopeDisplay(object):
+    template_name = 'widgetblock/scope_display.html'
+    
+    def __init__(self):
+        self.blocks_seen = list()
+    
+    def render(self, context):
+        return render_to_string(self.template_name, {'display':self, 'scopes':context.get('scopes', None)})
+    
+    def add_block(self, block_key):
+        self.blocks_seen.append(block_key)
