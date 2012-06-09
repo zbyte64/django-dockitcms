@@ -3,7 +3,7 @@ from django.core.urlresolvers import Resolver404
 from django.http import Http404
 from django.conf import settings
 
-from models import BaseViewPoint, Subsite
+from models import BaseViewPoint, Subsite, Collection, Index
 
 class DockitCMSSite(object):
     def __init__(self, name=None, app_name='dockitcms'):
@@ -16,6 +16,7 @@ class DockitCMSSite(object):
         self.registered_view_points = set()
     
     def get_urls(self): #CONSIDER, won't this match everything?!?
+        self.init_applications()
         urlpatterns = patterns('',
             url(r'^(?P<path>.*)$',
                 self.index,
@@ -48,6 +49,14 @@ class DockitCMSSite(object):
         if not subsites:
             msg = 'No matching subsites'
         raise Http404(msg)
+    
+    def init_applications(self):
+        for collection in Collection.objects.all():
+            collection.register_collection()
+        for view_point in BaseViewPoint.objects.all():
+            view_point.register_view_point()
+        for index in Index.objects.all():
+            index.register_index()
 
 site = DockitCMSSite()
 

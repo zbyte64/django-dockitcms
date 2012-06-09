@@ -21,6 +21,9 @@ class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     def get_object_class(self):
         raise NotImplementedError
     
+    def register_index(self):
+        raise NotImplementedError
+    
     class Meta:
         typed_field = 'index_type'
 
@@ -32,6 +35,9 @@ class CollectionIndex(Index):
     
     def get_object_class(self):
         return self.get_document()
+    
+    def register_index(self):
+        self.get_index().commit()
     
     def __unicode__(self):
         return u'%s - %s' % (self.collection, self.name)
@@ -47,6 +53,9 @@ class ModelIndex(Index):
     
     def get_object_class(self):
         return self.get_model()
+    
+    def register_index(self):
+        pass
     
     def __unicode__(self):
         return u'%s - %s' % (self.model, self.name)
