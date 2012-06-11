@@ -159,6 +159,8 @@ class ListEmailField(ListFieldMixin, EmailField):
         typed_key = 'ListEmailField'
 
 class FileField(BaseFieldEntry):
+    upload_to = schema.CharField(blank=True)
+    
     field_class = schema.FileField
     
     class Meta:
@@ -173,6 +175,8 @@ class ListFileField(ListFieldMixin, FileField):
         typed_key = 'ListFileField'
 
 class ImageField(BaseFieldEntry):
+    upload_to = schema.CharField(blank=True)
+    
     #TODO schema.ImageField
     field_class = schema.FileField
     scaffold_template_name = 'dockitcms/scaffold/image.html'
