@@ -23,8 +23,8 @@ class AdminAwareSchemaAdmin(SchemaAdmin):
                 return form_class
         return super(AdminAwareSchemaAdmin, self).get_form_class(request, obj)
     
-    def get_object_tools(self, request, obj=None):
-        object_tools = super(AdminAwareSchemaAdmin, self).get_object_tools(request, obj)
+    def get_object_tools(self, request, obj=None, add=False):
+        object_tools = super(AdminAwareSchemaAdmin, self).get_object_tools(request, obj, add)
         self.send_mixin_event('admin.object_tools', 
                               {'object_tools':object_tools, 'admin':self, 'request':request, 'object':obj})
         return object_tools
