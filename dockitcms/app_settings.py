@@ -10,6 +10,7 @@ class LazyList(list):
     def __iter__(self):
         if not self._loaded:
             self.load()
+        return list.__iter__(self)
     
     def load(self):
         for entry in getattr(settings, 'SCOPE_PROCESSORS', []):
