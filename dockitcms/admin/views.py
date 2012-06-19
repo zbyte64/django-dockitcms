@@ -22,15 +22,18 @@ class VirtualDocumentAdmin(AdminAwareDocumentAdmin):
         ret = self.resolver.reverse(name, *args, **kwargs)
         return self.base_url + ret
     
-    def get_base_breadcrumbs(self):
+    def get_base_breadcrumbs(self, top=False):
         admin_name = self.admin_site.name
         model_name = self.model._meta.verbose_name
         opts = self.model._meta
         breadcrumbs = [
             Breadcrumb('Home', ['%s:index' % admin_name]),
             Breadcrumb(opts.app_label, ['%s:index' % admin_name]), #TODO app listing support
-            Breadcrumb(opts.verbose_name_plural, self.reverse('%s_changelist' % self.app_name)),
         ]
+        if top:
+            breadcrumbs.append(Breadcrumb(opts.verbose_name_plural))
+        else:
+            breadcrumbs.append(Breadcrumb(opts.verbose_name_plural, self.reverse('%s_changelist' % self.app_name)))
         return breadcrumbs
 
 class ManageCollectionView(View):
