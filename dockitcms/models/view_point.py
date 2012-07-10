@@ -116,7 +116,10 @@ class ViewPoint(BaseViewPoint):
         return re.compile(self.base_url)
     
     def _base_url(self):
-        return urlparse.urljoin(self.subsite.url, self.url)
+        url = self.url or ''
+        if url.startswith('/'):
+            url = '.'+url
+        return urlparse.urljoin(self.subsite.url, url)
     base_url = property(_base_url)
     
     def get_absolute_url(self):
