@@ -61,6 +61,7 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
     def save_object(self, obj):
         #if object in existing_object_map, return None
         #then resolve/hijack key relations
+        
         if self._object_in_object_map(obj.object, self.existing_object_map):
             return
         
@@ -99,7 +100,7 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         #TODO we don't like specifying ids
         obj.save()
         
-        return obj
+        return obj.object
     
     def _hashable(self, val):
         if isinstance(val, dict):
@@ -109,7 +110,9 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         return val
     
     def _get_object_key(self, obj):
-        if hasattr(obj, 'natural_key'):
+        if hasattr(obj, 'natural_key_hash'):
+            return obj.natural_key_hash
+        elif hasattr(obj, 'natural_key'):
             key = obj.natural_key()
             return self._hashable(key)
         else:

@@ -5,6 +5,10 @@ class ManifestFixtures(object):
     def viewpoint_fixture(self):
         return [{
             "pk": "31",
+            "natural_key": {
+                "url": "/teams/",
+                "subsite": "Root",
+            },
             "model": "dockitcms.viewpoint",
             "fields": {
                 "list_template_html": "",
@@ -18,12 +22,12 @@ class ManifestFixtures(object):
                 "list_template_name": "dockitcms/list.html",
                 "detail_template_html": "",
                 "detail_template_name": "dockitcms/detail.html",
-                "index": "27",
+                "index": {"uuid": "123456789"},
                 "list_template_source": "name",
                 "widgets": [],
                 "slug_field": "",
                 "canonical": True,
-                "subsite": "29",
+                "subsite": {"name": "Root"},
                 "list_content": "{% for object in object_list %}\r\n<a href=\"{{object.get_absolute_url}}\">{{object}}</a>\r\n{% endfor %}",
                 "detail_content": "{% for product in object.products %}\r\n{{product}}\r\n{% endfor %}"
             }
@@ -31,8 +35,12 @@ class ManifestFixtures(object):
         {
             "pk": "33",
             "model": "dockitcms.viewpoint",
+            "natural_key": {
+                "url": "/team/",
+                "subsite": "Root",
+            },
             "fields": {
-                "index": "27",
+                "index": {"uuid": "123456789"},
                 "view_type": "dockitcms.detailview",
                 "url": "/team/",
                 "template_name": "dockitcms/detail.html",
@@ -41,7 +49,7 @@ class ManifestFixtures(object):
                 "content": "",
                 "slug_field": "slug",
                 "template_source": "html",
-                "subsite": "29",
+                "subsite": {"name": "Root"},
                 "canonical": False
             }
         }]
@@ -50,6 +58,9 @@ class ManifestFixtures(object):
         return [{
             "pk": "2",
             "model": "dockitcms.application",
+            "natural_key": {
+                "slug": "test",
+            },
             "fields": {
                 "name": "Test",
                 "slug": "test",
@@ -60,6 +71,9 @@ class ManifestFixtures(object):
         return [{
             "pk": "29",
             "model": "dockitcms.subsite",
+            "natural_key": {
+                "name": "Root",
+            },
             "fields": {
                 "widgets": [],
                 "url": "/",
@@ -77,6 +91,9 @@ class ManifestFixtures(object):
         return [{
             "pk": "27",
             "model": "dockitcms.index",
+            "natural_key": {
+                "uuid": "123456789"
+            },
             "fields": {
                 "name": "Team all",
                 "parameters": [
@@ -86,7 +103,7 @@ class ManifestFixtures(object):
                     }
                 ],
                 "mixins": [],
-                "collection": "4",
+                "collection": {"key": "team"},
                 "index_type": "dockitcms.filteredcollection",
                 "inclusions": [],
                 "exclusions": []
@@ -97,6 +114,9 @@ class ManifestFixtures(object):
         return [{
             "pk": "4",
             "model": "dockitcms.basecollection",
+            "natural_key": {
+                "key": "team",
+            },
             "fields": {
                 "inherit_from": "",
                 "title": "Team",
