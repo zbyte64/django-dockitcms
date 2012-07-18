@@ -14,7 +14,7 @@ class Application(schema.Document):
     name = schema.CharField()
     slug = schema.SlugField(unique=True)
     
-    def natural_key(self):
+    def create_natural_key(self):
         return {'slug':self.slug}
     
     def __unicode__(self):
