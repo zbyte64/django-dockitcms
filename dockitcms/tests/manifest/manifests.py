@@ -37,7 +37,6 @@ class ManifestTestCase(unittest.TestCase):
         manifest = self.manifest_loader.load_manifest(data)
         objects = manifest.load()
         self.assertEqual(len(objects), 6)
-        assert False, str(objects)
     
     def test_create_dockitcmsfixture_manifest(self):
         from dockit.models import TemporaryDocument
