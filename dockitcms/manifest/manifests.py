@@ -36,6 +36,16 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         #conserve_indexes: indexes attempt to do functional mapping, ie avoid duplicate indexes
         '''
         self.existing_object_map = existing_object_map or dict()
+        
+        #normalize existing object map
+        for key, value in self.existing_object_map.items():
+            if isinstance(value, (list, tuple)):
+                new_value = dict()
+                for skey, svalue in value:
+                    skey = self._hashable(skey)
+                    new_value[skey] = svalue
+                self.existing_object_map[key] = new_value
+        
         self.rename_collections = rename_collections or dict()
         self.conserve_indexes = conserve_indexes
         self._loaded_collections = dict()
@@ -68,15 +78,19 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         self._process_object_through_object_map(obj.object, self.existing_object_map)
         
         #CONSIDER collection.key is optional; 
-        #TODO collections need a base natural key!
         if obj.object._meta.collection == 'dockitcms.basecollection':
             if obj.object.key in self.rename_collections:
                 original_key = obj.object.key
                 original_map_key = self._get_object_key(obj)
                 obj.object.key = self.rename_collections[original_key]
                 
+                #TODO this should not be necessary
+                obj.object._primitive_data.pop('@natural_key', None)
+                obj.object._primitive_data.pop('@natural_key_hash', None)
+                obj.natural_key = obj.object.create_natural_key()
+                
                 #update existing object map so future indexes point to this
-                self._add_to_object_map(obj.object, original_map_key)
+                self._add_to_object_map(obj.object, original_map_key, obj.natural_key)
             self._loaded_collections[obj.object.key] = obj.object
         
         if self.conserve_indexes and obj.object._meta.collection == 'dockitcms.indexes':
@@ -97,7 +111,6 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
                 primitive_data = obj.object.to_portable_primitive(obj.object)
                 obj.object = document_cls.from_portable_primitive(primitive_data)
         
-        #TODO we don't like specifying ids
         obj.save()
         
         return obj.object
@@ -113,7 +126,9 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         if hasattr(obj, 'natural_key_hash'):
             return obj.natural_key_hash
         elif hasattr(obj, 'natural_key'):
-            key = obj.natural_key()
+            key = obj.natural_key
+            if callable(key):
+                key = key()
             return self._hashable(key)
         else:
             return obj.pk
@@ -124,7 +139,7 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         collection = obj._meta.collection
         self.existing_object_map.setdefault(collection, {})
         for key in all_keys:
-            self.existing_object_map[collection][key] = obj
+            self.existing_object_map[collection][self._hashable(key)] = obj
     
     def _lookup_comparable_index(self, obj):
         #TODO match obj index to others in the system.
