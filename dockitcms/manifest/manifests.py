@@ -1,4 +1,5 @@
 from dockit.manifest.manifests import DockitFixtureManifest
+from dockit.core import serializers as dockit_serializers
 from dockit import schema
 
 class DockitCMSFixtureManifest(DockitFixtureManifest):
@@ -188,6 +189,65 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         if existing_obj is not None:
             return True
         return False
+    
+    @classmethod
+    def dump(cls, objects, data_source, data_source_key, **options):
+        subsites = list()
+        applications = list()
+        collections = list()
+        collection_data = dict()
+        viewpoints = list()
+        indexes = list()
+        documentdesign = list()
+        
+        from dockitcms import models
+        
+        for obj in objects:
+            if isinstance(obj, models.Subsite):
+                subsites.append(obj)
+            elif isinstance(obj, models.Application):
+                applications.append(obj)
+            elif isinstance(obj, models.DocumentDesign):
+                documentdesign.append(obj)
+            elif isinstance(obj, models.BaseCollection):
+                collections.append(obj)
+            elif isinstance(obj, models.BaseViewPoint):
+                viewpoints.append(obj)
+            elif isinstance(obj, models.BaseIndex):
+                indexes.append(obj)
+            elif obj._meta.collection.startswith('dockitcms.virtual.'):
+                key = obj._meta.collection[len('dockitcms.virtual.'):]
+                collection_data.setdefault(key, list())
+                collection_data[key].append(obj)
+            else:
+                assert False, "Unhandled object %s" % obj
+            pass #TODO route the object to the proper destination
+        
+        def prep_data(data):
+            prep_data = dockit_serializers.serialize('python', data)
+            results = data_source.to_payload(data_source_key, prep_data, **options)
+            return [results]
+        
+        subsites = prep_data(subsites)
+        applications = prep_data(applications)
+        collections = prep_data(collections)
+        for key, values in collection_data.items():
+            collection_data[key] = prep_data(values)
+        viewpoints = prep_data(viewpoints)
+        indexes = prep_data(indexes)
+        documentdesign = prep_data(documentdesign)
+        
+        results = {
+            'documentdesign': documentdesign,
+            'collections': collections,
+            'collection_data': collection_data,
+            'indexes': indexes,
+            'viewpoints': viewpoints,
+            'subsites': subsites,
+            'applications': applications,
+        }
+        
+        return results
 
 '''
 {'loader':'dockitcmsfixture',

@@ -83,10 +83,14 @@ class ManifestTestCase(unittest.TestCase):
         assert cl_found
     
     def test_create_dockitcmsfixture_manifest(self):
-        from dockit.models import TemporaryDocument
-        foo = TemporaryDocument(extrafield=1)
-        data_sources = [(InlineDataSource, [foo], {})]
+        dev_subsite = Subsite(url='/dev/',
+                              name='Dev Site',
+                              sites=[Site.objects.get_current()],
+                              mixins=["widgetblock.widgets"],)
+        dev_subsite.save()
+        data_sources = [(InlineDataSource, [dev_subsite], {})]
         payload = self.manifest_loader.create_manifest_payload('dockitcmsfixture', data_sources)
-        self.assertEqual(len(payload['data']), 1)
-
+        self.assertTrue('subsites' in payload)
+        self.assertEqual(len(payload['subsites']), 1)
+        self.assertEqual(len(payload['subsites'][0]['data']), 1)
 
