@@ -321,10 +321,7 @@ class ModelReferenceField(BaseFieldEntry):
     def get_field_kwargs(self):
         kwargs = super(ModelReferenceField, self).get_field_kwargs()
         ct_id = kwargs.pop('model')
-        if not isinstance(ct_id, (long, int)):
-            model = ct_id
-        else:
-            model = ContentType.objects.get(pk=ct_id).model_class()
+        model = self.model.model_class()
         kwargs['model'] = model
         return kwargs
 
