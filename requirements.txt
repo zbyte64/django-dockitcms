@@ -1,2 +1,7 @@
 -e git+git://github.com/zbyte64/django-dockit.git#egg=django-dockit
 django-classy-tags
+
+mimeparse
+-e git+git://github.com/zbyte64/django-hyperadmin.git#egg=django-hyperadmin
+-e git+git://github.com/zbyte64/django-hyperadmin-dockitresource.git#egg=django-hyperadmin-dockitresource
+

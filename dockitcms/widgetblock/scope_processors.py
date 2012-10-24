@@ -28,10 +28,10 @@ def modelwidgets(scope):
             for entry in entries:
                 widgets.extend(entry.widgets)
             #TODO compute admin url
-            url = reverse('admin:widgetblock_modelwidgets_lookup',
-                          kwargs={'app_label':ct.app_label,
-                                  'module_name':ct.model,
-                                  'pk':pk,})
-            manage_urls = {'list':url}
+            #url = reverse('admin:widgetblock_modelwidgets_lookup',
+            #              kwargs={'app_label':ct.app_label,
+            #                      'module_name':ct.model,
+            #                      'pk':pk,})
+            manage_urls = {}#'list':url}
             scope.add_data('widgets', widgets, manage_urls)
 
