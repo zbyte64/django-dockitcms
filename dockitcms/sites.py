@@ -52,11 +52,20 @@ class DockitCMSSite(object):
     
     def init_applications(self):
         for collection in Collection.objects.all():
-            collection.register_collection()
+            try:
+                collection.register_collection()
+            except Exception, err:
+                print err
         for view_point in BaseViewPoint.objects.all():
-            view_point.register_view_point()
+            try:
+                view_point.register_view_point()
+            except Exception, err:
+                print err
         for index in Index.objects.all():
-            index.register_index()
+            try:
+                index.register_index()
+            except Exception, err:
+                print err
 
 site = DockitCMSSite()
 
