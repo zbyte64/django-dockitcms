@@ -36,7 +36,11 @@ class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     def get_scopes(self):
         scopes = super(PointDetailView, self).get_scopes()
         object_scope = Scope('object', object=self.object)
-        object_scope.add_data('object', self.object, self.object.get_manage_urls())
+        if hasattr(self.object, 'get_manage_urls'):
+            manage_urls = self.object.get_manage_urls()
+        else:
+            manage_urls = dict()
+        object_scope.add_data('object', self.object, manage_urls)
         scopes.append(object_scope)
         return scopes
 

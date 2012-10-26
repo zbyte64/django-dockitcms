@@ -1,5 +1,4 @@
 from django.conf.urls.defaults import patterns, url, include
-from django.core.urlresolvers import get_resolver, get_urlconf
 from django.conf import settings
 
 from dockitcms.models import BaseViewPoint, Subsite, Collection, Index
@@ -7,7 +6,7 @@ from dockitcms.signals import pre_init_applications, post_init_applications, pos
 
 
 class DockitCMSSite(object):
-    def __init__(self, name=None, app_name='dockitcms'):
+    def __init__(self, name=None, app_name='dockitcms_app'):
         self.root_path = None
         if name is None:
             self.name = 'dockitcms'
@@ -35,13 +34,6 @@ class DockitCMSSite(object):
     def urls(self):
         return self.get_urls(), self.app_name, self.name
     
-    def patch_resolver(self, resolver=None):
-        if resolver is None:
-            urlconf = get_urlconf()
-            resolver = get_resolver(urlconf)
-        #TODO test how this effects current requests
-        resolver._populate()
-    
     def init_applications(self):
         pre_init_applications.send(sender=type(self), cms_site=self)
         
@@ -55,7 +47,6 @@ class DockitCMSSite(object):
         for view_point in BaseViewPoint.objects.all():
             try:
                 view_point.register_view_point()
-                view_point.contains_url('')
             except Exception, err:
                 print err
                 errors.append(err)
@@ -69,7 +60,6 @@ class DockitCMSSite(object):
     
     def reload_site(self):
         self.init_applications()
-        self.patch_resolver()
         post_reload_site.send(sender=type(self), cms_site=self)
 
 site = DockitCMSSite()

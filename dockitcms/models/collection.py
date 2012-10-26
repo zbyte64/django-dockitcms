@@ -113,7 +113,7 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
                 urls['edit'] = base_url + instance.pk + '/'
             return urls
         
-        kwargs['attrs']['get_manage_urls'] = get_manage_urls
+        #kwargs['attrs']['get_manage_urls'] = get_manage_urls
         kwargs['attrs']['_collection_document'] = self
         return kwargs
     

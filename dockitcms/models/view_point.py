@@ -1,15 +1,14 @@
 from dockit import schema
 
 from dockitcms.scope import ScopeList, Scope, get_site_scope
+from dockitcms.models.mixin import create_document_mixin
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.conf.urls.defaults import patterns, url, include
 
 import re
-import urlparse
 
-from mixin import create_document_mixin
 
 SUBSITE_MIXINS = {}
 VIEW_POINT_MIXINS = {}
@@ -43,19 +42,13 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
     
     @property
     def urls(self):
-        return self.get_urls(), None, self.name
+        #urls, app_name, namespace
+        return self.get_urls(), self.name, None
 
 Subsite.objects.index('sites').commit()
 
 class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
     subsite = schema.ReferenceField(Subsite)
-    
-    def contains_url(self, url):
-        raise NotImplementedError
-    
-    def _base_url(self):
-        return self.subsite.url
-    base_url = property(_base_url)
     
     #TODO this is currently only called during the save
     def register_view_point(self):
@@ -95,23 +88,21 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         from django.conf.urls.defaults import patterns
         return patterns('')
     
+    def get_absolute_url(self):
+        return self.reverse('index')
+    
     @property
     def urls(self):
-        return self.get_urls(), None, None
-    
-    def get_resolver(self):
-        from dockitcms.common import CMSURLResolver
-        urls = self.get_urls()
-        return CMSURLResolver(r'^'+self.base_url, urls)
-    
-    def dispatch(self, request):
-        resolver = self.get_resolver()
-        view_match = resolver.resolve(request.path)
-        return view_match.func(request, *view_match.args, **view_match.kwargs)
+        return self.get_urls(), None, self.pk
     
     def reverse(self, name, *args, **kwargs):
-        resolver = self.get_resolver()
-        return self.base_url + resolver.reverse(name, *args, **kwargs)
+        if not name.startswith('dockitcms:%s:' % self.pk):
+            name = 'dockitcms:%s:%s' % (self.pk, name)
+        try:
+            return reverse(name, args=args, kwargs=kwargs)#, current_app=self.subsite.name)
+        except Exception, error:
+            print error
+            raise
     
     def save(self, *args, **kwargs):
         super(BaseViewPoint, self).save(*args, **kwargs)
@@ -127,22 +118,9 @@ BaseViewPoint.objects.index('subsite').commit()
 class ViewPoint(BaseViewPoint):
     url = schema.CharField(help_text='May be a regular expression that the url has to match')
     
-    def contains_url(self, url):
-        return bool(self.url_regexp.match(url))
-    
     @property
     def url_regexp(self):
-        return re.compile(self.base_url)
-    
-    def _base_url(self):
-        url = self.url or ''
-        if url.startswith('/'):
-            url = '.'+url
-        return urlparse.urljoin(self.subsite.url, url)
-    base_url = property(_base_url)
-    
-    def get_absolute_url(self):
-        return self.base_url
+        return re.compile(self.url)
     
     def __unicode__(self):
         if self.url:
