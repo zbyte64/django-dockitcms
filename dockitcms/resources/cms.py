@@ -1,4 +1,3 @@
-from dockitresource.resources import DocumentResource
 import hyperadmin
 
 
@@ -6,13 +5,12 @@ import hyperadmin
 #from django.utils.functional import update_wrapper
 
 from dockitcms.models import BaseCollection, BaseViewPoint, DocumentDesign, Subsite, Application, Index, BaseRecipe
+from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
+from dockitcms.resources.virtual import VirtualDocumentResource
 
 #from views import ManageCollectionView
 
 #from common import CMSDocumentResource, AdminAwareSchemaAdmin
-
-class CMSDocumentResource(DocumentResource):
-    pass
 
 class ApplicationResource(CMSDocumentResource):
     pass
@@ -24,8 +22,32 @@ class DocumentDesignResource(CMSDocumentResource):
 
 hyperadmin.site.register(DocumentDesign, DocumentDesignResource)
 
-class CollectionResource(CMSDocumentResource):
+class CollectionResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['title', 'application']#, 'admin_manage_link']
+    
+    def get_manage_collection_resource_kwargs(self, item, **kwargs):
+        document_class = item.instance.get_document()
+        params = {'resource_adaptor':document_class,
+                  'site':self.site,
+                  'parent_resource':self,}
+        params.update(kwargs)
+        return params
+    
+    def get_manage_collection_resource_class(self):
+        return VirtualDocumentResource
+    
+    def get_manage_collection_resource(self, item, **kwargs):
+        kwargs = self.get_manage_collection_resource_kwargs(item, **kwargs)
+        klass = self.get_manage_collection_resource_class()
+        return klass(**kwargs)
+    
+    def register_new_collection(self, item):
+        #resource = self.get_manage_collection_resource(item)
+        #register app
+        #register resource
+        document_class = item.instance.get_document()
+        self.site.register(document_class, self.get_manage_collection_resource_class())
+        #perhaps we should register to a different admin?
     
     '''
     manage_collection = ManageCollectionView
@@ -45,17 +67,17 @@ class CollectionResource(CMSDocumentResource):
 
 hyperadmin.site.register(BaseCollection, CollectionResource)
 
-class IndexResource(CMSDocumentResource):
+class IndexResource(ReloadCMSSiteMixin, CMSDocumentResource):
     pass
 
 hyperadmin.site.register(Index, IndexResource)
 
-class SubsiteResource(CMSDocumentResource):
+class SubsiteResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['name', 'url']
 
 hyperadmin.site.register(Subsite, SubsiteResource)
 
-class ViewPointResource(CMSDocumentResource):
+class ViewPointResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['base_url', 'subsite', 'view_type']
 
 hyperadmin.site.register(BaseViewPoint, ViewPointResource)

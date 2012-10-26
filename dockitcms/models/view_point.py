@@ -4,6 +4,7 @@ from dockitcms.scope import ScopeList, Scope, get_site_scope
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
+from django.conf.urls.defaults import patterns, url, include
 
 import re
 import urlparse
@@ -15,6 +16,7 @@ VIEW_POINT_MIXINS = {}
 
 class ManageUrlsMixin(object):
     def get_manage_urls(self):
+        return {}
         admin_name = '_'.join((self._meta.app_label, self._meta.module_name))
         urls = {'add': reverse('admin:%s_add' % admin_name),
                 'list': reverse('admin:%s_changelist' % admin_name),}
@@ -29,6 +31,19 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
     
     def __unicode__(self):
         return u'%s - %s' % (self.name, self.url)
+    
+    def get_urls(self):
+        urlpatterns = patterns('',)
+        
+        for view_point in BaseViewPoint.objects.filter(subsite=self):
+            urlpatterns += patterns('',
+                url(r'', include(view_point.urls))
+            )
+        return urlpatterns
+    
+    @property
+    def urls(self):
+        return self.get_urls(), None, self.name
 
 Subsite.objects.index('sites').commit()
 
@@ -79,6 +94,10 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
     def get_urls(self):
         from django.conf.urls.defaults import patterns
         return patterns('')
+    
+    @property
+    def urls(self):
+        return self.get_urls(), None, None
     
     def get_resolver(self):
         from dockitcms.common import CMSURLResolver
