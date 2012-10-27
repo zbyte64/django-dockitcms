@@ -1,7 +1,7 @@
 from dockit import schema
 
 from dockitcms.scope import ScopeList, Scope, get_site_scope
-from dockitcms.models.mixin import create_document_mixin
+from dockitcms.models.mixin import create_document_mixin, ManageUrlsMixin
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
@@ -12,16 +12,6 @@ import re
 
 SUBSITE_MIXINS = {}
 VIEW_POINT_MIXINS = {}
-
-class ManageUrlsMixin(object):
-    def get_manage_urls(self):
-        return {}
-        admin_name = '_'.join((self._meta.app_label, self._meta.module_name))
-        urls = {'add': reverse('admin:%s_add' % admin_name),
-                'list': reverse('admin:%s_changelist' % admin_name),}
-        if self.pk:
-            urls['edit'] = reverse('admin:%s_change' % admin_name, args=[self.pk])
-        return urls
 
 class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MIXINS)):
     url = schema.CharField()

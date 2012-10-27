@@ -5,8 +5,8 @@ from dockit.schema.loading import force_register_documents
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
 
-from design import DocumentDesign
-from mixin import EventMixin, PostEventFunction
+from dockitcms.models.design import DocumentDesign
+from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction
 
 COLLECTION_MIXINS = {}
 
@@ -32,14 +32,14 @@ def mixin_choices():
         choices.append((key, value.label))
     return choices
 
-class BaseCollection(schema.Document):
+class BaseCollection(ManageUrlsMixin, schema.Document):
     application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
     title = None
     
     @permalink
     def get_admin_manage_url(self):
-        return ('admin:dockitcms_basecollection_manage', [self.pk], {})
+        return self.get_resource_item().get_absolute_url()
     
     def admin_manage_link(self):
         url = self.get_admin_manage_url()
@@ -98,22 +98,15 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
         kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
         
-        if parents and not any([issubclass(parent, schema.Document) for parent in parents]):
+        parents.append(VirtualManageUrlsMixin)
+        if not any([issubclass(parent, schema.Document) for parent in parents]):
             parents.append(schema.Document)
+        
         if parents:
             kwargs['parents'] = tuple(parents)
         if self.application:
             kwargs['app_label'] = self.application.name
         
-        def get_manage_urls(instance):
-            base_url = self.get_admin_manage_url()
-            urls = {'add': base_url + 'add/',
-                    'list': base_url,}
-            if instance.pk:
-                urls['edit'] = base_url + instance.pk + '/'
-            return urls
-        
-        #kwargs['attrs']['get_manage_urls'] = get_manage_urls
         kwargs['attrs']['_collection_document'] = self
         return kwargs
     

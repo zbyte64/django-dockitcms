@@ -3,6 +3,46 @@ from dockit import schema
 
 SCHEMA_MIXINS = {}
 
+class ManageUrlsMixin(object):
+    """
+    Links the document to the resource
+    """
+    def get_admin_client(self):
+        #TODO this should be configurable
+        from hyperadminclient.urls import admin_client
+        return admin_client.api_endpoint
+    
+    def get_resource(self):
+        admin_client = self.get_admin_client()
+        try:
+            return admin_client.get_resource(type(self))
+        except Exception, error:
+            for key, resource in admin_client.registry.iteritems():
+                if isinstance(key, type) and isinstance(self, key):
+                    return resource
+    
+    def get_manage_urls(self):
+        resource = self.get_resource()
+        
+        if resource is None:
+            return {}
+        
+        urls = {'add': resource.get_create_link().get_absolute_url(),
+                'list': resource.get_resource_link().get_absolute_url(),}
+        if self.pk:
+            resource_item = resource.get_resource_item(self)
+            urls['edit'] = resource_item.get_absolute_url()
+        return urls
+    
+    def get_resource_item(self):
+        return self.get_resource().get_resource_item(self)
+
+class VirtualManageUrlsMixin(ManageUrlsMixin):
+    def get_admin_client(self):
+        #TODO this should be configurable
+        from dockitcms.urls import admin_client
+        return admin_client.api_endpoint
+
 class MixinEventWrapper(object):
     def __init__(self, instance, func, definition):
         self.instance = instance
