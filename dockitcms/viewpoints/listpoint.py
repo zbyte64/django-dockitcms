@@ -1,5 +1,5 @@
 from dockitcms.models import ViewPoint
-from .common import IndexMixin, PointListView, PointDetailView, CanonicalMixin, TEMPLATE_SOURCE_CHOICES, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from dockitcms.viewpoints.common import IndexMixin, PointListView, PointDetailView, CanonicalMixin, TEMPLATE_SOURCE_CHOICES, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockit import schema
 from dockit.forms import DocumentForm
@@ -53,7 +53,7 @@ class ListingViewPoint(ViewPoint, CanonicalMixin, IndexMixin):
             config[key] = params.get('%s_%s' % (prefix, key), None)
         return config
     
-    def get_urls(self):
+    def get_inner_urls(self):
         document = self.get_object_class()
         params = self.to_primitive(self)
         index = self.get_index()

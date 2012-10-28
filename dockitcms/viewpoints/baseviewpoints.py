@@ -1,5 +1,5 @@
-from .forms import TemplateFormMixin
-from .common import CanonicalMixin, TemplateMixin, IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from dockitcms.viewpoints.forms import TemplateFormMixin
+from dockitcms.viewpoints.common import CanonicalMixin, TemplateMixin, IndexMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 
 from dockitcms.models import ViewPoint
 
@@ -8,7 +8,6 @@ from dockit.forms import DocumentForm
 
 from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
-from django.utils.safestring import mark_safe
 from django import forms
 
 class BaseViewPoint(ViewPoint, IndexMixin, TemplateMixin):
@@ -27,7 +26,7 @@ class ListViewPoint(BaseViewPoint, TemplateMixin):
     
     view_class = PointListView
     
-    def get_urls(self):
+    def get_inner_urls(self):
         params = self.to_primitive(self)
         object_class = self.get_object_class()
         index = self.get_index()
@@ -70,7 +69,7 @@ class DetailViewPoint(BaseViewPoint, TemplateMixin, CanonicalMixin):
         
         return object_class
     
-    def get_urls(self):
+    def get_inner_urls(self):
         params = self.to_primitive(self)
         object_class = self.get_object_class()
         index = self.get_index()

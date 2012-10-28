@@ -1,6 +1,6 @@
-import mixins
-from baseviewpoints import *
-from categorypoint import *
+from dockitcms.viewpoints import mixins
+from dockitcms.viewpoints.baseviewpoints import *
+from dockitcms.viewpoints.categorypoint import *
 #from datepoint import *
-from listpoint import *
+from dockitcms.viewpoints.listpoint import *
 #from tagpoint impot *

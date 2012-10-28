@@ -1,4 +1,4 @@
-from listpoint import ListViewPoint
+from dockitcms.viewpoints.listpoint import ListViewPoint
 
 from django import forms
 from django.conf.urls.defaults import patterns, url
@@ -27,7 +27,7 @@ class TagListViewPointClass(BaseViewPointClass):
             config[key] = params.get('%s_%s' % (prefix, key), None)
         return config
     
-    def get_urls(self, view_point_doc):
+    def get_inner_urls(self, view_point_doc):
         document = self.get_document(view_point_doc)
         params = view_point_doc.view_config
         return patterns('',

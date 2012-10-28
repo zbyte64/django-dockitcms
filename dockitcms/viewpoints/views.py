@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 
 from dockitcms.models.mixin import EventMixin, PreEventFunction, CollectEventFunction, PostEventFunction
 
-from exceptions import HttpException
+from dockitcms.viewpoints.exceptions import HttpException
 
 class VPViewMixin(EventMixin): #should be mixed into all view classes by view points
     view_point = None

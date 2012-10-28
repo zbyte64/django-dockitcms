@@ -27,7 +27,6 @@ class DockitCMSSite(object):
             urlpatterns += patterns('',
                 url(r'^%s' % base_url, include(subsite.urls))
             )
-        
         return urlpatterns
 
     @property

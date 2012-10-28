@@ -5,7 +5,7 @@ from dockit import schema
 
 from django.utils.translation import ugettext_lazy as _
 
-from exceptions import HttpForbidden
+from dockitcms.viewpoints.exceptions import HttpForbidden
 
 class AuthConfiguration(schema.Schema):
     authenticated_users_only = schema.BooleanField(default=False)

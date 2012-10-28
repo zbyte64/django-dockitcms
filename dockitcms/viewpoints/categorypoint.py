@@ -2,7 +2,7 @@ from dockitcms.models import ViewPoint, CollectionIndex
 from dockitcms.scope import Scope
 #from schema.forms import DocumentForm
 
-from .common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES
+from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES, PointListView, PointDetailView
 
 from django.conf.urls.defaults import patterns, url
 #from django import forms
@@ -10,9 +10,8 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 
-from common import PointListView, PointDetailView
-
 from dockit import schema
+
 
 class CategoryDetailView(PointListView):
     #indexes to be set
@@ -147,7 +146,7 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
             config[key] = params.get('%s_%s' % (prefix, key), None)
         return config
     
-    def get_urls(self):
+    def get_inner_urls(self):
         category_document = self.get_category_document()
         item_document = self.get_item_document()
         category_index = self.get_category_index()

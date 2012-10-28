@@ -1,4 +1,4 @@
-from listpoint import ListViewPoint
+from dockitcms.viewpoints.listpoint import ListViewPoint
 
 from django import forms
 from django.conf.urls.defaults import patterns, url
@@ -131,7 +131,7 @@ class DateListViewPoint(ListViewPoint):
         print 'enabled for', field
         ListViewPoint.register_view_point(self)
     
-    def get_urls(self):
+    def get_inner_urls(self):
         document = self.get_document()
         params = self.to_primitive(self)
         list_configuration = self._configuration_from_prefix(params, 'list')

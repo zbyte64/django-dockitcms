@@ -75,8 +75,7 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         return ViewPointDesignerFragmentView.as_view(**kwargs)
     
     def get_urls(self):
-        from django.conf.urls.defaults import patterns
-        return patterns('')
+        raise NotImplementedError
     
     def get_absolute_url(self):
         return self.reverse('index')
@@ -110,7 +109,19 @@ class ViewPoint(BaseViewPoint):
     
     @property
     def url_regexp(self):
-        return re.compile(self.url)
+        url = self.url
+        if url.startswith('/'):
+            url = url[1:]
+        return r'%s' % url
+    
+    def get_urls(self):
+        urlpatterns = patterns('',
+            (self.url_regexp, include(self.get_inner_urls())),
+        )
+        return urlpatterns
+    
+    def get_inner_urls(self):
+        return patterns('',)
     
     def __unicode__(self):
         if self.url:

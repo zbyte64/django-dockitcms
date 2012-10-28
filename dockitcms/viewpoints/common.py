@@ -1,7 +1,7 @@
 from dockit import schema
 from dockit.views import ListView, DetailView
 
-from .views import ConfigurableTemplateResponseMixin
+from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 from dockitcms.models import CollectionIndex
 from dockitcms.scope import Scope
 

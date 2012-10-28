@@ -200,11 +200,14 @@ def create_document_mixin(MIXINS):
             def send_mixin_event(kls, event, kwargs):
                 return self.send_mixin_event(event, kwargs)
             
+            cls = type(self)
+            
             document_kwargs = {
                 'fields':{},#copy(self._meta.fields.fields), #fields => uber dictionary, fields.fields => fields we defined
                 'proxy': True,
-                'name': type(self).__name__,
-                'parents': (type(self),),
+                'name': cls.__name__,
+                'parents': (cls,),
+                'module': cls.__module__,
                 'attrs': {'get_active_mixins':classmethod(get_active_mixins),
                           'send_mixin_event':classmethod(send_mixin_event),
                           '_mixin_bound':True},
