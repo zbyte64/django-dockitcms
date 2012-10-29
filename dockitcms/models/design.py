@@ -53,7 +53,7 @@ class DesignMixin(object):
         return 'temp_schema'
     
     def get_schema_kwargs(self, **kwargs):
-        params = {'module':'dockitcms.models',
+        params = {'module':'dockitcms.models.virtual',
                   'virtual':True,
                   'fields':self.get_fields(),
                   'name':self.get_schema_name(),}
