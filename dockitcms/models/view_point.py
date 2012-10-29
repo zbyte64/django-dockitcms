@@ -7,8 +7,6 @@ from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.conf.urls.defaults import patterns, url, include
 
-import re
-
 
 SUBSITE_MIXINS = {}
 VIEW_POINT_MIXINS = {}
@@ -33,7 +31,11 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
     @property
     def urls(self):
         #urls, app_name, namespace
-        return self.get_urls(), self.name, None
+        return self, self.name, None
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
 
 Subsite.objects.index('sites').commit()
 
@@ -82,7 +84,11 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
     
     @property
     def urls(self):
-        return self.get_urls(), None, self.pk
+        return self, None, self.pk
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
     
     def reverse(self, name, *args, **kwargs):
         if not name.startswith('dockitcms:%s:' % self.pk):

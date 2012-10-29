@@ -4,7 +4,6 @@ from django.conf import settings
 from dockitcms.models import BaseViewPoint, Subsite, Collection, Index
 from dockitcms.signals import pre_init_applications, post_init_applications, post_reload_site
 
-
 class DockitCMSSite(object):
     def __init__(self, name=None, app_name='dockitcms_app'):
         self.root_path = None
@@ -16,8 +15,6 @@ class DockitCMSSite(object):
         self.registered_view_points = set()
     
     def get_urls(self): #CONSIDER, won't this match everything?!?
-        self.init_applications()
-        
         urlpatterns = patterns('',)
         
         for subsite in Subsite.objects.filter(sites=settings.SITE_ID):
@@ -31,7 +28,12 @@ class DockitCMSSite(object):
 
     @property
     def urls(self):
-        return self.get_urls(), self.app_name, self.name
+        self.init_applications()
+        return self, self.app_name, self.name
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
     
     def init_applications(self):
         pre_init_applications.send(sender=type(self), cms_site=self)
