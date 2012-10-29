@@ -112,6 +112,8 @@ class ViewPoint(BaseViewPoint):
         url = self.url
         if url.startswith('/'):
             url = url[1:]
+        if not url.startswith('^'):
+            url = '^'+url
         return r'%s' % url
     
     def get_urls(self):
