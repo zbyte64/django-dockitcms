@@ -4,8 +4,8 @@ from dockit.backends.queryindex import QueryFilterOperation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
-from collection import Collection
-from mixin import create_document_mixin
+from dockitcms.models.collection import Collection
+from dockitcms.models.mixin import create_document_mixin
 
 INDEX_MIXINS = {}
 

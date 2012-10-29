@@ -1,8 +1,8 @@
 from dockit import schema
 
-from collection import BaseCollection, Application
-from view_point import BaseViewPoint, Subsite
-from index import Index
+from dockitcms.models.collection import BaseCollection, Application
+from dockitcms.models.view_point import BaseViewPoint, Subsite
+from dockitcms.models.index import Index
 
 class BaseRecipe(schema.Document):
     #fields to keep track of what the recipe generated

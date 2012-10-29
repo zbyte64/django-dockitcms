@@ -1,4 +1,4 @@
-from models import BaseTemplateWidget, Widget, ReusableWidget
+from dockitcms.widgetblock.models import BaseTemplateWidget, Widget, ReusableWidget
 
 from dockit import schema
 
@@ -59,7 +59,7 @@ class CTAWidget(BaseTemplateWidget):
     
     @classmethod
     def get_admin_form_class(cls):
-        from forms import CTAWidgetForm
+        from dockitcms.widgetblock.forms import CTAWidgetForm
         return CTAWidgetForm
 
 class IndexWidget(BaseTemplateWidget, IndexMixin):

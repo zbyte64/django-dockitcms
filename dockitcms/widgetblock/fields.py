@@ -2,7 +2,7 @@ from dockit import schema
 
 from dockitcms.fields import BaseFieldEntry, ListFieldMixin
 
-from models import Widget
+from dockitcms.widgetblock.models import Widget
 
 class WidgetField(BaseFieldEntry):
     field_class = schema.SchemaField

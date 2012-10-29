@@ -2,7 +2,7 @@ from django.db.models import Model
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 
-from models import ModelWidgets
+from dockitcms.widgetblock.models import ModelWidgets
 
 def widgets(scope):
     if 'object' in scope.kwargs:

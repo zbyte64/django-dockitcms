@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.text import capfirst
 from django.utils.datastructures import SortedDict
 
-from properties import SchemaDesignChoiceField
+from dockitcms.models.properties import SchemaDesignChoiceField
 
 class FieldEntry(schema.Schema):
     '''

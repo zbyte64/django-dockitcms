@@ -1,4 +1,4 @@
-from scope import get_site_scope, Scope, ScopeList
+from dockitcms.scope import get_site_scope, Scope, ScopeList
 
 class DefaultScopeMiddleware(object):
     def process_template_response(self, request, response):

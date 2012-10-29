@@ -1,4 +1,4 @@
-import mixins
-import builtins
-import fields
+import dockitcms.widgetblock.mixins
+import dockitcms.widgetblock.builtins
+import dockitcms.widgetblock.fields
 

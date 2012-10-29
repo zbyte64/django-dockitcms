@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 
-from models import SchemaEntry, FieldEntry, Collection
+from dockitcms.models import SchemaEntry, FieldEntry, Collection
 
 from dockit import schema
 
