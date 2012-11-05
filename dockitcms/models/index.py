@@ -1,10 +1,9 @@
 from dockit import schema
 from dockit.backends.queryindex import QueryFilterOperation
 
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
-from dockitcms.models.collection import Collection
+from dockitcms.models.collection import Collection, ModelCollection
 from dockitcms.models.mixin import create_document_mixin
 
 INDEX_MIXINS = {}
@@ -46,10 +45,10 @@ class CollectionIndex(Index):
         proxy = True
 
 class ModelIndex(Index):
-    model = schema.ModelReferenceField(ContentType)
+    collection = schema.ReferenceField(ModelCollection)
     
     def get_model(self):
-        return self.model.model_class()
+        return self.collection.get_model()
     
     def get_object_class(self):
         return self.get_model()
@@ -58,7 +57,7 @@ class ModelIndex(Index):
         pass
     
     def __unicode__(self):
-        return u'%s - %s' % (self.model, self.name)
+        return u'%s - %s' % (self.collection.model, self.name)
     
     class Meta:
         proxy = True

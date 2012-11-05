@@ -6,6 +6,7 @@ from dockitcms.sites import site
 from dockitcms.resources.virtual import site as admin_site
 
 admin_site.load_site()
+#TODO client needs to reload when admin_site reloads.
 admin_client = HyperAdminClient(api_endpoint=admin_site, name='cmsadmin')
 
 urlpatterns = patterns('',

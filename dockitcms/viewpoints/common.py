@@ -2,7 +2,7 @@ from dockit import schema
 from dockit.views import ListView, DetailView
 
 from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
-from dockitcms.models import CollectionIndex
+from dockitcms.models import BaseCollection
 from dockitcms.scope import Scope
 
 from django.utils.translation import ugettext_lazy as _
@@ -20,14 +20,20 @@ Context:<br/>
 <em>object</em> <span>The currently viewed object</span><br/>
 '''))
 
+#TODO instead of referencing an index, reference a collection and use collection.get_resource().get_indexes() to power lookups and listings
 class IndexMixin(schema.Schema):
-    index = schema.ReferenceField(CollectionIndex)
+    collection = schema.ReferenceField(BaseCollection)
+    index_name = schema.CharField()
+    
+    @property
+    def index(self):
+        return self.collection.get_resource().get_indexes()[self.index_name]
     
     def get_object_class(self):
-        return self.index.get_object_class()
+        return self.collection.get_object_class()
     
     def get_index(self):
-        return self.index.get_index()
+        return self.index.get_index_query()
 
 class PointListView(ConfigurableTemplateResponseMixin, ListView):
     pass

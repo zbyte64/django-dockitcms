@@ -4,6 +4,7 @@ from dockit.schema.loading import force_register_documents
 
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
 
 from dockitcms.models.design import DocumentDesign
 from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction
@@ -47,10 +48,14 @@ class BaseCollection(ManageUrlsMixin, schema.Document):
     admin_manage_link.short_description = _('Manage')
     admin_manage_link.allow_tags = True
     
+    def get_object_class(self):
+        raise NotImplementedError
+    
     class Meta:
         typed_field = 'collection_type'
         verbose_name = 'collection'
 
+#TODO name virtual document collection
 class Collection(BaseCollection, DocumentDesign, EventMixin):
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
@@ -124,6 +129,9 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
             doc = self.register_collection()
             return doc
     
+    def get_object_class(self):
+        return self.get_document()
+    
     def __unicode__(self):
         if self.title:
             return self.title
@@ -132,4 +140,16 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
     
     class Meta:
         typed_key = 'document'
+
+class ModelCollection(BaseCollection, EventMixin):
+    model = schema.ModelReferenceField(ContentType)
+    
+    def get_model(self):
+        return self.model.model_class()
+    
+    def get_object_class(self):
+        return self.get_model()
+    
+    class Meta:
+        typed_key = 'model'
 
