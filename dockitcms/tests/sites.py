@@ -1,4 +1,4 @@
-from dockitcms.models import Subsite, ModelCollection
+from dockitcms.models import Subsite, ModelCollection, Application
 from dockitcms.viewpoints.baseviewpoints import ListViewPoint
 from dockitcms.sites import DockitCMSSite
 
@@ -14,9 +14,13 @@ class DockitCMSSiteTest(unittest.TestCase):
         self.site = site
         
         self.factory = RequestFactory()
+        
+        app = Application(name='test', slug='test')
+        app.save()
+        self.application = app
     
     def create_collection(self):
-        coll = ModelCollection(model=ContentType.objects.get_for_model(User))
+        coll = ModelCollection(model=ContentType.objects.get_for_model(User), application=self.application)
         coll.save()
         return coll
     

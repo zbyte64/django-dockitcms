@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 
 class IndexTest(unittest.TestCase):
     def setUp(self):
-        app = Application(name='test')
+        app = Application(name='test', slug='test')
         app.save()
         self.application = app
     

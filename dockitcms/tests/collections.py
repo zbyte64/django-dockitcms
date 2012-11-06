@@ -38,7 +38,7 @@ class SampleAdminFormMixin(AdminFormMixin):
 
 class CollectionTest(unittest.TestCase):
     def setUp(self):
-        app = Application(name='test')
+        app = Application(name='test', slug='test')
         app.save()
         self.application = app
     

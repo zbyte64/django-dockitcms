@@ -1,4 +1,4 @@
-from dockitcms.models import Subsite, ModelCollection
+from dockitcms.models import Subsite, Application, ModelCollection
 from dockitcms import fields
 from dockitcms.viewpoints.listpoint import ListingViewPoint
 from dockitcms.resources.virtual import site
@@ -15,11 +15,14 @@ class ListingViewPointTest(unittest.TestCase):
     def setUp(self):
         subsite = Subsite(name='test', url='/')
         subsite.save()
+        app = Application(name='test', slug='test')
+        app.save()
+        self.app = app
         self.subsite = subsite
         self.factory = RequestFactory()
     
     def create_collection(self):
-        coll = ModelCollection(model=ContentType.objects.get_for_model(User))
+        coll = ModelCollection(model=ContentType.objects.get_for_model(User), application=self.app)
         coll.save()
         return coll
     
