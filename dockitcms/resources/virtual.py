@@ -20,6 +20,10 @@ class VirtualApplicationResource(ApplicationResource):
     
     def get_prompt(self):
         return self.application_document.name
+    
+    def get_app_name(self):
+        return self.application_document.slug
+    app_name = property(get_app_name)
 
 class VirtualResourceSite(ResourceSite):
     site_resource_class = VirtualSiteResource

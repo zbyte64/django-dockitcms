@@ -23,6 +23,10 @@ class CMSCollectionMixin(object):
     
     def build_dynamic_indexes(self):
         return {}
+    
+    def get_app_name(self):
+        return self.collection.application.slug
+    app_name = property(get_app_name)
 
 class VirtualDocumentResource(CMSCollectionMixin, CMSDocumentResource):
     def build_dynamic_indexes(self):
