@@ -79,7 +79,7 @@ class DockitCMSFixtureManifest(DockitFixtureManifest):
         self._process_object_through_object_map(obj.object, self.existing_object_map)
         
         #CONSIDER collection.key is optional; 
-        if obj.object._meta.collection == 'dockitcms.basecollection':
+        if obj.object._meta.collection == 'dockitcms.collection':
             if obj.object.key in self.rename_collections:
                 original_key = obj.object.key
                 original_map_key = self._get_object_key(obj)
