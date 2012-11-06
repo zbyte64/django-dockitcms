@@ -25,7 +25,7 @@ class ListingViewPoint(ViewPoint, CanonicalMixin, IndexMixin):
     detail_view_class = PointDetailView
     
     def get_object_class(self):
-        doc_cls = self.index.get_object_class()
+        doc_cls = self.collection.get_object_class()
         view_point = self
         
         def get_absolute_url_for_instance(instance):

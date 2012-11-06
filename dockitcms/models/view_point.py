@@ -87,6 +87,7 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
     
     @property
     def urls(self):
+        self.urlpatterns
         return self, None, self.pk
     
     @property
