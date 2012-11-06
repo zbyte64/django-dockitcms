@@ -6,7 +6,6 @@ from hyperadmin.resources.applications.application import ApplicationResource
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.sites import ResourceSite
 
-from dockitcms.resources.common import CMSDocumentResource
 from dockitcms.models import Collection, Application
 
 
@@ -21,14 +20,9 @@ class VirtualApplicationResource(ApplicationResource):
     def get_prompt(self):
         return self.application_document.name
 
-class VirtualDocumentResource(CMSDocumentResource):
-    pass
-    #app_name
-
 class VirtualResourceSite(ResourceSite):
     site_resource_class = VirtualSiteResource
     virtual_application_resource_class = VirtualApplicationResource
-    document_resource_class = VirtualDocumentResource
     
     def __init__(self, name='dockitcms-hyperadmin', **kwargs):
         super(VirtualResourceSite, self).__init__(name=name, **kwargs)
@@ -47,9 +41,9 @@ class VirtualResourceSite(ResourceSite):
     def load_collections(self):
         self.registry = dict()
         for collection in self.query_collections():
-            #TODO handle different types, perhaps the collection type should define the resource class
-            document_class = collection.get_document()
-            self.register(document_class, self.document_resource_class)
+            object_class = collection.get_object_class()
+            resource_class = collection.get_resource_class()
+            self.register(object_class, resource_class)
     
     def load_site(self):
         self.load_applications()

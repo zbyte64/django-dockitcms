@@ -6,7 +6,6 @@ import hyperadmin
 
 from dockitcms.models import Collection, BaseViewPoint, DocumentDesign, Subsite, Application, Index, BaseRecipe
 from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
-from dockitcms.resources.virtual import VirtualDocumentResource
 
 #from views import ManageCollectionView
 
@@ -33,12 +32,9 @@ class CollectionResource(ReloadCMSSiteMixin, CMSDocumentResource):
         params.update(kwargs)
         return params
     
-    def get_manage_collection_resource_class(self):
-        return VirtualDocumentResource
-    
     def get_manage_collection_resource(self, item, **kwargs):
         kwargs = self.get_manage_collection_resource_kwargs(item, **kwargs)
-        klass = self.get_manage_collection_resource_class()
+        klass = item.get_resource_class()
         return klass(**kwargs)
     
     def register_new_collection(self, item):

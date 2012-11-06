@@ -51,6 +51,9 @@ class Collection(ManageUrlsMixin, schema.Document):
     def get_object_class(self):
         raise NotImplementedError
     
+    def get_resource_class(self):
+        raise NotImplementedError
+    
     class Meta:
         typed_field = 'collection_type'
         verbose_name = 'collection'
@@ -131,6 +134,10 @@ class VirtualDocumentCollection(Collection, DocumentDesign, EventMixin):
     def get_object_class(self):
         return self.get_document()
     
+    def get_resource_class(self):
+        from dockitcms.resources.collection import VirtualDocumentResource
+        return VirtualDocumentResource
+    
     def __unicode__(self):
         if self.title:
             return self.title
@@ -148,6 +155,10 @@ class ModelCollection(Collection, EventMixin):
     
     def get_object_class(self):
         return self.get_model()
+    
+    def get_resource_class(self):
+        from dockitcms.resources.collection import ModelResource
+        return ModelResource
     
     class Meta:
         typed_key = 'dockitcms.model'

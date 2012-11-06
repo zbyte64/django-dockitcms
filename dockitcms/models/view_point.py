@@ -23,9 +23,12 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         urlpatterns = patterns('',)
         
         for view_point in BaseViewPoint.objects.filter(subsite=self):
-            urlpatterns += patterns('',
-                url(r'', include(view_point.urls))
-            )
+            try:
+                urlpatterns += patterns('',
+                    url(r'', include(view_point.urls))
+                )
+            except Exception as error:
+                print error
         return urlpatterns
     
     @property
