@@ -33,7 +33,7 @@ def mixin_choices():
         choices.append((key, value.label))
     return choices
 
-class BaseCollection(ManageUrlsMixin, schema.Document):
+class Collection(ManageUrlsMixin, schema.Document):
     application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
     title = None
@@ -55,8 +55,7 @@ class BaseCollection(ManageUrlsMixin, schema.Document):
         typed_field = 'collection_type'
         verbose_name = 'collection'
 
-#TODO name virtual document collection
-class Collection(BaseCollection, DocumentDesign, EventMixin):
+class VirtualDocumentCollection(Collection, DocumentDesign, EventMixin):
     key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
     
@@ -79,7 +78,7 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
         if name in function_events:
             ret = object.__getattribute__(self, name)
             return self._mixin_function(ret, function_events[name])
-        return BaseCollection.__getattribute__(self, name)
+        return Collection.__getattribute__(self, name)
     
     def get_active_mixins(self):
         mixins = list()
@@ -91,7 +90,7 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
         return mixins
     
     def save(self, *args, **kwargs):
-        ret = super(Collection, self).save(*args, **kwargs)
+        ret = super(VirtualDocumentCollection, self).save(*args, **kwargs)
         self.register_collection()
         return ret
     
@@ -99,7 +98,7 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
         return 'dockitcms.virtual.%s' % self.key
     
     def get_document_kwargs(self, **kwargs):
-        kwargs = super(Collection, self).get_document_kwargs(**kwargs)
+        kwargs = super(VirtualDocumentCollection, self).get_document_kwargs(**kwargs)
         kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
         
@@ -139,9 +138,9 @@ class Collection(BaseCollection, DocumentDesign, EventMixin):
             return self.__repr__()
     
     class Meta:
-        typed_key = 'document'
+        typed_key = 'dockitcms.virtualdocument'
 
-class ModelCollection(BaseCollection, EventMixin):
+class ModelCollection(Collection, EventMixin):
     model = schema.ModelReferenceField(ContentType)
     
     def get_model(self):
@@ -151,5 +150,5 @@ class ModelCollection(BaseCollection, EventMixin):
         return self.get_model()
     
     class Meta:
-        typed_key = 'model'
+        typed_key = 'dockitcms.model'
 

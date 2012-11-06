@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 
-from dockitcms.models import SchemaEntry, FieldEntry, Collection
+from dockitcms.models import SchemaEntry, FieldEntry, VirtualDocumentCollection
 
 from dockit import schema
 
@@ -292,7 +292,7 @@ registry.register_field('URLField', URLField)
 '''
 
 class CollectionReferenceField(BaseFieldEntry):
-    collection = schema.ReferenceField(Collection)
+    collection = schema.ReferenceField(VirtualDocumentCollection)
 
     field_class = schema.ReferenceField
     

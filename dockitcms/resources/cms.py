@@ -4,7 +4,7 @@ import hyperadmin
 #from django.conf.urls.defaults import patterns, url
 #from django.utils.functional import update_wrapper
 
-from dockitcms.models import BaseCollection, BaseViewPoint, DocumentDesign, Subsite, Application, Index, BaseRecipe
+from dockitcms.models import Collection, BaseViewPoint, DocumentDesign, Subsite, Application, Index, BaseRecipe
 from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
 from dockitcms.resources.virtual import VirtualDocumentResource
 
@@ -65,7 +65,7 @@ class CollectionResource(ReloadCMSSiteMixin, CMSDocumentResource):
         )
     '''
 
-hyperadmin.site.register(BaseCollection, CollectionResource)
+hyperadmin.site.register(Collection, CollectionResource)
 
 class IndexResource(ReloadCMSSiteMixin, CMSDocumentResource):
     pass

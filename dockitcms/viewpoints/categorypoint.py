@@ -1,4 +1,4 @@
-from dockitcms.models import ViewPoint, CollectionIndex
+from dockitcms.models import ViewPoint, Collection
 from dockitcms.scope import Scope
 #from schema.forms import DocumentForm
 
@@ -64,7 +64,8 @@ Context: <br/>
 ''')
 
 class CategoryViewPoint(ViewPoint, CanonicalMixin):
-    category_index = schema.ReferenceField(CollectionIndex)
+    category_collection = schema.ReferenceField(Collection)
+    #TODO #category_index = schema.ReferenceField(CollectionIndex)
     #category_index_param = schema.CharField()
     category_slug_field = schema.CharField(blank=True)
     
@@ -73,10 +74,11 @@ class CategoryViewPoint(ViewPoint, CanonicalMixin):
     category_template_html = schema.TextField(blank=True)
     category_content = schema.TextField(blank=True, help_text=CATEGORY_CONTEXT_DESCRIPTION)
     
-    item_index = schema.ReferenceField(CollectionIndex)
+    item_collection = schema.ReferenceField(Collection)
+    #TODO #item_index = schema.ReferenceField(CollectionIndex)
     #item_index_param = schema.CharField()
     item_slug_field = schema.CharField(blank=True)
-    item_category_index = schema.ReferenceField(CollectionIndex) #dot_path = schema.CharField()
+    #TODO #item_category_index = schema.ReferenceField(CollectionIndex) #dot_path = schema.CharField()
     item_category_index_param = schema.CharField()
     
     item_template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')

@@ -3,7 +3,7 @@ from dockit.backends.queryindex import QueryFilterOperation
 
 from django.db.models import Q
 
-from dockitcms.models.collection import Collection, ModelCollection
+from dockitcms.models.collection import VirtualDocumentCollection, ModelCollection
 from dockitcms.models.mixin import create_document_mixin
 
 INDEX_MIXINS = {}
@@ -26,8 +26,8 @@ class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     class Meta:
         typed_field = 'index_type'
 
-class CollectionIndex(Index):
-    collection = schema.ReferenceField(Collection)
+class VirtualDocumentIndex(Index):
+    collection = schema.ReferenceField(VirtualDocumentCollection)
     
     def get_document(self):
         return self.collection.get_document()
@@ -100,7 +100,7 @@ class CollectionParam(schema.Schema):
     def get_query_filter_operation(self):
         return QueryFilterOperation(key=self.key, operation=self.operation, value=None)
 
-class FilteredCollectionIndex(CollectionIndex):
+class FilteredVirtualDocumentIndex(VirtualDocumentIndex):
     inclusions = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     exclusions = schema.ListField(schema.SchemaField(CollectionFilter), blank=True)
     
@@ -122,12 +122,12 @@ class FilteredCollectionIndex(CollectionIndex):
         return index
     
     def save(self, *args, **kwargs):
-        ret = super(FilteredCollectionIndex, self).save(*args, **kwargs)
+        ret = super(FilteredVirtualDocumentIndex, self).save(*args, **kwargs)
         self.get_index().commit()
         return ret
     
     class Meta:
-        typed_key = 'dockitcms.filteredcollection'
+        typed_key = 'dockitcms.filteredvirtualdocument'
 
 class ModelFilter(schema.Schema):
     key = schema.CharField()

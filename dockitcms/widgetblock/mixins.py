@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from dockitcms.mixins import AdminObjectToolMixin
-from dockitcms.models import Subsite, BaseViewPoint, Collection
+from dockitcms.models import Subsite, BaseViewPoint, VirtualDocumentCollection
 
 from models import BlockWidget
 
@@ -16,8 +16,8 @@ class WidgetMixinSchema(schema.Schema):
 class WidgetMixin(AdminObjectToolMixin):
     schema_class = WidgetMixinSchema
     label = _('Widgets')
-    
-Collection.register_mixin('widgetblock.widgets', WidgetMixin)
+
+VirtualDocumentCollection.register_mixin('widgetblock.widgets', WidgetMixin)
 Subsite.register_mixin('widgetblock.widgets', WidgetMixin)
 BaseViewPoint.register_mixin('widgetblock.widgets', WidgetMixin)
 

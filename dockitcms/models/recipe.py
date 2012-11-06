@@ -1,13 +1,13 @@
 from dockit import schema
 
-from dockitcms.models.collection import BaseCollection, Application
+from dockitcms.models.collection import Collection, Application
 from dockitcms.models.view_point import BaseViewPoint, Subsite
 from dockitcms.models.index import Index
 
 class BaseRecipe(schema.Document):
     #fields to keep track of what the recipe generated
     generated_applications = schema.ListField(schema.ReferenceField(Application), editable=False)
-    generated_collections = schema.ListField(schema.ReferenceField(BaseCollection), editable=False)
+    generated_collections = schema.ListField(schema.ReferenceField(Collection), editable=False)
     generated_indexes = schema.ListField(schema.ReferenceField(Index), editable=False)
     generated_view_points = schema.ListField(schema.ReferenceField(BaseViewPoint), editable=False)
     generated_subsites = schema.ListField(schema.ReferenceField(Subsite), editable=False)

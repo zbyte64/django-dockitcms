@@ -7,7 +7,7 @@ from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.sites import ResourceSite
 
 from dockitcms.resources.common import CMSDocumentResource
-from dockitcms.models import BaseCollection, Application
+from dockitcms.models import Collection, Application
 
 
 class VirtualSiteResource(SiteResource):
@@ -37,7 +37,7 @@ class VirtualResourceSite(ResourceSite):
         return Application.objects.all()
     
     def query_collections(self):
-        return BaseCollection.objects.all()
+        return Collection.objects.all()
     
     def load_applications(self):
         self.applications = dict()
@@ -47,6 +47,7 @@ class VirtualResourceSite(ResourceSite):
     def load_collections(self):
         self.registry = dict()
         for collection in self.query_collections():
+            #TODO handle different types, perhaps the collection type should define the resource class
             document_class = collection.get_document()
             self.register(document_class, self.document_resource_class)
     
