@@ -1,5 +1,5 @@
 from dockitcms.mixins import AdminInlineMixin
-from dockitcms.models import BaseViewPoint, Collection
+from dockitcms.models import BaseViewPoint, VirtualDocumentCollection
 
 from dockit import schema
 
@@ -55,6 +55,6 @@ class AuthMixin(AdminInlineMixin):
         obj = getattr(view, 'object', None)
         context['object_user_perms'] = user.get_all_permissions(obj)
 
-#Collection.register_mixin('dockitcms.auth', AuthMixin)
+#VirtualDocumentCollection.register_mixin('dockitcms.auth', AuthMixin)
 #BaseViewPoint.register_mixin('dockitcms.auth', AuthMixin)
 

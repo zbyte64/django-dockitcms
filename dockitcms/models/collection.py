@@ -152,3 +152,5 @@ class ModelCollection(Collection, EventMixin):
     class Meta:
         typed_key = 'dockitcms.model'
 
+#TODO add ResourceCollection which points to an existing resource
+
