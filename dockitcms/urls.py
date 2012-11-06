@@ -1,13 +1,11 @@
 from django.conf.urls.defaults import patterns, include, url
 
-from hyperadminclient.clients import HyperAdminClient
-
 from dockitcms.sites import site
+from dockitcms.clients import CMSClient
 from dockitcms.resources.virtual import site as admin_site
 
 admin_site.load_site()
-#TODO client needs to reload when admin_site reloads.
-admin_client = HyperAdminClient(api_endpoint=admin_site, name='cmsadmin')
+admin_client = CMSClient(api_endpoint=admin_site, name='cmsadmin')
 
 urlpatterns = patterns('',
     url(r'', include(site.urls)),

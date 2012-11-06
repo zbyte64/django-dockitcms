@@ -54,6 +54,27 @@ class Collection(ManageUrlsMixin, schema.Document):
     def get_resource_class(self):
         raise NotImplementedError
     
+    @classmethod
+    def get_collection_admin_client(cls):
+        #TODO this should be configurable
+        from dockitcms.urls import admin_client
+        return admin_client.api_endpoint
+    
+    def get_collection_resource(self):
+        admin_client = self.get_collection_admin_client()
+        cls = self.get_object_class()
+        try:
+            return admin_client.get_resource(cls)
+        except Exception, error:
+            seen = list()
+            for key, resource in admin_client.registry.iteritems():
+                seen.append((resource.collection.collection_type, key, resource.collection))
+                if resource.collection.collection_type != 'dockitcms.virtualdocument':
+                    assert False, str("%s, %s, %s, %s" % (resource.collection, self, resource.collection==self, resource.collection.collection_type))
+                if hasattr(resource, 'collection') and resource.collection == self:
+                    return resource
+            assert False, str(seen)
+    
     class Meta:
         typed_field = 'collection_type'
         verbose_name = 'collection'
@@ -137,6 +158,19 @@ class VirtualDocumentCollection(Collection, DocumentDesign, EventMixin):
     def get_resource_class(self):
         from dockitcms.resources.collection import VirtualDocumentResource
         return VirtualDocumentResource
+    
+    def get_collection_resource(self):
+        admin_client = self.get_collection_admin_client()
+        cls = self.get_object_class()
+        try:
+            return admin_client.get_resource(cls)
+        except Exception, error:
+            for key, resource in admin_client.registry.iteritems():
+                if isinstance(key, type) and issubclass(cls, key):
+                    return resource
+                #TODO why do we need this?
+                if issubclass(key, schema.Document) and key._meta.collection == cls._meta.collection:
+                    return resource
     
     def __unicode__(self):
         if self.title:

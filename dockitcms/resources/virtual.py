@@ -7,6 +7,7 @@ from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.sites import ResourceSite
 
 from dockitcms.models import Collection, Application
+from dockitcms.resources.signals import post_api_reload
 
 
 class VirtualSiteResource(SiteResource):
@@ -51,6 +52,7 @@ class VirtualResourceSite(ResourceSite):
     
     def reload_site(self):
         self.load_site()
+        post_api_reload.send(sender=type(self), api_site=self)
 
 site = VirtualResourceSite()
 site.register_builtin_media_types()

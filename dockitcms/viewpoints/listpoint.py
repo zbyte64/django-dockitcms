@@ -56,7 +56,7 @@ class ListingViewPoint(ViewPoint, CanonicalMixin, IndexMixin):
     def get_inner_urls(self):
         document = self.get_object_class()
         params = self.to_primitive(self)
-        index = self.get_index()
+        index = self.get_index_query
         urlpatterns = patterns('',
             url(r'^$', 
                 self.list_view_class.as_view(document=document,

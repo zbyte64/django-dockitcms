@@ -61,7 +61,7 @@ class DockitCMSSite(object):
     
     def reload_site(self):
         self.init_applications()
-        post_reload_site.send(sender=type(self), cms_site=self)
+        post_reload_site.send(sender=self, cms_site=self)
 
 site = DockitCMSSite()
 

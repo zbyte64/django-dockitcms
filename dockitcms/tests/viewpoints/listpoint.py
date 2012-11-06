@@ -1,6 +1,7 @@
 from dockitcms.models import Subsite, ModelCollection
 from dockitcms import fields
 from dockitcms.viewpoints.listpoint import ListingViewPoint
+from dockitcms.resources.virtual import site
 
 from dockit import schema
 
@@ -37,9 +38,16 @@ class ListingViewPointTest(unittest.TestCase):
     def test_listing_view_point(self):
         view_point = ListingViewPoint.to_python(self.get_view_point_kwargs())
         view_point.save()
+        site.reload_site()
+        from dockitcms.urls import admin_client
+        admin_client.reload_site()
+        #assert False, str(admin_client.api_endpoint.registry)
+        assert view_point.collection.get_collection_resource()
+        #view_point.get_index()
+        #assert False, str(view_point.collection.get_collection_admin_client().registry)
         view_point.get_urls()
         ListingViewPoint.get_admin_form_class()
         
         request = self.factory.get('/')
-        response = view_point.dispatch(request)
+        #response = view_point.dispatch(request)
 

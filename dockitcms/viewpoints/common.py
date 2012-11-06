@@ -26,12 +26,12 @@ class IndexMixin(schema.Schema):
     
     @property
     def index(self):
-        return self.get_object_class().get_resource().get_indexes()[self.index_name]
+        return self.collection.get_collection_resource().get_indexes()[self.index_name]
     
     def get_object_class(self):
         return self.collection.get_object_class()
     
-    def get_index(self):
+    def get_index_query(self):
         return self.index.get_index_query()
 
 class PointListView(ConfigurableTemplateResponseMixin, ListView):

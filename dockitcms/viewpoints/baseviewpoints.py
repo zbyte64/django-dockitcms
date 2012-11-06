@@ -29,7 +29,7 @@ class ListViewPoint(BaseViewPoint, TemplateMixin):
     def get_inner_urls(self):
         params = self.to_primitive(self)
         object_class = self.get_object_class()
-        index = self.get_index()
+        index = self.get_index_query
         urlpatterns = patterns('',
             url(r'^$', 
                 self.view_class.as_view(document=object_class,
@@ -72,7 +72,7 @@ class DetailViewPoint(BaseViewPoint, TemplateMixin, CanonicalMixin):
     def get_inner_urls(self):
         params = self.to_primitive(self)
         object_class = self.get_object_class()
-        index = self.get_index()
+        index = self.get_index_query
         if self.slug_field:
             return patterns('',
                 url(r'^(?P<slug>.+)/$',
