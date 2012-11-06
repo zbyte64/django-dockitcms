@@ -20,14 +20,13 @@ Context:<br/>
 <em>object</em> <span>The currently viewed object</span><br/>
 '''))
 
-#TODO instead of referencing an index, reference a collection and use collection.get_resource().get_indexes() to power lookups and listings
 class IndexMixin(schema.Schema):
     collection = schema.ReferenceField(Collection)
     index_name = schema.CharField()
     
     @property
     def index(self):
-        return self.collection.get_resource().get_indexes()[self.index_name]
+        return self.get_object_class().get_resource().get_indexes()[self.index_name]
     
     def get_object_class(self):
         return self.collection.get_object_class()

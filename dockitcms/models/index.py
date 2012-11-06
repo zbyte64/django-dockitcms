@@ -11,7 +11,7 @@ INDEX_MIXINS = {}
 class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     name = schema.CharField()
     
-    def get_index(self):
+    def get_index(self): #TODO rename to query?
         raise NotImplementedError
     
     def get_parameters(self):
@@ -25,6 +25,8 @@ class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     
     class Meta:
         typed_field = 'index_type'
+
+Index.objects.index('name').commit()
 
 class VirtualDocumentIndex(Index):
     collection = schema.ReferenceField(VirtualDocumentCollection)
@@ -129,6 +131,8 @@ class FilteredVirtualDocumentIndex(VirtualDocumentIndex):
     class Meta:
         typed_key = 'dockitcms.filteredvirtualdocument'
 
+FilteredVirtualDocumentIndex.objects.index('collection').commit()
+
 class ModelFilter(schema.Schema):
     key = schema.CharField()
     operation = schema.CharField(choices=FILTER_OPERATION_CHOICES, default='exact')
@@ -176,4 +180,6 @@ class FilteredModelIndex(ModelIndex):
     
     class Meta:
         typed_key = 'dockitcms.filteredmodel'
+
+FilteredModelIndex.objects.index('collection').commit()
 

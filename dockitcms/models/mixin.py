@@ -7,18 +7,20 @@ class ManageUrlsMixin(object):
     """
     Links the document to the resource
     """
-    def get_admin_client(self):
+    @classmethod
+    def get_admin_client(cls):
         #TODO this should be configurable
         from hyperadminclient.urls import admin_client
         return admin_client.api_endpoint
     
-    def get_resource(self):
-        admin_client = self.get_admin_client()
+    @classmethod
+    def get_resource(cls):
+        admin_client = cls.get_admin_client()
         try:
-            return admin_client.get_resource(type(self))
+            return admin_client.get_resource(cls)
         except Exception, error:
             for key, resource in admin_client.registry.iteritems():
-                if isinstance(key, type) and isinstance(self, key):
+                if isinstance(key, type) and issubclass(cls, key):
                     return resource
     
     def get_manage_urls(self):
@@ -38,21 +40,23 @@ class ManageUrlsMixin(object):
         return self.get_resource().get_resource_item(self)
 
 class VirtualManageUrlsMixin(ManageUrlsMixin):
-    def get_admin_client(self):
+    @classmethod
+    def get_admin_client(cls):
         #TODO this should be configurable
         from dockitcms.urls import admin_client
         return admin_client.api_endpoint
     
-    def get_resource(self):
-        admin_client = self.get_admin_client()
+    @classmethod
+    def get_resource(cls):
+        admin_client = cls.get_admin_client()
         try:
-            return admin_client.get_resource(type(self))
+            return admin_client.get_resource(cls)
         except Exception, error:
             for key, resource in admin_client.registry.iteritems():
-                if isinstance(key, type) and isinstance(self, key):
+                if isinstance(key, type) and issubclass(cls, key):
                     return resource
                 #TODO why do we need this?
-                if issubclass(key, schema.Document) and key._meta.collection == self._meta.collection:
+                if issubclass(key, schema.Document) and key._meta.collection == cls._meta.collection:
                     return resource
 
 class MixinEventWrapper(object):

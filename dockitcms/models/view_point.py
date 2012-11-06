@@ -28,7 +28,12 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
                     url(r'', include(view_point.urls))
                 )
             except Exception as error:
-                print error
+                import sys, traceback
+                typ, val, tb = sys.exc_info()
+                message = traceback.format_exception_only(typ, val)[0]
+                body = traceback.format_exc()
+                print message
+                print body
         return urlpatterns
     
     @property
