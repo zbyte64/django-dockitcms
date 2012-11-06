@@ -1,10 +1,11 @@
 from django.core.urlresolvers import get_resolver, get_urlconf, clear_url_caches, RegexURLResolver
 
 from dockitcms.signals import reload_site, post_reload_site
+from dockitcms.loading import get_site_reloader
 
 
-def kick_off_reload_site(cms_site, **kwargs):
-    cms_site.reload_site()
+def kick_off_reload_site(**kwargs):
+    get_site_reloader().signal_reload()
 reload_site.connect(kick_off_reload_site)
 
 def refresh_resolver(resolver):
