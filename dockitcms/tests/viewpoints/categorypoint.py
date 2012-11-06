@@ -1,4 +1,4 @@
-from dockitcms.models import FilteredModelIndex, Subsite
+from dockitcms.models import ModelCollection, Subsite
 from dockitcms import fields
 from dockitcms.viewpoints.categorypoint import CategoryViewPoint
 
@@ -17,18 +17,19 @@ class CategoryViewPointTest(unittest.TestCase):
         self.subsite = subsite
         self.factory = RequestFactory()
     
-    def create_model_index(self):
-        index = FilteredModelIndex(model=ContentType.objects.get_for_model(User))
-        index.save()
-        return index
+    def create_collection(self):
+        coll = ModelCollection(model=ContentType.objects.get_for_model(User))
+        coll.save()
+        return coll
     
     def get_view_point_kwargs(self, **kwargs):
         #TODO this is nonsensical, build out test data and make real params
-        index = self.create_model_index()
+        coll = self.create_collection()
         params = {'subsite':self.subsite,
-                  'category_index': index,
-                  'item_category_index': index,
-                  'item_index': index,
+                  'category_collection': coll,
+                  'item_collection': coll,
+                  #'item_index': coll,
+                  'url':'/test/',
                   'list_template_source':'html',
                   'list_template_html':'',
                   'detail_template_source':'html',

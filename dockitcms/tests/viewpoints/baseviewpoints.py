@@ -1,4 +1,4 @@
-from dockitcms.models import FilteredModelIndex, Subsite
+from dockitcms.models import ModelCollection, Subsite
 from dockitcms import fields
 from dockitcms.viewpoints.baseviewpoints import ListViewPoint, DetailViewPoint
 
@@ -17,14 +17,16 @@ class ListViewPointTest(unittest.TestCase):
         self.subsite = subsite
         self.factory = RequestFactory()
     
-    def create_model_index(self):
-        index = FilteredModelIndex(model=ContentType.objects.get_for_model(User))
-        index.save()
-        return index
+    def create_collection(self):
+        coll = ModelCollection(model=ContentType.objects.get_for_model(User))
+        coll.save()
+        return coll
     
     def get_view_point_kwargs(self, **kwargs):
         params = {'subsite':self.subsite.pk,
-                  'index': self.create_model_index().pk,
+                  'collection': self.create_collection().pk,
+                  'url': '/users/',
+                  'index_name': 'primary',
                   'template_source':'html',
                   'template_html':'',}
         params.update(kwargs)

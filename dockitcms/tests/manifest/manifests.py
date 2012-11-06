@@ -2,7 +2,7 @@ from dockit.manifest.datasources import InlineDataSource
 from dockit.manifest.common import ManifestLoader
 
 from dockitcms.manifest.manifests import DockitCMSFixtureManifest
-from dockitcms.models import BaseCollection, Subsite, BaseViewPoint
+from dockitcms.models import Collection, Subsite, BaseViewPoint
 
 from django.utils import unittest
 from django.contrib.sites.models import Site
@@ -76,7 +76,7 @@ class ManifestTestCase(unittest.TestCase):
             if isinstance(obj, BaseViewPoint):
                 self.assertEqual(obj.subsite, dev_subsite)
                 vp_found = True
-            if isinstance(obj, BaseCollection):
+            if isinstance(obj, Collection):
                 self.assertEqual(obj.key, 'dev.team')
                 cl_found = True
         assert vp_found

@@ -113,7 +113,7 @@ class ManifestFixtures(object):
     def collection_fixture(self):
         return [{
             "pk": "4",
-            "model": "dockitcms.basecollection",
+            "model": "dockitcms.collection",
             "natural_key": {
                 "key": "team",
             },
@@ -179,7 +179,7 @@ class ManifestFixtures(object):
                     "list_display": [],
                 },
                 "application": {'slug':'test'},
-                "collection_type": "document",
+                "collection_type": "dockitcms.virtualdocument",
                 "key": "team",
                 "object_label": ""
             }

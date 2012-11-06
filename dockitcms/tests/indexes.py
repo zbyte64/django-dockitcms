@@ -1,4 +1,4 @@
-from dockitcms.models import FilteredCollectionIndex, CollectionFilter, CollectionParam, FilteredModelIndex, ModelFilter, ModelParam, Collection, Application
+from dockitcms.models import FilteredVirtualDocumentIndex, CollectionFilter, CollectionParam, FilteredModelIndex, ModelFilter, ModelParam, VirtualDocumentCollection, ModelCollection, Application
 from dockitcms import fields
 
 from dockit import backends
@@ -22,7 +22,7 @@ class IndexTest(unittest.TestCase):
                             fields.BooleanField(name='published', blank=True),
                             fields.BooleanField(name='featured', blank=True),],}
         params.update(kwargs)
-        collection = Collection(**params)
+        collection = VirtualDocumentCollection(**params)
         collection.save()
         
         document = collection.get_document()
@@ -31,9 +31,18 @@ class IndexTest(unittest.TestCase):
         
         return collection
     
+    def create_model_collection(self, **kwargs):
+        params = {'model': ContentType.objects.get_for_model(User),
+                  'application':self.application,}
+        params.update(kwargs)
+        collection = ModelCollection(**params)
+        collection.save()
+        return collection
+    
     def test_filtered_collection_index(self):
         collection = self.create_test_collection()
-        index = FilteredCollectionIndex(collection=collection,
+        index = FilteredVirtualDocumentIndex(collection=collection,
+                                        name='featured_titles',
                                         inclusions=[CollectionFilter(key='featured', value='true', operation='exact', value_type='boolean')],
                                         exclusions=[CollectionFilter(key='published', value='false', operation='exact', value_type='boolean')],
                                         parameters=[CollectionParam(key='title', operation='exact')],)
@@ -56,7 +65,9 @@ class IndexTest(unittest.TestCase):
         self.assertEqual(query.count(), 1, msg)
     
     def test_filtered_model_index(self):
-        index = FilteredModelIndex(model=ContentType.objects.get_for_model(User),
+        coll = self.create_model_collection()
+        index = FilteredModelIndex(collection=coll,
+                                   name='staff_username',
                                    inclusions=[ModelFilter(key='is_staff', value='true', operation='exact', value_type='boolean')],
                                    exclusions=[ModelFilter(key='is_active', value='false', operation='exact', value_type='boolean')],
                                    parameters=[ModelParam(key='username', operation='exact')],)

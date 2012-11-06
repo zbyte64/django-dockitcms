@@ -30,10 +30,7 @@ class MixinTest(unittest.TestCase):
         return document
     
     def get_admin_for_document(self, document):
-        from django.contrib.admin import site
-        from dockitcms.admin import AdminAwareDocumentAdmin
-        doc_cls = type(document)
-        return AdminAwareDocumentAdmin(doc_cls, site, schema=doc_cls).create_admin_for_schema(doc_cls, document)
+        return document.get_resource()
     
     def test_mixin_expands_document(self):
         document = self.create_test_document(mixins=['test'], a_field='Hello world')

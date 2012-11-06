@@ -4,26 +4,36 @@ from dockitcms.models.index import FilteredVirtualDocumentIndex, FilteredModelIn
 from hyperadmin.resources.indexes import Index
 from hyperadmin.resources.models.models import ModelResource as BaseModelResource
 
-#TODO index objects should be cached
 
-class VirtualDocumentResource(CMSDocumentResource):
+class CMSCollectionMixin(object):
     def __init__(self, **kwargs):
         self.collection = kwargs.pop('collection')
-        super(VirtualDocumentResource, self).__init__(**kwargs)
+        self.dynamic_indexes = None
+        super(CMSCollectionMixin, self).__init__(**kwargs)
     
     def get_indexes(self):
-        indexes = super(VirtualDocumentResource, self).get_indexes()
+        indexes = super(CMSCollectionMixin, self).get_indexes()
+        indexes.update(self.get_dynamic_indexes())
+        return indexes
+    
+    def get_dynamic_indexes(self):
+        if self.dynamic_indexes is None:
+            self.dynamic_indexes = self.build_dynamic_indexes()
+        return self.dynamic_indexes
+    
+    def build_dynamic_indexes(self):
+        return {}
+
+class VirtualDocumentResource(CMSCollectionMixin, CMSDocumentResource):
+    def build_dynamic_indexes(self):
+        indexes = super(VirtualDocumentResource, self).build_dynamic_indexes()
         for index in FilteredVirtualDocumentIndex.objects.filter(collection=self.collection):
             indexes[index.name] = Index(index.name, self, index.get_index())
         return indexes
 
-class ModelResource(BaseModelResource):
-    def __init__(self, **kwargs):
-        self.collection = kwargs.pop('collection')
-        super(ModelResource, self).__init__(**kwargs)
-    
-    def get_indexes(self):
-        indexes = super(ModelResource, self).get_indexes()
+class ModelResource(CMSCollectionMixin, BaseModelResource):
+    def build_dynamic_indexes(self):
+        indexes = super(ModelResource, self).build_dynamic_indexes()
         for index in FilteredModelIndex.objects.filter(collection=self.collection):
             indexes[index.name] = Index(index.name, self, index.get_index())
         return indexes
