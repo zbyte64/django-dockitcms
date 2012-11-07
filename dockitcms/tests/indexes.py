@@ -47,7 +47,7 @@ class IndexTest(unittest.TestCase):
                                         exclusions=[CollectionFilter(key='published', value='false', operation='exact', value_type='boolean')],
                                         parameters=[CollectionParam(key='title', operation='exact')],)
         index.save()
-        query_hash = index.get_index()._index_hash()
+        query_hash = index.get_index_query()._index_hash()
         collection_name = collection.get_document()._meta.collection
         
         #assert the backend was notified of the index
@@ -60,7 +60,7 @@ class IndexTest(unittest.TestCase):
         doc.save()
         self.assertEqual(document.objects.all().count(), 1)
         
-        query = index.get_index()
+        query = index.get_index_query()
         msg = str(query.queryset.query.queryset.query)
         self.assertEqual(query.count(), 1, msg)
     
@@ -72,5 +72,5 @@ class IndexTest(unittest.TestCase):
                                    exclusions=[ModelFilter(key='is_active', value='false', operation='exact', value_type='boolean')],
                                    parameters=[ModelParam(key='username', operation='exact')],)
         index.save()
-        index.get_index().count()
+        index.get_index_query().count()
 

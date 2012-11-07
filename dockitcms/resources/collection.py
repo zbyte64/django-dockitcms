@@ -1,7 +1,6 @@
 from dockitcms.resources.common import CMSDocumentResource
 from dockitcms.models.index import FilteredVirtualDocumentIndex, FilteredModelIndex
 
-from hyperadmin.resources.indexes import Index
 from hyperadmin.resources.models.models import ModelResource as BaseModelResource
 
 
@@ -32,13 +31,13 @@ class VirtualDocumentResource(CMSCollectionMixin, CMSDocumentResource):
     def build_dynamic_indexes(self):
         indexes = super(VirtualDocumentResource, self).build_dynamic_indexes()
         for index in FilteredVirtualDocumentIndex.objects.filter(collection=self.collection):
-            indexes[index.name] = Index(index.name, self, index.get_index())
+            indexes[index.name] = index.get_index(resource=self)
         return indexes
 
 class ModelResource(CMSCollectionMixin, BaseModelResource):
     def build_dynamic_indexes(self):
         indexes = super(ModelResource, self).build_dynamic_indexes()
         for index in FilteredModelIndex.objects.filter(collection=self.collection):
-            indexes[index.name] = Index(index.name, self, index.get_index())
+            indexes[index.name] = index.get_index(resource=self)
         return indexes
 

@@ -6,12 +6,29 @@ from django.db.models import Q
 from dockitcms.models.collection import VirtualDocumentCollection, ModelCollection
 from dockitcms.models.mixin import create_document_mixin
 
+from hyperadmin.resources.indexes import Index as ResourceIndex
+
+
 INDEX_MIXINS = {}
 
 class Index(schema.Document, create_document_mixin(INDEX_MIXINS)):
     name = schema.CharField()
     
-    def get_index(self): #TODO rename to query?
+    def get_index_kwargs(self, **kwargs):
+        params = {'name':self.name,
+                  'query':self.get_index_query(),}
+        params.update(kwargs)
+        return params
+    
+    def get_index_class(self):
+        return ResourceIndex
+    
+    def get_index(self, **kwargs):
+        params = self.get_index_kwargs(**kwargs)
+        klass = self.get_index_class()
+        return klass(**params)
+    
+    def get_index_query(self):
         raise NotImplementedError
     
     def get_parameters(self):
@@ -38,7 +55,7 @@ class VirtualDocumentIndex(Index):
         return self.get_document()
     
     def register_index(self):
-        self.get_index().commit()
+        self.get_index_query().commit()
     
     def __unicode__(self):
         return u'%s - %s' % (self.collection, self.name)
@@ -108,7 +125,7 @@ class FilteredVirtualDocumentIndex(VirtualDocumentIndex):
     
     parameters = schema.ListField(schema.SchemaField(CollectionParam), blank=True)
     
-    def get_index(self):
+    def get_index_query(self):
         document = self.get_document()
         index = document.objects.all()
         inclusions = list()
@@ -125,7 +142,7 @@ class FilteredVirtualDocumentIndex(VirtualDocumentIndex):
     
     def save(self, *args, **kwargs):
         ret = super(FilteredVirtualDocumentIndex, self).save(*args, **kwargs)
-        self.get_index().commit()
+        self.register_index()
         return ret
     
     class Meta:
@@ -162,7 +179,7 @@ class FilteredModelIndex(ModelIndex):
     
     parameters = schema.ListField(schema.SchemaField(ModelParam), blank=True)
     
-    def get_index(self):
+    def get_index_query(self):
         model = self.get_model()
         index = model.objects.all()
         inclusions = list()
