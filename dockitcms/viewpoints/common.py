@@ -20,6 +20,23 @@ Context:<br/>
 <em>object</em> <span>The currently viewed object</span><br/>
 '''))
 
+
+class SingleResourceMixin(schema.Schema):
+    collection = schema.ReferenceField(Collection)
+    
+    @property
+    def resource(self):
+        return self.collection.get_collection_resource()
+    
+    def get_object_class(self):
+        return self.collection.get_object_class()
+
+class ResourceEndpointMixin(SingleResourceMixin):
+    endpoint_name = schema.CharField()
+    url_name = schema.CharField(blank=True)
+    
+    #TODO this requires a sort of form wizard? or make endpoint a resource
+
 class IndexMixin(schema.Schema):
     collection = schema.ReferenceField(Collection)
     index_name = schema.CharField()
