@@ -10,6 +10,7 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.translation import ugettext_lazy as _
 from django import forms
 
+#TODO IndexMixin => SingleResourceMixin/ResourceEndpointMixin; CONSIDER: what about index lookups, should factor down to seperate endpoints for each index
 class BaseViewPoint(ViewPoint, IndexMixin, TemplateMixin):
     view_class = None
     
@@ -19,6 +20,19 @@ class BaseViewPoint(ViewPoint, IndexMixin, TemplateMixin):
     @classmethod
     def get_admin_form_class(cls):
         return BaseViewPointForm
+    
+    def get_view_endpoint_options(self):
+        return {}
+    
+    def get_view_endpoint_definitions(self):
+        return [{
+            'url':self.url_regexp,
+            'view_class':self.view_class,
+            'resource': self.resource, #TODO migrate from index
+            'endpoint_name': self.endpoint_name, #TODO populated from selecting an endpoint
+            'url_name': self.url_name or self.endpoint_name, #TODO
+            'options':self.get_view_endpoint_options(),
+        }]
 
 class ListViewPoint(BaseViewPoint, TemplateMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)
