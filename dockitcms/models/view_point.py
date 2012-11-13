@@ -14,10 +14,25 @@ VIEW_POINT_MIXINS = {}
 class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MIXINS)):
     url = schema.CharField()
     name = schema.CharField()
+    slug = schema.SlugField()
     sites = schema.ModelSetField(Site, blank=True)
     
     def __unicode__(self):
         return u'%s - %s' % (self.name, self.url)
+    
+    def get_site_client(self):
+        """
+        Returns a hyperadmin client for public consumption
+        """
+        from hyperadmin.clients.djangoviews import DjangoViewsClient
+        from dockitcms.resources.urls import site
+        client = DjangoViewsClient(api_endpoint=site, name=self.slug)
+        for view_point in BaseViewPoint.objects.filter(subsite=self):
+            entries = view_point.get_view_endpoint_definitions()
+            for entry in entries:
+                client.register_view_endpoint(entry['url'], entry['view_class'], entry['resource'],
+                                              entry['endpoint_name'], name=entry['url_name'], options=entry['options'])
+        return client
     
     def get_urls(self):
         urlpatterns = patterns('',)
@@ -79,10 +94,17 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         
         return ScopeList([site_scope, subsite_scope, viewpoint_scope])
     
-    def get_admin_view(self, **kwargs):
-        from dockitcms.admin.views import ViewPointDesignerFragmentView
-        kwargs['view_spec'] = self
-        return ViewPointDesignerFragmentView.as_view(**kwargs)
+    def get_view_endpoint_definitions(self):
+        """
+        return a list of dictionaries containing the following keys:
+        * url
+        * view_class
+        * resource
+        * endpoint_name
+        * url_name
+        * options
+        """
+        raise NotImplementedError
     
     def get_urls(self):
         raise NotImplementedError
