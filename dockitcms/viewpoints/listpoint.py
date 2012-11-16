@@ -12,9 +12,7 @@ class ListingViewPoint(BaseViewPoint):
     class Meta:
         typed_key = 'dockitcms.listing'
     
-    def get_view_endpoint_definitions(self):
-        endpoints = []
-        endpoints.extend(self.list_view.get_view_endpoint_definitions())
-        endpoints.extend(self.detail_view.get_view_endpoint_definitions())
-        return endpoints
+    def register_view_endpoints(self, site):
+        self.list_view.register_view_endpoints(site)
+        self.detail_view.register_view_endpoints(site)
 

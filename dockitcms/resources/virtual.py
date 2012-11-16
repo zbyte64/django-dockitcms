@@ -66,12 +66,3 @@ site = VirtualResourceSite()
 site.register_builtin_media_types()
 site.install_storage_resources()
 
-class ResourceSubsite(ResourceSite):
-    """
-    The public facing API that exposes functionality from the VirtualResourceSite/Collections API
-    
-    What kind of resource?
-    """
-    def post_resource_registration(self, resource):
-        return #No app objects in this API yet...
-

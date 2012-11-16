@@ -23,7 +23,8 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         """
         Returns a hyperadmin client for public consumption
         """
-        from dockitcms.resources.virtual import ResourceSubsite, site
+        from dockitcms.resources.virtual import site
+        from dockitcms.resources.public import ResourceSubsite
         from dockitcms.models import Collection
         #from hyperadmin.clients.djangoviews import DjangoViewsClient
         #from dockitcms.resources.urls import site

@@ -38,8 +38,6 @@ class Collection(ManageUrlsMixin, schema.Document):
     admin_options = schema.SchemaField(AdminOptions)
     title = None
     
-    public_resource_class = None #TODO implement this, must have register_endpoint
-    
     @permalink
     def get_admin_manage_url(self):
         return self.get_resource_item().get_absolute_url()
@@ -78,7 +76,8 @@ class Collection(ManageUrlsMixin, schema.Document):
             assert False, str(seen)
     
     def get_public_resource_class(self):
-        return self.public_resource_class
+        from dockitcms.resources.public import PublicResource
+        return PublicResource
     
     def get_public_resource_options(self):
         return {

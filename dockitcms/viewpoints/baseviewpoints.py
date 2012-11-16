@@ -1,5 +1,6 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
 from dockitcms.viewpoints.common import TemplateMixin, ResourceEndpointMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from dockitcms.viewspoints.endpoints import ListEndpoint, DetailEndpoint
 
 from dockitcms.models import ViewPoint
 
@@ -9,10 +10,10 @@ from dockit.forms import DocumentForm
 from django.utils.translation import ugettext_lazy as _
 from django import forms
 
-#TODO IndexMixin => SingleResourceMixin/ResourceEndpointMixin; CONSIDER: what about index lookups, should factor down to seperate endpoints for each index
+
 class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
     view_class = None
-    view_endpoint_class = None #TODO
+    view_endpoint_class = None
     
     class Meta:
         proxy = True
@@ -43,32 +44,13 @@ class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
         kwargs = self.get_view_endpoint_kwargs(resource=resource)
         endpoint = klass(**kwargs)
         resource.register_endpoint(endpoint) #TODO support this method
-    
-    def get_view_endpoint_options(self):
-        return {'view_point':self,
-                'configuration':{
-                    'template_source':self.template_source,
-                    'template_name':self.template_name,
-                    'template_html':self.template_html,
-                    'content':self.content,
-                }
-        }
-    
-    def get_view_endpoint_definitions(self):
-        return [{
-            'url':self.get_url_regexp(),
-            'view_class':self.view_class,
-            'resource': self.resource, #TODO migrate from index
-            'endpoint_name': self.endpoint_name, #TODO populated from selecting an endpoint
-            'url_name': self.url_name or self.endpoint_name, #TODO
-            'options':self.get_view_endpoint_options(),
-        }]
 
 class ListViewPoint(BaseViewPoint, TemplateMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)
     #order_by = schema.CharField(blank=True)
     
     view_class = PointListView
+    view_endpoint_class = ListEndpoint
     
     #def get_view_endpoint_options(self):
     #    return {}
@@ -86,6 +68,7 @@ class DetailViewPoint(BaseViewPoint, TemplateMixin):
     slug_field = schema.SlugField(blank=True)
     
     view_class = PointDetailView
+    view_endpoint_class = DetailEndpoint
     
     def get_url(self):
         url = super(DetailViewPoint, self).get_url()
