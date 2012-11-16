@@ -2,7 +2,7 @@ from dockitcms.widgetblock.models import BaseTemplateWidget, Widget, ReusableWid
 
 from dockit import schema
 
-from dockitcms.viewpoints.common import IndexMixin
+#from dockitcms.viewpoints.common import IndexMixin
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
@@ -61,7 +61,7 @@ class CTAWidget(BaseTemplateWidget):
     def get_admin_form_class(cls):
         from dockitcms.widgetblock.forms import CTAWidgetForm
         return CTAWidgetForm
-
+"""
 class IndexWidget(BaseTemplateWidget, IndexMixin):
     '''
     A widget that is powered by an index
@@ -75,7 +75,7 @@ class IndexWidget(BaseTemplateWidget, IndexMixin):
         index = self.get_index()
         context['object_list'] = index
         return context
-
+"""
 class FlatMenuEntry(schema.Schema):
     title = schema.CharField()
     url = schema.CharField()

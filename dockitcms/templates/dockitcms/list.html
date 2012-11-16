@@ -5,8 +5,10 @@
 {{content}}
 {% else %}
 <ul>
-{% for object in object_list %}
-<li><a href="{{object.get_absolute_url}}">{{object}}</a></li>
+{% for resource_item in resource_items %}
+{% with resource_item.instance as object %}
+<li><a href="{{resource_item.get_absolute_url}}">{{object}}</a></li>
+{% endwith %}
 {% endfor %}
 </ul>
 {% endif %}

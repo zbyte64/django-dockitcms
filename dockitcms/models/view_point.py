@@ -5,7 +5,6 @@ from dockitcms.models.mixin import create_document_mixin, ManageUrlsMixin
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
-from django.conf.urls.defaults import patterns, url, include
 
 
 SUBSITE_MIXINS = {}
@@ -24,37 +23,47 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         """
         Returns a hyperadmin client for public consumption
         """
-        from hyperadmin.clients.djangoviews import DjangoViewsClient
-        from dockitcms.resources.urls import site
-        client = DjangoViewsClient(api_endpoint=site, name=self.slug)
-        for view_point in BaseViewPoint.objects.filter(subsite=self):
-            entries = view_point.get_view_endpoint_definitions()
-            for entry in entries:
-                client.register_view_endpoint(entry['url'], entry['view_class'], entry['resource'],
-                                              entry['endpoint_name'], name=entry['url_name'], options=entry['options'])
-        return client
-    
-    def get_urls(self):
-        urlpatterns = patterns('',)
+        from dockitcms.resources.virtual import ResourceSubsite, site
+        from dockitcms.models import Collection
+        #from hyperadmin.clients.djangoviews import DjangoViewsClient
+        #from dockitcms.resources.urls import site
+        
+        #client = DjangoViewsClient(api_endpoint=site, name=self.name)
+        #TODO special resource class for proxying lookups. register endpoints with resource
+        #TODO the collection can define the resource class to be used
+        
+        subsite_api = ResourceSubsite(api_endpoint=site, name=self.name)
+        
+        for collection in Collection.objects.all():
+            collection.register_public_resource(site=subsite_api)
         
         for view_point in BaseViewPoint.objects.filter(subsite=self):
             try:
-                urlpatterns += patterns('',
-                    url(r'', include(view_point.urls))
-                )
+                view_point.register_view_endpoints(site=subsite_api)
             except Exception as error:
-                import sys, traceback
-                typ, val, tb = sys.exc_info()
-                message = traceback.format_exception_only(typ, val)[0]
-                body = traceback.format_exc()
-                print message
-                print body
-        return urlpatterns
+                print view_point, error
+                continue
+            #for entry in entries:
+            #    if 
+            #    client.register_view_endpoint(entry['url'], entry['view_class'], entry['resource'],
+            #                                  entry['endpoint_name'], name=entry['url_name'], options=entry['options'])
+        return subsite_api
+    
+    def get_urls(self):
+        if not hasattr(self, '_client'):
+            self._client = self.get_site_client()
+        client = self._client
+        return client.get_urls()
     
     @property
     def urls(self):
         #urls, app_name, namespace
-        return self, self.name, None
+        try:
+            self.urlpatterns
+        except Exception as error:
+            print error
+            raise
+        return self, None, self.name
     
     @property
     def urlpatterns(self):
@@ -94,6 +103,7 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         
         return ScopeList([site_scope, subsite_scope, viewpoint_scope])
     
+    #TODO replace this with something that returns real endpoints
     def get_view_endpoint_definitions(self):
         """
         return a list of dictionaries containing the following keys:
@@ -106,20 +116,11 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         """
         raise NotImplementedError
     
-    def get_urls(self):
-        raise NotImplementedError
+    def register_view_endpoints(self, site):
+        pass
     
     def get_absolute_url(self):
         return self.reverse('index')
-    
-    @property
-    def urls(self):
-        self.urlpatterns
-        return self, None, self.pk
-    
-    @property
-    def urlpatterns(self):
-        return self.get_urls()
     
     def reverse(self, name, *args, **kwargs):
         if not name.startswith('dockitcms:%s:' % self.pk):
@@ -144,23 +145,17 @@ BaseViewPoint.objects.index('subsite').commit()
 class ViewPoint(BaseViewPoint):
     url = schema.CharField(help_text='May be a regular expression that the url has to match')
     
-    @property
-    def url_regexp(self):
-        url = self.url
+    def get_url(self):
+        url = self.url or ''
         if url.startswith('/'):
             url = url[1:]
         if not url.startswith('^'):
             url = '^'+url
+        return url
+        
+    def get_url_regexp(self):
+        url = self.get_url()
         return r'%s' % url
-    
-    def get_urls(self):
-        urlpatterns = patterns('',
-            (self.url_regexp, include(self.get_inner_urls())),
-        )
-        return urlpatterns
-    
-    def get_inner_urls(self):
-        return patterns('',)
     
     def __unicode__(self):
         if self.url:

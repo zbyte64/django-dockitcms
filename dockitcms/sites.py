@@ -29,11 +29,13 @@ class DockitCMSSite(object):
     @property
     def urls(self):
         self.init_applications()
-        return self, self.app_name, self.name
+        return self#, self.app_name, self.name
     
     @property
     def urlpatterns(self):
-        return self.get_urls()
+        if not hasattr(self, '_urlpatterns'):
+            self._urlpatterns = self.get_urls()
+        return self._urlpatterns
     
     def init_applications(self):
         pre_init_applications.send(sender=type(self), cms_site=self)
@@ -60,6 +62,8 @@ class DockitCMSSite(object):
         post_init_applications.send(sender=type(self), cms_site=self, errors=errors)
     
     def reload_site(self):
+        if hasattr(self, '_urlpatterns'):
+            del self._urlpatterns
         self.init_applications()
         post_reload_site.send(sender=self, cms_site=self)
 

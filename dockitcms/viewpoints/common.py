@@ -1,5 +1,6 @@
 from dockit import schema
-from dockit.views import ListView, DetailView
+
+from hyperadmin.clients.views import ListView, DetailView
 
 from dockitcms.viewpoints.views import ConfigurableTemplateResponseMixin
 from dockitcms.models import Collection
@@ -35,21 +36,12 @@ class ResourceEndpointMixin(SingleResourceMixin):
     endpoint_name = schema.CharField()
     url_name = schema.CharField(blank=True)
     
+    def get_resource_endpoint(self):
+        for endpoint in self.resource.get_view_endpoints():
+            if endpoint.name_suffix == self.endpoint_name:
+                return endpoint
+    
     #TODO this requires a sort of form wizard? or make endpoint a resource
-
-class IndexMixin(schema.Schema):
-    collection = schema.ReferenceField(Collection)
-    index_name = schema.CharField()
-    
-    @property
-    def index(self):
-        return self.collection.get_collection_resource().get_indexes()[self.index_name]
-    
-    def get_object_class(self):
-        return self.collection.get_object_class()
-    
-    def get_index_query(self):
-        return self.index.get_index_query()
 
 class PointListView(ConfigurableTemplateResponseMixin, ListView):
     pass
@@ -57,12 +49,13 @@ class PointListView(ConfigurableTemplateResponseMixin, ListView):
 class PointDetailView(ConfigurableTemplateResponseMixin, DetailView):
     def get_scopes(self):
         scopes = super(PointDetailView, self).get_scopes()
-        object_scope = Scope('object', object=self.object)
-        if hasattr(self.object, 'get_manage_urls'):
-            manage_urls = self.object.get_manage_urls()
+        obj = self.get_object()
+        object_scope = Scope('object', object=obj)
+        if hasattr(obj, 'get_manage_urls'):
+            manage_urls = obj.get_manage_urls()
         else:
             manage_urls = dict()
-        object_scope.add_data('object', self.object, manage_urls)
+        object_scope.add_data('object', obj, manage_urls)
         scopes.append(object_scope)
         return scopes
 

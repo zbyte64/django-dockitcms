@@ -38,6 +38,8 @@ class Collection(ManageUrlsMixin, schema.Document):
     admin_options = schema.SchemaField(AdminOptions)
     title = None
     
+    public_resource_class = None #TODO implement this, must have register_endpoint
+    
     @permalink
     def get_admin_manage_url(self):
         return self.get_resource_item().get_absolute_url()
@@ -74,6 +76,21 @@ class Collection(ManageUrlsMixin, schema.Document):
                 if hasattr(resource, 'collection') and resource.collection == self:
                     return resource
             assert False, str(seen)
+    
+    def get_public_resource_class(self):
+        return self.public_resource_class
+    
+    def get_public_resource_options(self):
+        return {
+            'collection': self,
+        }
+    
+    def register_public_resource(self, site):
+        klass = self.get_public_resource_class()
+        options = self.get_public_resource_options()
+        #resource_adaptor = self.get_object_class()
+        resource_adaptor = self.get_collection_resource().resource_adaptor
+        return site.register(resource_adaptor, klass, **options)
     
     class Meta:
         typed_field = 'collection_type'

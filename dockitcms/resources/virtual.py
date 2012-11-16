@@ -26,6 +26,10 @@ class VirtualApplicationResource(ApplicationResource):
     app_name = property(get_app_name)
 
 class VirtualResourceSite(ResourceSite):
+    """
+    An API composed of the collections & applications defined through the core API.
+    AKA: Collections API
+    """
     site_resource_class = VirtualSiteResource
     virtual_application_resource_class = VirtualApplicationResource
     
@@ -61,3 +65,13 @@ class VirtualResourceSite(ResourceSite):
 site = VirtualResourceSite()
 site.register_builtin_media_types()
 site.install_storage_resources()
+
+class ResourceSubsite(ResourceSite):
+    """
+    The public facing API that exposes functionality from the VirtualResourceSite/Collections API
+    
+    What kind of resource?
+    """
+    def post_resource_registration(self, resource):
+        return #No app objects in this API yet...
+
