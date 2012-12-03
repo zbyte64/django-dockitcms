@@ -1,6 +1,6 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
 from dockitcms.viewpoints.common import TemplateMixin, ResourceEndpointMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
-from dockitcms.viewspoints.endpoints import ListEndpoint, DetailEndpoint
+from dockitcms.viewpoints.endpoints import ListEndpoint, DetailEndpoint
 
 from dockitcms.models import ViewPoint
 
