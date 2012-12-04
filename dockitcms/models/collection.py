@@ -82,6 +82,7 @@ class Collection(ManageUrlsMixin, schema.Document):
     def get_public_resource_options(self):
         return {
             'collection': self,
+            'app_name': self.application.slug,
         }
     
     def register_public_resource(self, site):

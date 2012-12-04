@@ -5,6 +5,7 @@ from dockitcms.models.mixin import create_document_mixin, ManageUrlsMixin
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
+from django.conf import settings
 
 
 SUBSITE_MIXINS = {}
@@ -42,6 +43,8 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
             try:
                 view_point.register_view_endpoints(site=subsite_api)
             except Exception as error:
+                if settings.DEBUG:
+                    raise
                 print view_point, error
                 continue
             #for entry in entries:
