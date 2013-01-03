@@ -5,10 +5,7 @@ from hyperadmin.resources.models.models import ModelResource as BaseModelResourc
 
 
 class CMSCollectionMixin(object):
-    def __init__(self, **kwargs):
-        self.collection = kwargs.pop('collection')
-        self.dynamic_indexes = None
-        super(CMSCollectionMixin, self).__init__(**kwargs)
+    collection = None
     
     def get_indexes(self):
         indexes = super(CMSCollectionMixin, self).get_indexes()
@@ -16,7 +13,7 @@ class CMSCollectionMixin(object):
         return indexes
     
     def get_dynamic_indexes(self):
-        if self.dynamic_indexes is None:
+        if not hasattr(self, 'dynamic_indexes'):
             self.dynamic_indexes = self.build_dynamic_indexes()
         return self.dynamic_indexes
     

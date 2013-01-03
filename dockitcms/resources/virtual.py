@@ -14,16 +14,10 @@ class VirtualSiteResource(SiteResource):
     pass
 
 class VirtualApplicationResource(ApplicationResource):
-    def __init__(self, **kwargs):
-        self.application_document = kwargs.pop('application')
-        super(VirtualApplicationResource, self).__init__(**kwargs)
+    application = None
     
     def get_prompt(self):
-        return self.application_document.name
-    
-    #def get_app_name(self):
-    #    return self.application_document.slug
-    #app_name = property(get_app_name)
+        return self.application.name
 
 class VirtualResourceSite(ResourceSite):
     """

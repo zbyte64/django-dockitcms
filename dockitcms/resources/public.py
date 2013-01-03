@@ -26,17 +26,11 @@ class PublicResource(BaseResource):
     collection = None
     
     def __init__(self, **kwargs):
-        #self.collection = kwargs.pop('collection')
-        #self._app_name = kwargs.pop('app_name')
         super(PublicResource, self).__init__(**kwargs)
         self.api_resource = self.collection.get_collection_resource()
     
     def register_endpoint(self, endpoint):
         self.endpoints[endpoint.name_suffix] = endpoint
-    
-    #def get_app_name(self):
-    #    return self._app_name
-    #app_name = property(get_app_name)
     
     def get_resource_name(self):
         return self.collection.title
