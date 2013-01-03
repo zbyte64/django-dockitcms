@@ -37,13 +37,17 @@ class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
         params.update(kwargs)
         return params
     
+    def get_view_endpoints(self):
+        klass = self.get_view_endpoint_class()
+        kwargs = self.get_view_endpoint_kwargs()
+        return [(self.collection, (klass, kwargs))]
+    
     def register_view_endpoints(self, site):
         #we assume that the resource adaptor is the same object in both the Collections API and the Public API
         resource = site.get_resource(self.resource.resource_adaptor)
         klass = self.get_view_endpoint_class()
         kwargs = self.get_view_endpoint_kwargs(parent=resource)
-        endpoint = klass(**kwargs)
-        resource.register_endpoint(endpoint) #TODO support this method
+        endpoint = resource.register_endpoint(klass, **kwargs)
 
 class ListViewPoint(BaseViewPoint, TemplateMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)

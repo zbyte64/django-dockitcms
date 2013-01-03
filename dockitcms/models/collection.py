@@ -7,9 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 
 from dockitcms.models.design import DocumentDesign
-from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction
+from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction, CollectEventFunction
 
 COLLECTION_MIXINS = {}
+VIRTUAL_COLLECTION_MIXINS = {}
+MODEL_COLLECTION_MIXINS = {}
 
 class Application(schema.Document):
     name = schema.CharField()
@@ -33,10 +35,46 @@ def mixin_choices():
         choices.append((key, value.label))
     return choices
 
-class Collection(ManageUrlsMixin, schema.Document):
+class Collection(ManageUrlsMixin, schema.Document, EventMixin):
     application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
     title = None
+    
+    mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
+    
+    mixin_function_events = {
+        'get_document_kwargs': {
+            'post': PostEventFunction(event='document_kwargs', keyword='document_kwargs'),
+        },
+        'get_view_endpoints': {
+            'collect': CollectEventFunction(event='view_endpoints', extend_function='extends'),
+            'post': PostEventFunction(event='view_endpoints', keyword='view_endpoints'),
+        },
+    }
+    
+    @classmethod
+    def register_mixin(self, key, mixin_class):
+        COLLECTION_MIXINS[key] = mixin_class
+    
+    @classmethod
+    def get_available_mixins(self):
+        return COLLECTION_MIXINS
+    
+    def __getattribute__(self, name):
+        function_events = object.__getattribute__(self, 'mixin_function_events')
+        if name in function_events:
+            ret = object.__getattribute__(self, name)
+            return self._mixin_function(ret, function_events[name])
+        return schema.Document.__getattribute__(self, name)
+    
+    def get_active_mixins(self):
+        mixins = list()
+        available_mixins = self.get_available_mixins()
+        for mixin_key in self.mixins:
+            if mixin_key in available_mixins:
+                mixin_cls = available_mixins[mixin_key]
+                mixins.append(mixin_cls(self))
+        return mixins
     
     @permalink
     def get_admin_manage_url(self):
@@ -92,43 +130,23 @@ class Collection(ManageUrlsMixin, schema.Document):
         resource_adaptor = self.get_collection_resource().resource_adaptor
         return site.register(resource_adaptor, klass, **options)
     
+    def get_view_endpoints(self):
+        return []
+    
     class Meta:
         typed_field = 'collection_type'
         verbose_name = 'collection'
 
-class VirtualDocumentCollection(Collection, DocumentDesign, EventMixin):
+class VirtualDocumentCollection(Collection, DocumentDesign):
     key = schema.SlugField(unique=True)
-    mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
-    
-    mixin_function_events = {
-        'get_document_kwargs': {
-            'post': PostEventFunction(event='document_kwargs', keyword='document_kwargs')
-        },
-    }
     
     @classmethod
     def register_mixin(self, key, mixin_class):
-        COLLECTION_MIXINS[key] = mixin_class
+        VIRTUAL_COLLECTION_MIXINS[key] = mixin_class
     
     @classmethod
     def get_available_mixins(self):
-        return COLLECTION_MIXINS
-    
-    def __getattribute__(self, name):
-        function_events = object.__getattribute__(self, 'mixin_function_events')
-        if name in function_events:
-            ret = object.__getattribute__(self, name)
-            return self._mixin_function(ret, function_events[name])
-        return Collection.__getattribute__(self, name)
-    
-    def get_active_mixins(self):
-        mixins = list()
-        available_mixins = self.get_available_mixins()
-        for mixin_key in self.mixins:
-            if mixin_key in available_mixins:
-                mixin_cls = available_mixins[mixin_key]
-                mixins.append(mixin_cls(self))
-        return mixins
+        return VIRTUAL_COLLECTION_MIXINS
     
     def save(self, *args, **kwargs):
         ret = super(VirtualDocumentCollection, self).save(*args, **kwargs)
@@ -198,7 +216,7 @@ class VirtualDocumentCollection(Collection, DocumentDesign, EventMixin):
     class Meta:
         typed_key = 'dockitcms.virtualdocument'
 
-class ModelCollection(Collection, EventMixin):
+class ModelCollection(Collection):
     model = schema.ModelReferenceField(ContentType)
     
     def get_model(self):

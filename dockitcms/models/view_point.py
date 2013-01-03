@@ -31,27 +31,16 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         from dockitcms.resources.virtual import site
         from dockitcms.resources.public import ResourceSubsite
         from dockitcms.models import Collection
-        #from hyperadmin.clients.djangoviews import DjangoViewsClient
-        #from dockitcms.resources.urls import site
-        
-        #client = DjangoViewsClient(api_endpoint=site, name=self.name)
-        #TODO special resource class for proxying lookups. register endpoints with resource
-        #TODO the collection can define the resource class to be used
         
         subsite_api = ResourceSubsite(api_endpoint=site, name=self.name)
         logger = self.get_logger()
         
-        for collection in Collection.objects.all():
-            collection.register_public_resource(site=subsite_api)
-        
         for view_point in BaseViewPoint.objects.filter(subsite=self):
-            try:
-                view_point.register_view_endpoints(site=subsite_api)
-            except Exception as error:
-                logger.exception('Error while constructing site client')
-                if settings.DEBUG:
-                    raise
-                continue
+            subsite_api.register_viewpoint(view_point)
+        
+        for collection in Collection.objects.all():
+            subsite_api.register_collection(collection)
+        
         return subsite_api
     
     def get_urls(self):
@@ -109,16 +98,10 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
         
         return ScopeList([site_scope, subsite_scope, viewpoint_scope])
     
-    #TODO replace this with something that returns real endpoints
-    def get_view_endpoint_definitions(self):
+    def get_view_endpoints(self):
         """
-        return a list of dictionaries containing the following keys:
-        * url
-        * view_class
-        * resource
-        * endpoint_name
-        * url_name
-        * options
+        returns a list of tuples
+        (collection, [(endpoint_cls, kwargs)...])
         """
         raise NotImplementedError
     
