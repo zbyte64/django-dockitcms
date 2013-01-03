@@ -41,7 +41,7 @@ class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
         #we assume that the resource adaptor is the same object in both the Collections API and the Public API
         resource = site.get_resource(self.resource.resource_adaptor)
         klass = self.get_view_endpoint_class()
-        kwargs = self.get_view_endpoint_kwargs(resource=resource)
+        kwargs = self.get_view_endpoint_kwargs(parent=resource)
         endpoint = klass(**kwargs)
         resource.register_endpoint(endpoint) #TODO support this method
 

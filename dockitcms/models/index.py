@@ -6,7 +6,7 @@ from django.db.models import Q
 from dockitcms.models.collection import VirtualDocumentCollection, ModelCollection
 from dockitcms.models.mixin import create_document_mixin
 
-from hyperadmin.resources.indexes import Index as ResourceIndex
+from hyperadmin.indexes import Index as ResourceIndex
 
 
 INDEX_MIXINS = {}

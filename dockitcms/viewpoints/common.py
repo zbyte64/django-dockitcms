@@ -37,9 +37,7 @@ class ResourceEndpointMixin(SingleResourceMixin):
     url_name = schema.CharField(blank=True)
     
     def get_resource_endpoint(self):
-        for endpoint in self.resource.get_view_endpoints():
-            if endpoint.name_suffix == self.endpoint_name:
-                return endpoint
+        return self.resource.endpoints.get(self.endpoint_name)
     
     #TODO this requires a sort of form wizard? or make endpoint a resource
 

@@ -20,6 +20,10 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
     def __unicode__(self):
         return u'%s - %s' % (self.name, self.url)
     
+    def get_logger(self):
+        from dockitcms.sites import logger
+        return logger
+    
     def get_site_client(self):
         """
         Returns a hyperadmin client for public consumption
@@ -35,6 +39,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         #TODO the collection can define the resource class to be used
         
         subsite_api = ResourceSubsite(api_endpoint=site, name=self.name)
+        logger = self.get_logger()
         
         for collection in Collection.objects.all():
             collection.register_public_resource(site=subsite_api)
@@ -43,14 +48,10 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
             try:
                 view_point.register_view_endpoints(site=subsite_api)
             except Exception as error:
+                logger.exception('Error while constructing site client')
                 if settings.DEBUG:
                     raise
-                print view_point, error
                 continue
-            #for entry in entries:
-            #    if 
-            #    client.register_view_endpoint(entry['url'], entry['view_class'], entry['resource'],
-            #                                  entry['endpoint_name'], name=entry['url_name'], options=entry['options'])
         return subsite_api
     
     def get_urls(self):
@@ -65,7 +66,8 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         try:
             self.urlpatterns
         except Exception as error:
-            print error
+            logger = self.get_logger()
+            logger.exception('Error while constructing urls')
             raise
         return self, None, self.name
     
