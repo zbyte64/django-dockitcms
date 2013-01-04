@@ -46,6 +46,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         if not hasattr(self, '_client'):
             self._client = self.get_site_client()
         client = self._client
+        
         return client.get_urls()
     
     @property
@@ -137,8 +138,8 @@ class ViewPoint(BaseViewPoint):
         url = self.url or ''
         if url.startswith('/'):
             url = url[1:]
-        #if not url.startswith('^'):
-        #    url = '^'+url
+        if not url.startswith('^'):
+            url = '^'+url
         return url
         
     def get_url_regexp(self):

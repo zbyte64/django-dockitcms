@@ -68,14 +68,6 @@ class DetailViewPoint(BaseViewPoint, TemplateMixin):
     view_class = PointDetailView
     view_endpoint_class = DetailEndpoint
     
-    def get_url(self):
-        url = super(DetailViewPoint, self).get_url()
-        if self.slug_field:
-            url += '(?P<slug>\w\d\-+)/$'
-        else:
-            url += str(self.get_resource_endpoint().get_url_suffix())[1:]
-        return url
-    
     def get_object_class(self):
         object_class = super(DetailViewPoint, self).get_object_class()
         return object_class
