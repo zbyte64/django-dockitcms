@@ -29,10 +29,10 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         Returns a hyperadmin client for public consumption
         """
         from dockitcms.resources.virtual import site
-        from dockitcms.resources.public import ResourceSubsite
+        from dockitcms.resources.public import PublicSubsite
         from dockitcms.models import Collection
         
-        subsite_api = ResourceSubsite(api_endpoint=site, name=self.name)
+        subsite_api = PublicSubsite(api_endpoint=site, name=self.name)
         logger = self.get_logger()
         
         for view_point in BaseViewPoint.objects.filter(subsite=self):

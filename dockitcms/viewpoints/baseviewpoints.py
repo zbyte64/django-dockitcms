@@ -32,7 +32,8 @@ class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
                     'template_name':self.template_name,
                     'template_html':self.template_html,
                     'content':self.content,
-                }
+                 },
+                 'url_suffix':self.get_url(),
         }
         params.update(kwargs)
         return params
@@ -41,13 +42,6 @@ class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
         klass = self.get_view_endpoint_class()
         kwargs = self.get_view_endpoint_kwargs()
         return [(self.collection, (klass, kwargs))]
-    
-    def register_view_endpoints(self, site):
-        #we assume that the resource adaptor is the same object in both the Collections API and the Public API
-        resource = site.get_resource(self.resource.resource_adaptor)
-        klass = self.get_view_endpoint_class()
-        kwargs = self.get_view_endpoint_kwargs(parent=resource)
-        endpoint = resource.register_endpoint(klass, **kwargs)
 
 class ListViewPoint(BaseViewPoint, TemplateMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)
@@ -79,7 +73,7 @@ class DetailViewPoint(BaseViewPoint, TemplateMixin):
         if self.slug_field:
             url += '(?P<slug>\w\d\-+)/$'
         else:
-            url += str(self.get_resource_endpoint()['url'])[1:]
+            url += str(self.get_resource_endpoint().get_url_suffix())[1:]
         return url
     
     def get_object_class(self):
