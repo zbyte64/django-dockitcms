@@ -12,10 +12,11 @@ from django.conf.urls.defaults import patterns, url, include
 
 
 class ChainedAPIRequest(InternalAPIRequest):
-    def __init__(self, api_request, site, path='/', url_args=[], url_kwargs={}, **kwargs):
+    def __init__(self, api_request, site, state, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.outer_api_request = api_request
         url_args = api_request.url_args
         url_kwargs = api_request.url_kwargs
+        self.state = state
         kwargs.setdefault('payload', api_request.payload)
         kwargs.setdefault('method', api_request.method)
         kwargs.setdefault('params', api_request.params)
@@ -29,6 +30,13 @@ class ChainedAPIRequest(InternalAPIRequest):
     @property
     def user(self):
         return self.outer_api_request.user
+    
+    def generate_response(self, link, state):
+        return self.outer_api_request.generate_response(link, self.state)
+    
+    @property
+    def request(self):
+        return self.outer_api_request.request
 
 class ChainedLinkPrototype(LinkPrototype):
     def __init__(self, outer_endpoint, inner_prototype):
@@ -64,9 +72,6 @@ class ChainedLinkPrototype(LinkPrototype):
         return self.inner_prototype.show_link(**kwargs)
     
     def get_link(self, **link_kwargs):
-        #link_kwargs['url'] = self.get_url()
-        #link_kwargs = self.inner_prototype.endpoint.get_link_kwargs(**link_kwargs)
-        print self.outer_endpoint.common_state
         return self.inner_prototype.get_link(**link_kwargs)
     
     def handle_submission(self, link, submit_kwargs):
@@ -79,13 +84,17 @@ class ChainedLinkPrototype(LinkPrototype):
         return self.outer_endpoint.get_url_name()
 
 class PublicEndpointState(EndpointState):
-    #links
-    #get_resource_items
+    #TODO links should consult inner_state, rewrite urls if they exist
     #get_namespaces
-    #item
     @property
     def inner_state(self):
         return self.endpoint.get_inner_endpoint().state
+    
+    def get_item(self):
+        if self.inner_state.item:
+            return self.endpoint.get_resource_item(self.inner_state.item)
+        return None
+    item = property(get_item)
     
     def get_resource_items(self):
         instances = self.inner_state.get_resource_items()
@@ -127,9 +136,35 @@ class PublicApplicationResource(BaseResource):
         urlpatterns = super(PublicApplicationResource, self).get_urls()
         for key, resource in self.resource_adaptor.iteritems():
             urlpatterns += patterns('',
-                url(r'^', include(resource.urls))
+                url(r'', include(resource.urls))
             )
         return urlpatterns
+
+class PublicSiteResource(BaseResource):
+    resource_class = 'resourcelisting'
+    
+    def __init__(self, **kwargs):
+        kwargs.setdefault('resource_adaptor', dict())
+        super(PublicSiteResource, self).__init__(**kwargs)
+    
+    def get_prompt(self):
+        return self.site.name
+    
+    def get_app_name(self):
+        return self.site.name
+    app_name = property(get_app_name)
+    
+    def get_urls(self):
+        urlpatterns = super(PublicSiteResource, self).get_urls()
+        for key, res in self.resources.items():
+            urlpatterns += patterns('',
+                url(r'', include(res.urls))
+            )
+        return urlpatterns
+    
+    @property
+    def resources(self):
+        return self.site.registry
 
 class PublicSubsite(ResourceSite):
     """
@@ -139,6 +174,7 @@ class PublicSubsite(ResourceSite):
     """
     name = 'cmssite'
     application_resource_class = PublicApplicationResource
+    site_resource_class = PublicSiteResource
     api_endpoint = None
     
     def __init__(self, **kwargs):
@@ -202,10 +238,11 @@ class PublicResource(BaseResource):
 class PublicEndpoint(PublicMixin, Endpoint):
     view_point = None
     
-    def get_internal_api_request_kwargs(self, **kwargs):
+    def get_inner_apirequest_kwargs(self, **kwargs):
         params = {'api_request':self.api_request,
                   'site':self.get_inner_site(),
-                  'path':self.api_request.get_full_path(),}
+                  'path':self.api_request.get_full_path(),
+                  'state':self.state,}
         params.update(kwargs)
         return params
     
@@ -215,12 +252,16 @@ class PublicEndpoint(PublicMixin, Endpoint):
     def _get_inner_endpoint(self):
         return self.view_point.get_resource_endpoint()
     
+    def get_inner_apirequest(self):
+        if not hasattr(self, 'inner_apirequest'):
+            kwargs = self.get_inner_apirequest_kwargs()
+            self.inner_apirequest = ChainedAPIRequest(**kwargs)
+        return self.inner_apirequest
+    
     def get_inner_endpoint(self):
         if self.api_request:
             if not hasattr(self, 'inner_endpoint'):
-                kwargs = self.get_internal_api_request_kwargs()
-                self.internal_api_request = ChainedAPIRequest(**kwargs)
-                self.inner_endpoint = self._get_inner_endpoint().fork(api_request=self.internal_api_request)
+                self.inner_endpoint = self._get_inner_endpoint().fork(api_request=self.get_inner_apirequest())
             return self.inner_endpoint
         return self._get_inner_endpoint()
     
@@ -228,13 +269,19 @@ class PublicEndpoint(PublicMixin, Endpoint):
         return self.get_inner_endpoint().get_url_name()
     
     def get_url_suffix(self):
-        return self.get_inner_endpoint().get_url_suffix()
+        ending = self.get_inner_endpoint().get_url_suffix()
+        if ending.startswith('^'):
+            ending = ending[1:]
+        return self.url_suffix + ending
     
     def get_name_suffix(self):
         return self.get_inner_endpoint().get_name_suffix()
     
+    def handle_link_submission(self, api_request):
+        inner_endpoint = self.get_inner_endpoint()
+        return inner_endpoint.dispatch_api(self.get_inner_apirequest())
+    
     def get_url_object(self):
-        #TODO this view should do dispatch_api on inner endpoint
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
@@ -255,3 +302,8 @@ class PublicEndpoint(PublicMixin, Endpoint):
     def get_resource_items(self):
         instances = self.get_instances()
         return [self.get_resource_item(instance) for instance in instances]
+    
+    def get_common_state(self):
+        return {}
+    common_state = property(get_common_state)
+

@@ -33,7 +33,6 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         from dockitcms.models import Collection
         
         subsite_api = PublicSubsite(api_endpoint=site, name=self.name)
-        logger = self.get_logger()
         
         for view_point in BaseViewPoint.objects.filter(subsite=self):
             subsite_api.register_viewpoint(view_point)
@@ -138,8 +137,8 @@ class ViewPoint(BaseViewPoint):
         url = self.url or ''
         if url.startswith('/'):
             url = url[1:]
-        if not url.startswith('^'):
-            url = '^'+url
+        #if not url.startswith('^'):
+        #    url = '^'+url
         return url
         
     def get_url_regexp(self):
