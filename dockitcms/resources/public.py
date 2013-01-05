@@ -5,7 +5,7 @@ from hyperadmin.sites import ResourceSite
 from hyperadmin.resources.resources import BaseResource
 from hyperadmin.endpoints import Endpoint, LinkPrototype
 from hyperadmin.states import EndpointState
-from hyperadmin.hyperobjects import ResourceItem
+from hyperadmin.hyperobjects import ResourceItem, LinkCollectionProvider
 from hyperadmin.apirequests import InternalAPIRequest
 
 from django.conf.urls.defaults import patterns, url, include
@@ -83,12 +83,28 @@ class ChainedLinkPrototype(LinkPrototype):
     def get_url_name(self):
         return self.outer_endpoint.get_url_name()
 
+#this is a mouthful
+class PublicEndpointStateLinkCollectionProvider(LinkCollectionProvider):
+    def _get_link_functions(self, attr):
+        functions = super(PublicEndpointStateLinkCollectionProvider, self)._get_link_functions(attr)
+        #TODO these inner links need post-processing
+        inner_links = getattr(self.container.inner_state.links, attr)
+        functions.append(inner_links)
+        return functions
+
 class PublicEndpointState(EndpointState):
     #TODO links should consult inner_state, rewrite urls if they exist
     #get_namespaces
+    
+    link_collector_class = PublicEndpointStateLinkCollectionProvider
+    
+    @property
+    def inner_endpoint(self):
+        return self.endpoint.get_inner_endpoint()
+    
     @property
     def inner_state(self):
-        return self.endpoint.get_inner_endpoint().state
+        return self.inner_endpoint.state
     
     def get_item(self):
         if self.inner_state.item:
@@ -229,7 +245,8 @@ class PublicResource(BaseResource):
     
     def get_breadcrumbs(self):
         breadcrumbs = self.create_link_collection()
-        breadcrumbs.append(self.get_breadcrumb())
+        #resources & apps don't have breadcrumbs do they?
+        #breadcrumbs.append(self.get_breadcrumb())
         return breadcrumbs
     
     def get_prompt(self):
@@ -286,6 +303,7 @@ class PublicEndpoint(PublicMixin, Endpoint):
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
     def get_link_prototypes(self):
+        return []
         if not hasattr(self, '_link_prototypes'):
             self._link_prototypes = dict()
             for key, proto in self.get_inner_endpoint().get_link_prototypes().iteritems():
