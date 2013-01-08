@@ -21,6 +21,9 @@ class ExpandedSchemas(object):
             self.schemas[key] = block_schema
         return self.schemas[key]
     
+    def __iter__(self):
+        return self.schemas.iterkeys()
+    
     def keys(self):
         return self.original_schemas.keys()
 
