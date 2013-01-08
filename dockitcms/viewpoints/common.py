@@ -7,6 +7,7 @@ from dockitcms.models import Collection
 from dockitcms.scope import Scope
 
 from django.utils.translation import ugettext_lazy as _
+from django.template import Template, Context
 from django.utils.safestring import mark_safe
 
 LIST_CONTEXT_DESCRIPTION = mark_safe(_('''
@@ -67,6 +68,18 @@ class TemplateMixin(schema.Schema):
     template_name = schema.CharField(default='dockitcms/list.html', blank=True)
     template_html = schema.TextField(blank=True)
     content = schema.TextField(blank=True)
+    
+    def render_content(self, context):
+        if self.content:
+            template = Template(self.content)
+            return mark_safe(template.render(Context(context)))
+        return ''
+    
+    def get_template_names(self):
+        if self.template_source == 'name':
+            return [self.template_name]
+        if self.template_source == 'html':
+            return Template(self.template_html)
 
 class CanonicalMixin(schema.Schema):
     canonical = schema.BooleanField(help_text=_('If checked, this view point defines the canonical urls for these collections'))

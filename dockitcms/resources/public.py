@@ -363,6 +363,7 @@ class PublicEndpoint(PublicMixin, Endpoint):
     
     def handle_link_submission(self, api_request):
         inner_endpoint = self.get_inner_endpoint()
+        inner_endpoint.generate_response = self.generate_response
         ilp = inner_endpoint.link_prototypes
         olp = self.link_prototypes
         return inner_endpoint.dispatch_api(self.get_inner_apirequest())
