@@ -4,14 +4,51 @@ from dockit.schema.loading import force_register_documents
 
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
+from django.utils.datastructures import MergeDict
 from django.contrib.contenttypes.models import ContentType
 
 from dockitcms.models.design import DocumentDesign
 from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction, CollectEventFunction
 
-COLLECTION_MIXINS = {}
-VIRTUAL_COLLECTION_MIXINS = {}
-MODEL_COLLECTION_MIXINS = {}
+
+class MixinDict(MergeDict):
+    def __init__(self, substates=[], data={}):
+        self.active_dictionary = dict()
+        self.substates = substates
+        dictionaries = self.get_dictionaries()
+        super(MixinDict, self).__init__(*dictionaries)
+        self.update(data)
+    
+    def get_dictionaries(self):
+        return [self.active_dictionary] + self.substates
+    
+    def __copy__(self):
+        substates = self.get_dictionaries()
+        ret = self.__class__(substates=substates)
+        return ret
+    
+    def __setitem__(self, key, value):
+        self.active_dictionary[key] = value
+    
+    def __delitem__(self, key):
+        del self.active_dictionary[key]
+    
+    def pop(self, key, default=None):
+        return self.active_dictionary.pop(key, default)
+    
+    def update(self, other_dict):
+        self.active_dictionary.update(other_dict)
+    
+    def choices(self):
+        choices = list()
+        for key, value in self.iteritems():
+            choices.append((key, value.label))
+        return choices
+
+COLLECTION_MIXINS = MixinDict()
+VIRTUAL_COLLECTION_MIXINS = MixinDict(substates=[COLLECTION_MIXINS])
+MODEL_COLLECTION_MIXINS = MixinDict(substates=[COLLECTION_MIXINS])
+
 
 class Application(schema.Document):
     name = schema.CharField()
@@ -29,18 +66,12 @@ class AdminOptions(schema.Schema):
     #raw_id_fields = schema.ListField(schema.CharField(), blank=True)
     #readonly_fields = schema.ListField(schema.CharField(), blank=True)
 
-def mixin_choices():
-    choices = list()
-    for key, value in COLLECTION_MIXINS.iteritems():
-        choices.append((key, value.label))
-    return choices
-
 class Collection(ManageUrlsMixin, schema.Document, EventMixin):
     application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
     title = None
     
-    mixins = schema.SetField(schema.CharField(), choices=mixin_choices, blank=True)
+    mixins = schema.SetField(schema.CharField(), choices=COLLECTION_MIXINS.choices, blank=True)
     
     mixin_function_events = {
         'get_document_kwargs': {
@@ -54,7 +85,7 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
     
     @classmethod
     def register_mixin(self, key, mixin_class):
-        COLLECTION_MIXINS[key] = mixin_class
+        self.get_available_mixins()[key] = mixin_class
     
     @classmethod
     def get_available_mixins(self):
@@ -139,10 +170,7 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
 
 class VirtualDocumentCollection(Collection, DocumentDesign):
     key = schema.SlugField(unique=True)
-    
-    @classmethod
-    def register_mixin(self, key, mixin_class):
-        VIRTUAL_COLLECTION_MIXINS[key] = mixin_class
+    mixins = schema.SetField(schema.CharField(), choices=VIRTUAL_COLLECTION_MIXINS.choices, blank=True)
     
     @classmethod
     def get_available_mixins(self):
@@ -218,6 +246,11 @@ class VirtualDocumentCollection(Collection, DocumentDesign):
 
 class ModelCollection(Collection):
     model = schema.ModelReferenceField(ContentType)
+    mixins = schema.SetField(schema.CharField(), choices=MODEL_COLLECTION_MIXINS.choices, blank=True)
+    
+    @classmethod
+    def get_available_mixins(self):
+        return MODEL_COLLECTION_MIXINS
     
     def get_model(self):
         return self.model.model_class()
@@ -228,6 +261,9 @@ class ModelCollection(Collection):
     def get_resource_class(self):
         from dockitcms.resources.collection import ModelResource
         return ModelResource
+    
+    def register_collection(self):
+        pass
     
     class Meta:
         typed_key = 'dockitcms.model'
