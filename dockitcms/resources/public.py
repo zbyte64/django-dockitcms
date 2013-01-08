@@ -22,6 +22,7 @@ class ChainedAPIRequest(InternalAPIRequest):
         kwargs.setdefault('params', api_request.params)
         super(ChainedAPIRequest, self).__init__(site, path, url_args, url_kwargs, **kwargs)
         self.session_state.update(api_request.session_state)
+        self.session_state['site'] = self.outer_api_request.site
     
     def get_full_path(self):
         #TODO
@@ -37,11 +38,33 @@ class ChainedAPIRequest(InternalAPIRequest):
     @property
     def request(self):
         return self.outer_api_request.request
+    
+    def get_link_prototypes(self, endpoint):
+        urlname = endpoint.get_url_name()
+        try:
+            outer_endpoint = self.outer_api_request.get_endpoint(urlname)
+        except KeyError:
+            try:
+                outer_endpoint = self.outer_api_request.get_resource(urlname)
+            except KeyError:
+                #endpoint does not exist in the public
+                return {}
+        return self.outer_api_request.get_link_prototypes(outer_endpoint)
+        
 
 class ChainedLinkPrototype(LinkPrototype):
-    def __init__(self, outer_endpoint, inner_prototype):
-        self.outer_endpoint = outer_endpoint
+    def __init__(self, endpoint, outer_api_request, inner_prototype):
+        #endpoint is discarded
+        self.outer_api_request = outer_api_request
         self.inner_prototype = inner_prototype
+        inner_prototype.get_url = self.get_url
+    
+    @property
+    def outer_endpoint(self):
+        try:
+            return self.outer_api_request.get_endpoint(self.get_url_name())
+        except KeyError:
+            return self.outer_api_request.get_resource(self.get_url_name())
     
     @property
     def name(self):
@@ -78,10 +101,10 @@ class ChainedLinkPrototype(LinkPrototype):
         return self.inner_prototype.handle_submission(link, submit_kwargs)
     
     def get_url(self, **kwargs):
-        return self.outer_endpoint.get_url(**kwargs)
+        return self.endpoint.get_url(**kwargs)
     
     def get_url_name(self):
-        return self.outer_endpoint.get_url_name()
+        return self.endpoint.get_url_name()
 
 #this is a mouthful
 class PublicEndpointStateLinkCollectionProvider(LinkCollectionProvider):
@@ -136,6 +159,66 @@ class PublicResourceItem(ResourceItem):
 class PublicMixin(object):
     state_class = PublicEndpointState
     resource_item_class = PublicResourceItem
+    inner_endpoint = None
+    
+    def get_inner_apirequest_kwargs(self, **kwargs):
+        params = {'api_request':self.api_request,
+                  'site':self.get_inner_site(),
+                  'path':self.api_request.get_full_path(),
+                  'state':self.state,}
+        params.update(kwargs)
+        return params
+    
+    def get_inner_site(self):
+        return self.inner_endpoint.site
+    
+    def get_inner_apirequest(self):
+        if not hasattr(self, 'inner_apirequest'):
+            if 'inner_apirequest' not in self.api_request.session_state:
+                kwargs = self.get_inner_apirequest_kwargs()
+                inner_apirequest = ChainedAPIRequest(**kwargs)
+                self.api_request.session_state['inner_apirequest'] = inner_apirequest
+            self.inner_apirequest = self.api_request.session_state['inner_apirequest']
+        return self.inner_apirequest
+    
+    def get_inner_endpoint(self):
+        if self.api_request:
+            if not hasattr(self, 'bound_inner_endpoint'):
+                inner_apirequest = self.get_inner_apirequest()
+                urlname = self.get_url_name()
+                self.bound_inner_endpoint = inner_apirequest.get_endpoint(urlname)
+            return self.bound_inner_endpoint
+        return self.inner_endpoint
+    
+    def get_url_name(self):
+        return self.inner_endpoint.get_url_name()
+    
+    def get_url_suffix(self):
+        ending = self.inner_endpoint.get_url_suffix()
+        if ending.startswith('^'):
+            ending = ending[1:]
+        return self.url_suffix + ending
+    
+    def get_name_suffix(self):
+        return self.inner_endpoint.get_name_suffix()
+    
+    def get_link_prototypes(self):
+        prototypes = list()
+        inner_link_prototypes = self.get_inner_endpoint().create_link_prototypes()
+        for key, proto in inner_link_prototypes.iteritems():
+            prototypes.append((ChainedLinkPrototype, {'inner_prototype':proto, 'outer_api_request':self.api_request}))
+        return prototypes
+    
+    def get_instances(self):
+        return self.get_inner_endpoint().get_resource_items()
+    
+    def get_resource_item(self, instance, **kwargs):
+        kwargs.setdefault('endpoint', self)
+        return self.get_resource_item_class()(instance=instance, **kwargs)
+    
+    def get_resource_items(self):
+        instances = self.get_instances()
+        return [self.get_resource_item(instance) for instance in instances]
 
 class PublicApplicationResource(BaseResource):
     app_name = None
@@ -164,10 +247,10 @@ class PublicSiteResource(BaseResource):
         super(PublicSiteResource, self).__init__(**kwargs)
     
     def get_prompt(self):
-        return self.site.name
+        return self._site.name
     
     def get_app_name(self):
-        return self.site.name
+        return self._site.name
     app_name = property(get_app_name)
     
     def get_urls(self):
@@ -219,13 +302,17 @@ class PublicSubsite(ResourceSite):
         ret.collection_viewpoints = self.collection_viewpoints
         return ret
 
-class PublicResource(BaseResource):
+class PublicResource(PublicMixin, BaseResource):
     app_name = None
     collection = None
     
-    def __init__(self, **kwargs):
-        super(PublicResource, self).__init__(**kwargs)
+    def post_register(self):
         self.api_resource = self.collection.get_collection_resource()
+        super(PublicResource, self).post_register()
+    
+    @property
+    def inner_endpoint(self):
+        return self.api_resource
     
     def get_parent(self):
         return self._parent
@@ -251,77 +338,35 @@ class PublicResource(BaseResource):
     
     def get_prompt(self):
         return self.api_resource.get_prompt()
+    
+    def get_url_name(self):
+        return self.api_resource.get_url_name()
+    
+    def get_inner_endpoint(self):
+        if self.api_request:
+            if not hasattr(self, 'bound_inner_endpoint'):
+                inner_apirequest = self.get_inner_apirequest()
+                urlname = self.get_url_name()
+                self.bound_inner_endpoint = inner_apirequest.get_resource(urlname)
+            return self.bound_inner_endpoint
+        return self.inner_endpoint
+    
+    def get_item_url(self, item):
+        return self.link_prototypes['update'].get_url(item=item.instance)
 
 class PublicEndpoint(PublicMixin, Endpoint):
     view_point = None
     
-    def get_inner_apirequest_kwargs(self, **kwargs):
-        params = {'api_request':self.api_request,
-                  'site':self.get_inner_site(),
-                  'path':self.api_request.get_full_path(),
-                  'state':self.state,}
-        params.update(kwargs)
-        return params
-    
-    def get_inner_site(self):
-        return self._get_inner_endpoint().site
-    
-    def _get_inner_endpoint(self):
+    @property
+    def inner_endpoint(self):
         return self.view_point.get_resource_endpoint()
-    
-    def get_inner_apirequest(self):
-        if not hasattr(self, 'inner_apirequest'):
-            kwargs = self.get_inner_apirequest_kwargs()
-            self.inner_apirequest = ChainedAPIRequest(**kwargs)
-        return self.inner_apirequest
-    
-    def get_inner_endpoint(self):
-        if self.api_request:
-            if not hasattr(self, 'inner_endpoint'):
-                self.inner_endpoint = self._get_inner_endpoint().fork(api_request=self.get_inner_apirequest())
-            return self.inner_endpoint
-        return self._get_inner_endpoint()
-    
-    def get_url_name(self):
-        return self.get_inner_endpoint().get_url_name()
-    
-    def get_url_suffix(self):
-        ending = self.get_inner_endpoint().get_url_suffix()
-        if ending.startswith('^'):
-            ending = ending[1:]
-        return self.url_suffix + ending
-    
-    def get_name_suffix(self):
-        return self.get_inner_endpoint().get_name_suffix()
     
     def handle_link_submission(self, api_request):
         inner_endpoint = self.get_inner_endpoint()
+        ilp = inner_endpoint.link_prototypes
+        olp = self.link_prototypes
         return inner_endpoint.dispatch_api(self.get_inner_apirequest())
-    
-    def get_url_object(self):
-        view = self.get_view()
-        return url(self.get_url_suffix(), view, name=self.get_url_name(),)
-    
-    def get_link_prototypes(self):
-        return []
-        if not hasattr(self, '_link_prototypes'):
-            self._link_prototypes = dict()
-            for key, proto in self.get_inner_endpoint().get_link_prototypes().iteritems():
-                self._link_prototypes[key] = ChainedLinkPrototype(self, proto)
-        return self._link_prototypes
-    
-    def get_instances(self):
-        return self.get_inner_endpoint().get_resource_items()
-    
-    def get_resource_item(self, instance, **kwargs):
-        kwargs.setdefault('endpoint', self)
-        return self.get_resource_item_class()(instance=instance, **kwargs)
-    
-    def get_resource_items(self):
-        instances = self.get_instances()
-        return [self.get_resource_item(instance) for instance in instances]
     
     def get_common_state(self):
         return {}
     common_state = property(get_common_state)
-
