@@ -1,7 +1,7 @@
 from dockitcms.resources.common import CMSDocumentResource
 from dockitcms.models.index import FilteredVirtualDocumentIndex, FilteredModelIndex
 
-from hyperadmin.resources.models.models import ModelResource as BaseModelResource
+from hyperadmin.resources.models import ModelResource as BaseModelResource
 
 
 class CMSCollectionMixin(object):

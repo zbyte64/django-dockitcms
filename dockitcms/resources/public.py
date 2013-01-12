@@ -2,10 +2,11 @@
 Resource classes for powering the public facing API go here. These classes proxy functionality from the collections/virtual API.
 """
 from hyperadmin.sites import ResourceSite
-from hyperadmin.resources.resources import BaseResource
-from hyperadmin.endpoints import Endpoint, LinkPrototype
+from hyperadmin.resources import BaseResource
+from hyperadmin.endpoints import Endpoint
+from hyperadmin.links import LinkPrototype, LinkCollectionProvider
 from hyperadmin.states import EndpointState
-from hyperadmin.hyperobjects import ResourceItem, LinkCollectionProvider
+from hyperadmin.resources.hyperobjects import ResourceItem
 from hyperadmin.apirequests import InternalAPIRequest
 
 from django.conf.urls.defaults import patterns, url, include
