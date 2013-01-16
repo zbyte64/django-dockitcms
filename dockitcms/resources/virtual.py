@@ -2,7 +2,6 @@
 Defines resources for virtual collections and applications.
 Virtual resources are contained by their own resource site and is reloaded when the CMS signals an application reload
 '''
-from hyperadmin.resources.applications.application import ApplicationResource
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.sites import ResourceSite
 
@@ -13,19 +12,12 @@ from dockitcms.resources.signals import post_api_reload
 class VirtualSiteResource(SiteResource):
     pass
 
-class VirtualApplicationResource(ApplicationResource):
-    application = None
-    
-    def get_prompt(self):
-        return self.application.name
-
 class VirtualResourceSite(ResourceSite):
     """
     An API composed of the collections & applications defined through the core API.
     AKA: Collections API
     """
     site_resource_class = VirtualSiteResource
-    virtual_application_resource_class = VirtualApplicationResource
     
     def __init__(self, name='dockitcms-hyperadmin', **kwargs):
         super(VirtualResourceSite, self).__init__(name=name, **kwargs)
@@ -37,9 +29,8 @@ class VirtualResourceSite(ResourceSite):
         return Collection.objects.all()
     
     def load_applications(self):
-        self.applications = dict()
         for app in self.query_applications():
-            self.register_application(app.slug, app_class=self.virtual_application_resource_class, application=app)
+            self.register_application(app.slug, resource_name=app.name)
     
     def load_collections(self):
         self.registry = dict()

@@ -1,15 +1,13 @@
 """
 Resource classes for powering the public facing API go here. These classes proxy functionality from the collections/virtual API.
 """
-from hyperadmin.sites import ResourceSite
+from hyperadmin.sites import BaseResourceSite
 from hyperadmin.resources import BaseResource
 from hyperadmin.endpoints import Endpoint
 from hyperadmin.links import LinkPrototype, LinkCollectionProvider
 from hyperadmin.states import EndpointState
 from hyperadmin.resources.hyperobjects import ResourceItem
 from hyperadmin.apirequests import InternalAPIRequest
-
-from django.conf.urls.defaults import patterns, url, include
 
 
 class ChainedAPIRequest(InternalAPIRequest):
@@ -45,11 +43,7 @@ class ChainedAPIRequest(InternalAPIRequest):
         try:
             outer_endpoint = self.outer_api_request.get_endpoint(urlname)
         except KeyError:
-            try:
-                outer_endpoint = self.outer_api_request.get_resource(urlname)
-            except KeyError:
-                #endpoint does not exist in the public
-                return {}
+            return {}
         return self.outer_api_request.get_link_prototypes(outer_endpoint)
         
 
@@ -221,71 +215,20 @@ class PublicMixin(object):
         instances = self.get_instances()
         return [self.get_resource_item(instance) for instance in instances]
 
-class PublicApplicationResource(BaseResource):
-    app_name = None
-    
-    def __init__(self, **kwargs):
-        kwargs.setdefault('resource_adaptor', dict())
-        super(PublicApplicationResource, self).__init__(**kwargs)
-    
-    def register_resource(self, resource):
-        key = resource.get_resource_name()
-        self.resource_adaptor[key] = resource
-    
-    def get_urls(self):
-        urlpatterns = super(PublicApplicationResource, self).get_urls()
-        for key, resource in self.resource_adaptor.iteritems():
-            urlpatterns += patterns('',
-                url(r'', include(resource.urls))
-            )
-        return urlpatterns
-
-class PublicSiteResource(BaseResource):
-    resource_class = 'resourcelisting'
-    
-    def __init__(self, **kwargs):
-        kwargs.setdefault('resource_adaptor', dict())
-        super(PublicSiteResource, self).__init__(**kwargs)
-    
-    def get_prompt(self):
-        return self._site.name
-    
-    def get_app_name(self):
-        return self._site.name
-    app_name = property(get_app_name)
-    
-    def get_urls(self):
-        urlpatterns = super(PublicSiteResource, self).get_urls()
-        for key, res in self.resources.items():
-            urlpatterns += patterns('',
-                url(r'', include(res.urls))
-            )
-        return urlpatterns
-    
-    @property
-    def resources(self):
-        return self.site.registry
-
-class PublicSubsite(ResourceSite):
+class PublicSubsite(BaseResourceSite):
     """
     The public facing API that exposes functionality from the VirtualResourceSite/Collections API
     
     What kind of resource?
     """
     name = 'cmssite'
-    application_resource_class = PublicApplicationResource
-    site_resource_class = PublicSiteResource
     api_endpoint = None
     
-    def __init__(self, **kwargs):
-        super(PublicSubsite, self).__init__(**kwargs)
-        #TODO media type handler that pumps to the endpoint
+    def post_register(self):
+        super(PublicSubsite, self).post_register()
         self.register_builtin_media_types()
         
         self.collection_viewpoints = dict()
-    
-    def post_resource_registration(self, resource):
-        return #No app objects in this API yet...
     
     def register_viewpoint(self, view_point):
         for collection, defs in view_point.get_view_endpoints():
@@ -293,7 +236,10 @@ class PublicSubsite(ResourceSite):
             self.collection_viewpoints[collection.pk].append(defs)
     
     def register_collection(self, collection):
-        collection.register_public_resource(site=self)
+        resource = collection.register_public_resource(site=self)
+        print '#'*10
+        print self, resource, collection
+        print self.get_urls()
     
     def get_public_view_endpoints_for_collection(self, collection):
         return self.collection_viewpoints.get(collection.pk, [])
@@ -348,7 +294,7 @@ class PublicResource(PublicMixin, BaseResource):
             if not hasattr(self, 'bound_inner_endpoint'):
                 inner_apirequest = self.get_inner_apirequest()
                 urlname = self.get_url_name()
-                self.bound_inner_endpoint = inner_apirequest.get_resource(urlname)
+                self.bound_inner_endpoint = inner_apirequest.get_endpoint(urlname)
             return self.bound_inner_endpoint
         return self.inner_endpoint
     

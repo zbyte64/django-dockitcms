@@ -138,8 +138,8 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
             seen = list()
             for key, resource in admin_client.registry.iteritems():
                 seen.append((resource.collection.collection_type, key, resource.collection))
-                if resource.collection.collection_type != 'dockitcms.virtualdocument':
-                    assert False, str("%s, %s, %s, %s" % (resource.collection, self, resource.collection==self, resource.collection.collection_type))
+                #if resource.collection.collection_type != 'dockitcms.virtualdocument':
+                #    assert False, str("%s, %s, %s, %s" % (resource.collection, self, resource.collection==self, resource.collection.collection_type))
                 if hasattr(resource, 'collection') and resource.collection == self:
                     return resource
             assert False, str(seen)
@@ -152,14 +152,13 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
         return {
             'collection': self,
             'app_name': self.application.slug,
+            'resource_adaptor': self.get_collection_resource().resource_adaptor
         }
     
     def register_public_resource(self, site):
         klass = self.get_public_resource_class()
         options = self.get_public_resource_options()
-        #resource_adaptor = self.get_object_class()
-        resource_adaptor = self.get_collection_resource().resource_adaptor
-        return site.register(resource_adaptor, klass, **options)
+        return site.register_endpoint(klass, **options)
     
     def get_view_endpoints(self):
         return []
