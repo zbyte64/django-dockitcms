@@ -15,12 +15,16 @@ class BaseViewPointEndpoint(PublicEndpoint):
         return response
     
     def get_context_data(self, state, link):
-        return {}
+        return {'resource_items':state.get_resource_items()}
 
 class ListEndpoint(BaseViewPointEndpoint):
     def get_context_data(self, state, link):
-        return {'object_list':[item.instance.instance for item in state.get_resource_items()]}
+        data = super(ListEndpoint, self).get_context_data(state, link)
+        data['object_list'] = [item.instance.instance for item in state.get_resource_items()]
+        return data
 
 class DetailEndpoint(BaseViewPointEndpoint):
     def get_context_data(self, state, link):
-        return {'object':state.get_resource_items()[0].instance.instance}
+        data = super(DetailEndpoint, self).get_context_data(state, link)
+        data['object'] = state.get_resource_items()[0].instance.instance
+        return data

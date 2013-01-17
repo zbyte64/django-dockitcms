@@ -14,17 +14,18 @@ from django.conf.urls.defaults import patterns, url, include
 
 
 class ChainedAPIRequest(InternalAPIRequest):
-    def __init__(self, api_request, site, state, path='/', url_args=[], url_kwargs={}, **kwargs):
+    def __init__(self, api_request, inner_site, outer_site, state, 
+                 path='/', url_args=[], url_kwargs={}, **kwargs):
         self.outer_api_request = api_request
+        self.outer_site = outer_site
         url_args = api_request.url_args
         url_kwargs = api_request.url_kwargs
         self.state = state
         kwargs.setdefault('payload', api_request.payload)
         kwargs.setdefault('method', api_request.method)
         kwargs.setdefault('params', api_request.params)
-        super(ChainedAPIRequest, self).__init__(site, path, url_args, url_kwargs, **kwargs)
+        super(ChainedAPIRequest, self).__init__(inner_site, path, url_args, url_kwargs, **kwargs)
         self.session_state.update(api_request.session_state)
-        self.session_state['site'] = self.outer_api_request.site
     
     def get_full_path(self):
         #TODO
@@ -48,7 +49,9 @@ class ChainedAPIRequest(InternalAPIRequest):
         except KeyError:
             return {}
         return self.outer_api_request.get_link_prototypes(outer_endpoint)
-        
+    
+    def reverse(self, name, *args, **kwargs):
+        return self.outer_site.reverse(name, *args, **kwargs)
 
 class ChainedLinkPrototype(LinkPrototype):
     def __init__(self, endpoint, outer_api_request, inner_prototype):
@@ -59,18 +62,16 @@ class ChainedLinkPrototype(LinkPrototype):
     
     @property
     def outer_endpoint(self):
-        try:
-            return self.outer_api_request.get_endpoint(self.get_url_name())
-        except KeyError:
-            return self.outer_api_request.get_resource(self.get_url_name())
+        return self.outer_api_request.get_endpoint(self.get_url_name())
+    
+    @property
+    def endpoint(self):
+        endpoint = self.inner_prototype.endpoint
+        return self.api_request.get_endpoint(endpoint.get_url_name())
     
     @property
     def name(self):
         return self.inner_prototype.name
-    
-    @property
-    def endpoint(self):
-        return self.inner_prototype.endpoint
     
     @property
     def resource(self):
@@ -161,7 +162,8 @@ class PublicMixin(object):
     
     def get_inner_apirequest_kwargs(self, **kwargs):
         params = {'api_request':self.api_request,
-                  'site':self.get_inner_site(),
+                  'inner_site':self.get_inner_site(),
+                  'outer_site':self.site,
                   'path':self.api_request.get_full_path(),
                   'state':self.state,}
         params.update(kwargs)
@@ -300,7 +302,7 @@ class PublicResource(PublicMixin, BaseResource):
         return self.inner_endpoint
     
     def get_item_url(self, item):
-        return self.link_prototypes['detail'].get_url(item=item.instance)
+        return self.link_prototypes['update'].get_url(item=item.instance)
 
 class PublicEndpoint(PublicMixin, ResourceEndpoint):
     view_point = None
