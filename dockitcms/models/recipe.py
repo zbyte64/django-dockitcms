@@ -9,7 +9,7 @@ class BaseRecipe(schema.Document):
     generated_applications = schema.ListField(schema.ReferenceField(Application), editable=False)
     generated_collections = schema.ListField(schema.ReferenceField(Collection), editable=False)
     generated_indexes = schema.ListField(schema.ReferenceField(Index), editable=False)
-    generated_view_points = schema.ListField(schema.ReferenceField(BaseViewPoint), editable=False)
+    #generated_view_points = schema.ListField(schema.ReferenceField(BaseViewPoint), editable=False)
     generated_subsites = schema.ListField(schema.ReferenceField(Subsite), editable=False)
     
     class Meta:

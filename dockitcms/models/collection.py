@@ -133,7 +133,7 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
         admin_client = self.get_collection_admin_client()
         cls = self.get_object_class()
         try:
-            return admin_client.get_resource(cls)
+            return admin_client.registry[cls]
         except Exception, error:
             seen = list()
             for key, resource in admin_client.registry.iteritems():
@@ -148,20 +148,30 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
         from dockitcms.resources.public import PublicResource
         return PublicResource
     
-    def get_public_resource_options(self):
-        return {
+    def get_public_resource_options(self, **kwargs):
+        params = {
             'collection': self,
             'app_name': self.application.slug,
             'resource_adaptor': self.get_collection_resource().resource_adaptor
         }
+        params.update(kwargs)
+        return params
     
-    def register_public_resource(self, site):
+    def register_public_resource(self, site, **kwargs):
         klass = self.get_public_resource_class()
-        options = self.get_public_resource_options()
+        options = self.get_public_resource_options(**kwargs)
         return site.register_endpoint(klass, **options)
     
     def get_view_endpoints(self):
         return []
+    
+    def register_collection(self):
+        pass
+    
+    def save(self, *args, **kwargs):
+        ret = super(Collection, self).save(*args, **kwargs)
+        self.register_collection()
+        return ret
     
     class Meta:
         typed_field = 'collection_type'
@@ -174,11 +184,6 @@ class VirtualDocumentCollection(Collection, DocumentDesign):
     @classmethod
     def get_available_mixins(self):
         return VIRTUAL_COLLECTION_MIXINS
-    
-    def save(self, *args, **kwargs):
-        ret = super(VirtualDocumentCollection, self).save(*args, **kwargs)
-        self.register_collection()
-        return ret
     
     def get_collection_name(self):
         return 'dockitcms.virtual.%s' % self.key
@@ -225,7 +230,7 @@ class VirtualDocumentCollection(Collection, DocumentDesign):
         admin_client = self.get_collection_admin_client()
         cls = self.get_object_class()
         try:
-            return admin_client.get_resource(cls)
+            return admin_client.registry[cls]
         except Exception, error:
             for key, resource in admin_client.registry.iteritems():
                 if isinstance(key, type) and issubclass(cls, key):
@@ -260,9 +265,6 @@ class ModelCollection(Collection):
     def get_resource_class(self):
         from dockitcms.resources.collection import ModelResource
         return ModelResource
-    
-    def register_collection(self):
-        pass
     
     class Meta:
         typed_key = 'dockitcms.model'

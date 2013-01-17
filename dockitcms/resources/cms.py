@@ -4,7 +4,7 @@ import hyperadmin
 #from django.conf.urls.defaults import patterns, url
 #from django.utils.functional import update_wrapper
 
-from dockitcms.models import Collection, BaseViewPoint, DocumentDesign, Subsite, Application, Index, BaseRecipe
+from dockitcms.models import Collection, SubsiteResourceDefinition, DocumentDesign, Subsite, Application, Index, BaseRecipe
 from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
 
 #from views import ManageCollectionView
@@ -50,10 +50,10 @@ class SubsiteResource(ReloadCMSSiteMixin, CMSDocumentResource):
 
 hyperadmin.site.register(Subsite, SubsiteResource)
 
-class ViewPointResource(ReloadCMSSiteMixin, CMSDocumentResource):
-    list_display = ['base_url', 'subsite', 'view_type']
+class SubsiteResourceDefinitionResource(ReloadCMSSiteMixin, CMSDocumentResource):
+    list_display = ['name', 'subsite', 'collection', 'url']
 
-hyperadmin.site.register(BaseViewPoint, ViewPointResource)
+hyperadmin.site.register(SubsiteResourceDefinition, SubsiteResourceDefinitionResource)
 
 class RecipeResource(CMSDocumentResource):
     pass

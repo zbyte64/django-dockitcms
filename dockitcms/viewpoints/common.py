@@ -23,25 +23,6 @@ Context:<br/>
 '''))
 
 
-class SingleResourceMixin(schema.Schema):
-    collection = schema.ReferenceField(Collection)
-    
-    @property
-    def resource(self):
-        return self.collection.get_collection_resource()
-    
-    def get_object_class(self):
-        return self.collection.get_object_class()
-
-class ResourceEndpointMixin(SingleResourceMixin):
-    endpoint_name = schema.CharField()
-    url_name = schema.CharField(blank=True)
-    
-    def get_resource_endpoint(self):
-        return self.resource.endpoints.get(self.endpoint_name)
-    
-    #TODO this requires a sort of form wizard? or make endpoint a resource
-
 class PointListView(ConfigurableTemplateResponseMixin, ListView):
     pass
 
@@ -80,7 +61,3 @@ class TemplateMixin(schema.Schema):
             return [self.template_name]
         if self.template_source == 'html':
             return Template(self.template_html)
-
-class CanonicalMixin(schema.Schema):
-    canonical = schema.BooleanField(help_text=_('If checked, this view point defines the canonical urls for these collections'))
-

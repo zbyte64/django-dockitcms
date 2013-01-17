@@ -2,7 +2,7 @@ from dockitcms.models import ViewPoint, Collection
 from dockitcms.scope import Scope
 #from schema.forms import DocumentForm
 
-from dockitcms.viewpoints.common import CanonicalMixin, TEMPLATE_SOURCE_CHOICES, PointListView, PointDetailView
+from dockitcms.viewpoints.common import TEMPLATE_SOURCE_CHOICES
 
 from django.conf.urls.defaults import patterns, url
 #from django import forms

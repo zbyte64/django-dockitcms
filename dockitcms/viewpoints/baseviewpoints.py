@@ -1,5 +1,5 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
-from dockitcms.viewpoints.common import TemplateMixin, ResourceEndpointMixin, PointListView, PointDetailView, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from dockitcms.viewpoints.common import TemplateMixin, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 from dockitcms.viewpoints.endpoints import ListEndpoint, DetailEndpoint
 
 from dockitcms.models import ViewPoint
@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from django import forms
 
 
-class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
+class BaseViewPoint(ViewPoint, TemplateMixin):
     view_class = None
     view_endpoint_class = None
     
@@ -33,27 +33,22 @@ class BaseViewPoint(ViewPoint, ResourceEndpointMixin, TemplateMixin):
                     'template_html':self.template_html,
                     'content':self.content,
                  },
-                 'url_suffix':self.get_url(),
         }
         params.update(kwargs)
-        return params
+        return super(BaseViewPoint, self).get_view_endpoint_kwargs(**params)
     
     def get_view_endpoints(self):
         klass = self.get_view_endpoint_class()
         kwargs = self.get_view_endpoint_kwargs()
-        return [(self.collection, (klass, kwargs))]
+        return [(klass, kwargs)]
 
 class ListViewPoint(BaseViewPoint, TemplateMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)
     #order_by = schema.CharField(blank=True)
     
-    view_class = PointListView
-    view_endpoint_class = ListEndpoint
+    default_endpoint_name = 'list'
     
-    #def get_view_endpoint_options(self):
-    #    return {}
-    #    #TODO
-    #    return {'paginate_by':self.paginate_by}
+    view_endpoint_class = ListEndpoint
     
     class Meta:
         typed_key = 'dockitcms.listview'
@@ -63,26 +58,9 @@ class ListViewPoint(BaseViewPoint, TemplateMixin):
         return ListViewPointForm
 
 class DetailViewPoint(BaseViewPoint, TemplateMixin):
-    slug_field = schema.SlugField(blank=True)
+    default_endpoint_name = 'detail'
     
-    view_class = PointDetailView
     view_endpoint_class = DetailEndpoint
-    
-    def get_object_class(self):
-        object_class = super(DetailViewPoint, self).get_object_class()
-        return object_class
-        #TODO
-        view_point = self
-        
-        def get_absolute_url_for_instance(instance):
-            if view_point.slug_field:
-                return view_point.reverse('detail', instance[view_point.slug_field])
-            return view_point.reverse('detail', instance.pk)
-        
-        if self.canonical:
-            object_class.get_absolute_url = get_absolute_url_for_instance
-        
-        return object_class
     
     class Meta:
         typed_key = 'dockitcms.detailview'

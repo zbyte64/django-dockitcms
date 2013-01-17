@@ -22,7 +22,6 @@ class DockitCMSSite(object):
         else:
             self.name = name
         self.app_name = app_name
-        self.registered_view_points = set()
     
     def get_logger(self):
         return logger
@@ -35,7 +34,7 @@ class DockitCMSSite(object):
             if base_url.startswith('/'):
                 base_url = base_url[1:]
             urlpatterns += patterns('',
-                url(r'^%s' % base_url, include(subsite.urls))
+                url(base_url, include(subsite.urls))
             )
         return urlpatterns
 
@@ -60,12 +59,14 @@ class DockitCMSSite(object):
             except Exception, err:
                 print err
                 errors.append(err)
+        '''
         for view_point in BaseViewPoint.objects.all():
             try:
                 view_point.register_view_point()
             except Exception, err:
                 print err
                 errors.append(err)
+        '''
         for index in Index.objects.all():
             try:
                 index.register_index()

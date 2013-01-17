@@ -2,6 +2,7 @@ from dockit import schema
 
 from dockitcms.scope import ScopeList, Scope, get_site_scope
 from dockitcms.models.mixin import create_document_mixin, ManageUrlsMixin
+from dockitcms.models.collection import Collection
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
@@ -9,6 +10,7 @@ from django.conf import settings
 
 
 SUBSITE_MIXINS = {}
+SUBSITE_RESOURCE_MIXINS = {}
 VIEW_POINT_MIXINS = {}
 
 class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MIXINS)):
@@ -24,21 +26,27 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         from dockitcms.sites import logger
         return logger
     
+    @property
+    def resource_definitions(self):
+        return SubsiteResourceDefinition.objects.filter(subsite=self)
+    
     def get_site_client(self):
         """
         Returns a hyperadmin client for public consumption
         """
         from dockitcms.resources.virtual import site
         from dockitcms.resources.public import PublicSubsite
-        from dockitcms.models import Collection
         
-        subsite_api = PublicSubsite(api_endpoint=site, name=self.name)
+        subsite_api = PublicSubsite(api_endpoint=site, name=self.name, subsite=self)
         
-        for view_point in BaseViewPoint.objects.filter(subsite=self):
-            subsite_api.register_viewpoint(view_point)
+        #for view_point in BaseViewPoint.objects.filter(subsite=self):
+        #    subsite_api.register_viewpoint(view_point)
         
-        for collection in Collection.objects.all():
-            subsite_api.register_collection(collection)
+        #for collection in Collection.objects.all():
+        #    subsite_api.register_collection(collection)
+        
+        for resource_def in self.resource_definitions:
+            resource_def.register_collection(subsite_api)
         
         return subsite_api
     
@@ -66,13 +74,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
 
 Subsite.objects.index('sites').commit()
 
-class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
-    subsite = schema.ReferenceField(Subsite)
-    
-    #TODO this is currently only called during the save
-    def register_view_point(self):
-        pass
-    
+class BaseViewPoint(ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
     def send_view_point_event(self, event, view, kwargs):
         '''
         The view calls this to notify the mixins that an event has happened
@@ -101,7 +103,7 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
     def get_view_endpoints(self):
         """
         returns a list of tuples
-        (collection, [(endpoint_cls, kwargs)...])
+        [(endpoint_cls, kwargs)...]
         """
         raise NotImplementedError
     
@@ -120,19 +122,28 @@ class BaseViewPoint(schema.Document, ManageUrlsMixin, create_document_mixin(VIEW
             print error
             raise
     
-    def save(self, *args, **kwargs):
-        super(BaseViewPoint, self).save(*args, **kwargs)
-        self.register_view_point()
-    
     class Meta:
         typed_field = 'view_type'
         verbose_name = 'View Point'
-        collection = 'dockitcms.viewpoint'
-
-BaseViewPoint.objects.index('subsite').commit()
 
 class ViewPoint(BaseViewPoint):
-    url = schema.CharField(help_text='May be a regular expression that the url has to match')
+    url = schema.CharField(help_text='May be a regular expression that the url has to match', blank=True)
+    endpoint_name = schema.CharField(blank=True)
+    url_name = schema.CharField(blank=True)
+    
+    default_endpoint_name = None
+    
+    def get_endpoint_name(self):
+        return self.endpoint_name or self.default_endpoint_name
+    
+    def get_view_endpoint_kwargs(self, **kwargs):
+        params = {
+            'url_suffix': self.get_url(),
+        }
+        if self.url_name:
+            params['name_suffix'] = self.url_name
+        params.update(kwargs)
+        return params
     
     def get_url(self):
         url = self.url or ''
@@ -150,8 +161,41 @@ class ViewPoint(BaseViewPoint):
         if self.url:
             return self.url
         else:
-            return self.__repr__()
+            return self.view_type
     
     class Meta:
         proxy = True
 
+class SubsiteResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
+    subsite = schema.ReferenceField(Subsite)
+    collection = schema.ReferenceField(Collection)
+    url = schema.CharField()
+    name = schema.CharField()
+    view_points = schema.ListField(schema.SchemaField(ViewPoint))
+    
+    def get_base_url(self):
+        url = self.url or ''
+        if url.startswith('/'):
+            url = url[1:]
+        if not url.startswith('^'):
+            url = '^'+url
+        return url
+    
+    @property
+    def cms_resource(self):
+        return self.collection.get_collection_resource()
+    
+    def get_collection_kwargs(self, **kwargs):
+        params = {
+            'view_points': self.view_points,
+            'base_url': self.get_base_url(),
+        }
+        params.update(kwargs)
+        return params
+    
+    def register_collection(self, site):
+        kwargs = self.get_collection_kwargs(site=site)
+        resource = self.collection.register_public_resource(**kwargs)
+        return resource
+
+SubsiteResourceDefinition.objects.index('subsite').commit()

@@ -3,11 +3,14 @@ Resource classes for powering the public facing API go here. These classes proxy
 """
 from hyperadmin.sites import BaseResourceSite
 from hyperadmin.resources import BaseResource
-from hyperadmin.endpoints import Endpoint
+from hyperadmin.resources.directory import ResourceDirectory
+from hyperadmin.resources.endpoints import ResourceEndpoint
 from hyperadmin.links import LinkPrototype, LinkCollectionProvider
 from hyperadmin.states import EndpointState
 from hyperadmin.resources.hyperobjects import ResourceItem
 from hyperadmin.apirequests import InternalAPIRequest
+
+from django.conf.urls.defaults import patterns, url, include
 
 
 class ChainedAPIRequest(InternalAPIRequest):
@@ -185,14 +188,16 @@ class PublicMixin(object):
             return self.bound_inner_endpoint
         return self.inner_endpoint
     
-    def get_url_name(self):
-        return self.inner_endpoint.get_url_name()
+    #def get_url_name(self):
+    #    return self.inner_endpoint.get_url_name()
     
     def get_url_suffix(self):
         ending = self.inner_endpoint.get_url_suffix()
         if ending.startswith('^'):
             ending = ending[1:]
-        return self.url_suffix + ending
+        if self.url_suffix:
+            return self.url_suffix + ending
+        return ending
     
     def get_name_suffix(self):
         return self.inner_endpoint.get_name_suffix()
@@ -215,43 +220,35 @@ class PublicMixin(object):
         instances = self.get_instances()
         return [self.get_resource_item(instance) for instance in instances]
 
+class PublicResourceDirectory(ResourceDirectory):
+    def get_urls(self):
+        urlpatterns = super(ResourceDirectory, self).get_urls()
+        for key, resource in self.resource_adaptor.iteritems():
+            urlpatterns += patterns('',
+                url(resource.base_url, include(resource.urls))
+            )
+        return urlpatterns
+
 class PublicSubsite(BaseResourceSite):
     """
     The public facing API that exposes functionality from the VirtualResourceSite/Collections API
     
     What kind of resource?
     """
+    directory_resource_class = PublicResourceDirectory
     name = 'cmssite'
+    subsite = None
     api_endpoint = None
     
     def post_register(self):
         super(PublicSubsite, self).post_register()
         self.register_builtin_media_types()
-        
-        self.collection_viewpoints = dict()
-    
-    def register_viewpoint(self, view_point):
-        for collection, defs in view_point.get_view_endpoints():
-            self.collection_viewpoints.setdefault(collection.pk, list())
-            self.collection_viewpoints[collection.pk].append(defs)
-    
-    def register_collection(self, collection):
-        resource = collection.register_public_resource(site=self)
-        print '#'*10
-        print self, resource, collection
-        print self.get_urls()
-    
-    def get_public_view_endpoints_for_collection(self, collection):
-        return self.collection_viewpoints.get(collection.pk, [])
-    
-    def fork(self, **kwargs):
-        ret = super(PublicSubsite, self).fork(**kwargs)
-        ret.collection_viewpoints = self.collection_viewpoints
-        return ret
 
 class PublicResource(PublicMixin, BaseResource):
     app_name = None
     collection = None
+    view_points = None
+    base_url = None
     
     def post_register(self):
         self.api_resource = self.collection.get_collection_resource()
@@ -271,10 +268,12 @@ class PublicResource(PublicMixin, BaseResource):
     
     def get_resource_name(self):
         return self.collection.title
+    resource_name = property(get_resource_name)
     
     def get_view_endpoints(self):
-        endpoints = self.site.get_public_view_endpoints_for_collection(self.collection)
-        endpoints.extend(self.collection.get_view_endpoints())
+        endpoints = list()
+        for view_point in self.view_points:
+            endpoints.extend(view_point.get_view_endpoints())
         return endpoints
     
     def get_breadcrumbs(self):
@@ -295,18 +294,27 @@ class PublicResource(PublicMixin, BaseResource):
                 inner_apirequest = self.get_inner_apirequest()
                 urlname = self.get_url_name()
                 self.bound_inner_endpoint = inner_apirequest.get_endpoint(urlname)
+                #how does this happen?!?
+                assert hasattr(self.bound_inner_endpoint, 'endpoints')
             return self.bound_inner_endpoint
         return self.inner_endpoint
     
     def get_item_url(self, item):
-        return self.link_prototypes['update'].get_url(item=item.instance)
+        return self.link_prototypes['detail'].get_url(item=item.instance)
 
-class PublicEndpoint(PublicMixin, Endpoint):
+class PublicEndpoint(PublicMixin, ResourceEndpoint):
     view_point = None
+    
+    def get_inner_site(self):
+        return self._parent.get_inner_site()
+    
+    def get_inner_resource(self):
+        return self._parent.get_inner_endpoint()
     
     @property
     def inner_endpoint(self):
-        return self.view_point.get_resource_endpoint()
+        endpoint_name = self.view_point.get_endpoint_name()
+        return self.get_inner_resource().endpoints[endpoint_name]
     
     def handle_link_submission(self, api_request):
         inner_endpoint = self.get_inner_endpoint()
