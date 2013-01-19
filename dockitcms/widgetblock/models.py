@@ -6,7 +6,8 @@ from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 from django.contrib.contenttypes.models import ContentType
 
-from common import ExpandedSchemas
+from dockitcms.widgetblock.common import ExpandedSchemas
+
 
 class Widget(schema.Schema):
     class Meta:

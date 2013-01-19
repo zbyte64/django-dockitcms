@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from dockitcms.mixins import AdminObjectToolMixin
 from dockitcms.models import Subsite, BaseViewPoint, VirtualDocumentCollection
 
-from models import BlockWidget
+from dockitcms.widgetblock.models import BlockWidget
 
 from dockit import schema
 
