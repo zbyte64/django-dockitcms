@@ -190,8 +190,8 @@ class PublicMixin(object):
             return self.bound_inner_endpoint
         return self.inner_endpoint
     
-    #def get_url_name(self):
-    #    return self.inner_endpoint.get_url_name()
+    def get_base_url_name(self):
+        return self.inner_endpoint.get_base_url_name()
     
     def get_url_suffix(self):
         ending = self.inner_endpoint.get_url_suffix()
