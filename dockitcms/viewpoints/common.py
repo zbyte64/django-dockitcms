@@ -8,19 +8,20 @@ from dockitcms.scope import Scope
 
 from django.utils.translation import ugettext_lazy as _
 from django.template import Template, Context
-from django.utils.safestring import mark_safe
+#from django.utils.safestring import mark_safe
 
-LIST_CONTEXT_DESCRIPTION = mark_safe(_('''
+#TODO lazy mark safe
+LIST_CONTEXT_DESCRIPTION = _('''
 Context:<br/>
 <em>object_list</em> <span>The list of items</span><br/>
 <em>page</em> <span>Page object if paginate by is supplied</span><br/>
 <em>paginator</em> <span>Paginator object if paginate by is supplied</span><br/>
-'''))
+''')
 
-DETAIL_CONTEXT_DESCRIPTION = mark_safe(_('''
+DETAIL_CONTEXT_DESCRIPTION = _('''
 Context:<br/>
 <em>object</em> <span>The currently viewed object</span><br/>
-'''))
+''')
 
 
 class PointListView(ConfigurableTemplateResponseMixin, ListView):
