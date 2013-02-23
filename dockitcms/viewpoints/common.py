@@ -8,7 +8,7 @@ from dockitcms.scope import Scope
 
 from django.utils.translation import ugettext_lazy as _
 from django.template import Template, Context
-#from django.utils.safestring import mark_safe
+from django.utils.safestring import mark_safe
 
 #TODO lazy mark safe
 LIST_CONTEXT_DESCRIPTION = _('''
