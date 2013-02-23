@@ -31,7 +31,8 @@ class VirtualResourceSite(ResourceSite):
         for collection in self.query_collections():
             object_class = collection.get_object_class()
             resource_class = collection.get_resource_class()
-            self.register(object_class, resource_class, collection=collection)
+            app_name = collection.application.name
+            self.register(object_class, resource_class, collection=collection, app_name=app_name)
     
     def load_site(self):
         self.load_applications()
