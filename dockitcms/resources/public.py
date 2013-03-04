@@ -17,14 +17,16 @@ class ChainedAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, inner_site, outer_site, state, 
                  path='/', url_args=[], url_kwargs={}, **kwargs):
         self.outer_api_request = api_request
+        assert not isinstance(api_request, type(self))
         self.outer_site = outer_site
+        self.inner_site = inner_site
         url_args = api_request.url_args
         url_kwargs = api_request.url_kwargs
         self.state = state
         kwargs.setdefault('payload', api_request.payload)
         kwargs.setdefault('method', api_request.method)
         kwargs.setdefault('params', api_request.params)
-        super(ChainedAPIRequest, self).__init__(inner_site, path, url_args, url_kwargs, **kwargs)
+        super(ChainedAPIRequest, self).__init__(outer_site, path, url_args, url_kwargs, **kwargs)
         self.session_state.update(api_request.session_state)
     
     def get_full_path(self):
@@ -174,6 +176,7 @@ class PublicMixin(object):
     
     def get_inner_apirequest(self):
         if not hasattr(self, 'inner_apirequest'):
+            api_request = self.api_request
             if 'inner_apirequest' not in self.api_request.session_state:
                 kwargs = self.get_inner_apirequest_kwargs()
                 inner_apirequest = ChainedAPIRequest(**kwargs)
@@ -308,10 +311,10 @@ class PublicEndpoint(PublicMixin, ResourceEndpoint):
     view_point = None
     
     def get_inner_site(self):
-        return self._parent.get_inner_site()
+        return self.parent.get_inner_site()
     
     def get_inner_resource(self):
-        return self._parent.get_inner_endpoint()
+        return self.parent.get_inner_endpoint()
     
     @property
     def inner_endpoint(self):
