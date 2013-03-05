@@ -28,7 +28,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
     
     @property
     def resource_definitions(self):
-        return SubsiteResourceDefinition.objects.filter(subsite=self)
+        return PublicResourceDefinition.objects.filter(subsite=self)
     
     def get_site_client(self):
         """
@@ -38,12 +38,6 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         from dockitcms.resources.public import PublicSubsite
         
         subsite_api = PublicSubsite(api_endpoint=site, name=self.name, subsite=self)
-        
-        #for view_point in BaseViewPoint.objects.filter(subsite=self):
-        #    subsite_api.register_viewpoint(view_point)
-        
-        #for collection in Collection.objects.all():
-        #    subsite_api.register_collection(collection)
         
         for resource_def in self.resource_definitions:
             resource_def.register_collection(subsite_api)
@@ -166,8 +160,7 @@ class ViewPoint(BaseViewPoint):
     class Meta:
         proxy = True
 
-#TODO rename to PublicResource
-class SubsiteResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
+class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
     subsite = schema.ReferenceField(Subsite)
     collection = schema.ReferenceField(Collection)
     url = schema.CharField()
@@ -199,4 +192,4 @@ class SubsiteResourceDefinition(schema.Document, create_document_mixin(SUBSITE_R
         resource = self.collection.register_public_resource(**kwargs)
         return resource
 
-SubsiteResourceDefinition.objects.index('subsite').commit()
+PublicResourceDefinition.objects.index('subsite').commit()

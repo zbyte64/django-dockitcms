@@ -1,15 +1,8 @@
 import hyperadmin
 
-
-#from django.conf.urls.defaults import patterns, url
-#from django.utils.functional import update_wrapper
-
-from dockitcms.models import Collection, SubsiteResourceDefinition, DocumentDesign, Subsite, Application, Index, BaseRecipe
+from dockitcms.models import Collection, PublicResourceDefinition, DocumentDesign, Subsite, Application, Index, BaseRecipe
 from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
 
-#from views import ManageCollectionView
-
-#from common import CMSDocumentResource, AdminAwareSchemaAdmin
 
 app_name = 'dockitcms'
 
@@ -52,10 +45,14 @@ class SubsiteResource(ReloadCMSSiteMixin, CMSDocumentResource):
 
 hyperadmin.site.register(Subsite, SubsiteResource, app_name=app_name)
 
-class SubsiteResourceDefinitionResource(ReloadCMSSiteMixin, CMSDocumentResource):
+#TODO this is redundant naming
+class PublicResourceDefinitionResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['name', 'subsite', 'collection', 'url']
+    
+    def get_prompt(self):
+        return 'Public Resource'
 
-hyperadmin.site.register(SubsiteResourceDefinition, SubsiteResourceDefinitionResource, app_name=app_name)
+hyperadmin.site.register(PublicResourceDefinition, PublicResourceDefinitionResource, app_name=app_name)
 
 class RecipeResource(CMSDocumentResource):
     pass

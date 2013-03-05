@@ -5,7 +5,7 @@ from hyperadmin.sites import BaseResourceSite
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.directory import ResourceDirectory
 from hyperadmin.resources.endpoints import ResourceEndpoint
-from hyperadmin.links import LinkPrototype, LinkCollectionProvider
+from hyperadmin.links import LinkPrototype, LinkCollectionProvider, LinkNotAvailable
 from hyperadmin.states import EndpointState
 from hyperadmin.resources.hyperobjects import ResourceItem
 from hyperadmin.apirequests import InternalAPIRequest
@@ -328,7 +328,9 @@ class PublicResource(PublicMixin, BaseResource):
         return self.inner_endpoint
     
     def get_item_url(self, item):
-        return self.link_prototypes['update'].get_url(item=item.instance)
+        if 'detail' not in self.link_prototypes:
+            raise LinkNotAvailable, 'Link unavailable: detail'
+        return self.link_prototypes['detail'].get_url(item=item.instance)
 
 class PublicEndpoint(PublicMixin, ResourceEndpoint):
     view_point = None
