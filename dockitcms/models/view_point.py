@@ -166,6 +166,7 @@ class ViewPoint(BaseViewPoint):
     class Meta:
         proxy = True
 
+#TODO rename to PublicResource
 class SubsiteResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
     subsite = schema.ReferenceField(Subsite)
     collection = schema.ReferenceField(Collection)
