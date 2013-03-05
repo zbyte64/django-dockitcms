@@ -19,5 +19,5 @@ class ListEndpoint(BaseViewPointEndpoint):
 
 class DetailEndpoint(BaseViewPointEndpoint):
     def get_context_data(self, **kwargs):
-        data['object'] = kwargs['state'].get_resource_items()[0].instance.instance
+        kwargs['object'] = kwargs['state'].get_resource_items()[0].instance.instance
         return super(DetailEndpoint, self).get_context_data(**kwargs)

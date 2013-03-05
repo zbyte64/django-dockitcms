@@ -44,7 +44,30 @@ class ChainedAPIRequest(InternalAPIRequest):
     def request(self):
         return self.outer_api_request.request
     
+    def get_endpoint(self, urlname):
+        """
+        Returns a bound endpoint matching the urlname
+        
+        :param urlname: The urlname to find
+        :type urlname: string
+        :raises KeyError: when the urlname does not match any endpoints
+        :rtype: Endpoint
+        """
+        #consult inner site for resources & endpoints
+        #CONSIDER: parent lookups are troublesome
+        if urlname not in self.endpoint_state['endpoints']:
+            endpoint = self.inner_site.get_endpoint_from_urlname(urlname)
+            bound_endpoint = endpoint.fork(api_request=self)
+            if bound_endpoint != self.endpoint_state['endpoints'][urlname]:
+                pass
+            if getattr(bound_endpoint, '_parent', None):
+                parent_name = bound_endpoint._parent.get_url_name()
+                parent = self.inner_site.get_endpoint_from_urlname(parent_name)
+                bound_endpoint._parent = parent
+        return self.endpoint_state['endpoints'][urlname]
+    
     def get_link_prototypes(self, endpoint):
+        #consult outer site for links
         urlname = endpoint.get_url_name()
         try:
             outer_endpoint = self.outer_api_request.get_endpoint(urlname)
@@ -311,10 +334,10 @@ class PublicEndpoint(PublicMixin, ResourceEndpoint):
     view_point = None
     
     def get_inner_site(self):
-        return self.parent.get_inner_site()
+        return self._parent.get_inner_site()
     
     def get_inner_resource(self):
-        return self.parent.get_inner_endpoint()
+        return self._parent.get_inner_endpoint()
     
     @property
     def inner_endpoint(self):
