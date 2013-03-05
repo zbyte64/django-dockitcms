@@ -1,6 +1,6 @@
 import hyperadmin
 
-from dockitcms.models import Collection, PublicResourceDefinition, DocumentDesign, Subsite, Application, Index, BaseRecipe
+from dockitcms.models import Collection, PublicResourceDefinition, DocumentDesign, Subsite, Application, Index
 from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
 
 
@@ -53,9 +53,3 @@ class PublicResourceDefinitionResource(ReloadCMSSiteMixin, CMSDocumentResource):
         return 'Public Resource'
 
 hyperadmin.site.register(PublicResourceDefinition, PublicResourceDefinitionResource, app_name=app_name)
-
-class RecipeResource(CMSDocumentResource):
-    pass
-
-hyperadmin.site.register(BaseRecipe, RecipeResource, app_name=app_name)
-
