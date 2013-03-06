@@ -1,5 +1,5 @@
 from dockitcms.viewpoints.forms import TemplateFormMixin
-from dockitcms.viewpoints.common import TemplateMixin, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
+from dockitcms.viewpoints.common import TemplateMixin, IndexMixin, LIST_CONTEXT_DESCRIPTION, DETAIL_CONTEXT_DESCRIPTION
 from dockitcms.viewpoints.endpoints import ListEndpoint, DetailEndpoint
 
 from dockitcms.models import ViewPoint
@@ -18,6 +18,7 @@ class BaseViewPoint(ViewPoint, TemplateMixin):
     class Meta:
         proxy = True
     
+    #TODO return a resource instead
     @classmethod
     def get_admin_form_class(cls):
         return BaseViewPointForm
@@ -42,7 +43,7 @@ class BaseViewPoint(ViewPoint, TemplateMixin):
         kwargs = self.get_view_endpoint_kwargs()
         return [(klass, kwargs)]
 
-class ListViewPoint(BaseViewPoint, TemplateMixin):
+class ListViewPoint(BaseViewPoint, IndexMixin):
     paginate_by = schema.IntegerField(blank=True, null=True)
     #order_by = schema.CharField(blank=True)
     
@@ -57,7 +58,7 @@ class ListViewPoint(BaseViewPoint, TemplateMixin):
     def get_admin_form_class(cls):
         return ListViewPointForm
 
-class DetailViewPoint(BaseViewPoint, TemplateMixin):
+class DetailViewPoint(BaseViewPoint, IndexMixin):
     default_endpoint_name = 'detail'
     
     view_endpoint_class = DetailEndpoint

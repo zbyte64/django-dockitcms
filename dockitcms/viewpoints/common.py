@@ -46,6 +46,9 @@ TEMPLATE_SOURCE_CHOICES = [
 ]
 
 class TemplateMixin(schema.Schema):
+    '''
+    View point mixin that allows for template rendering to be overriden.
+    '''
     template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
     template_name = schema.CharField(default='dockitcms/list.html', blank=True)
     template_html = schema.TextField(blank=True)
@@ -62,3 +65,16 @@ class TemplateMixin(schema.Schema):
             return [self.template_name]
         if self.template_source == 'html':
             return Template(self.template_html)
+
+class IndexMixin(schema.Schema):
+    '''
+    View point mixin that allows for index selection
+    '''
+    index_name = schema.CharField(blank=True) #TODO populate based on available indexes to resource
+    
+    def get_view_endpoint_kwargs(self, **kwargs):
+        params = {}
+        if self.index_name:
+            params['index_name'] = self.index_name
+        params.update(kwargs)
+        return super(IndexMixin, self).get_view_endpoint_kwargs(**params)
