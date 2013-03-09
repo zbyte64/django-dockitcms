@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, url, include
 from django.conf import settings
 
 from dockitcms.models import BaseViewPoint, Subsite, Collection, Index
-from dockitcms.signals import pre_init_applications, post_init_applications, post_reload_site
+from dockitcms.signals import pre_init_applications, post_init_applications, post_reload_site, reload_site
 
 import logging
 
@@ -22,9 +22,16 @@ class DockitCMSSite(object):
         else:
             self.name = name
         self.app_name = app_name
+        self.register_listener()
     
     def get_logger(self):
         return logger
+    
+    def reload_listener(self, **kwargs):
+        self.reload_site()
+    
+    def register_listener(self):
+        reload_site.connect(self.reload_listener)
     
     def get_urls(self): #CONSIDER, won't this match everything?!?
         urlpatterns = patterns('',)
@@ -57,25 +64,19 @@ class DockitCMSSite(object):
             try:
                 collection.register_collection()
             except Exception, err:
-                print err
+                self.get_logger().exception('Error loading collection: %s' % collection)
                 errors.append(err)
-        '''
-        for view_point in BaseViewPoint.objects.all():
-            try:
-                view_point.register_view_point()
-            except Exception, err:
-                print err
-                errors.append(err)
-        '''
+        
         for index in Index.objects.all():
             try:
                 index.register_index()
             except Exception, err:
-                print err
+                self.get_logger().exception('Error loading index: %s' % index)
                 errors.append(err)
         post_init_applications.send(sender=type(self), cms_site=self, errors=errors)
     
     def reload_site(self):
+        self.get_logger().info('Reloading site')
         if hasattr(self, '_urlpatterns'):
             del self._urlpatterns
         self.init_applications()
@@ -83,5 +84,6 @@ class DockitCMSSite(object):
 
 site = DockitCMSSite()
 
+#TODO move this to a better spot
 import dockitcms.listeners
 

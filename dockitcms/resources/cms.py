@@ -7,7 +7,7 @@ from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
 app_name = 'dockitcms'
 
 class ApplicationResource(CMSDocumentResource):
-    pass
+    list_display = ['name', 'slug']
 
 hyperadmin.site.register(Application, ApplicationResource, app_name=app_name)
 
@@ -17,7 +17,7 @@ class DocumentDesignResource(CMSDocumentResource):
 hyperadmin.site.register(DocumentDesign, DocumentDesignResource, app_name=app_name)
 
 class CollectionResource(ReloadCMSSiteMixin, CMSDocumentResource):
-    list_display = ['title', 'application']#, 'admin_manage_link']
+    list_display = ['title', 'application', 'key']
     
     def get_manage_collection_resource_kwargs(self, item, **kwargs):
         document_class = item.instance.get_document()
@@ -41,7 +41,7 @@ class IndexResource(ReloadCMSSiteMixin, CMSDocumentResource):
 hyperadmin.site.register(Index, IndexResource, app_name=app_name)
 
 class SubsiteResource(ReloadCMSSiteMixin, CMSDocumentResource):
-    list_display = ['name', 'url']
+    list_display = ['name', 'url', 'slug']
 
 hyperadmin.site.register(Subsite, SubsiteResource, app_name=app_name)
 

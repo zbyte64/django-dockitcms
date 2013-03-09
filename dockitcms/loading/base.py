@@ -1,4 +1,9 @@
+from dockitcms.signals import reload_site
+
+
 class SiteReloader(object):
+    def request_reload(self):
+        self.signal_reload()
+    
     def signal_reload(self):
-        from dockitcms.sites import site
-        site.reload_site()
+        reload_site.send(sender=self)
