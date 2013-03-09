@@ -1,8 +1,5 @@
 from django.conf import settings
-try:
-    import importlib
-except ImportError:
-    from django.utils import importlib
+from django.utils.importlib import import_module
 
 class LazyList(list):
     _loaded = False
@@ -15,7 +12,7 @@ class LazyList(list):
     def load(self):
         for entry in getattr(settings, 'SCOPE_PROCESSORS', []):
             module_name, class_name = entry.rsplit('.', 1)
-            module = importlib.import_module(module_name)
+            module = import_module(module_name)
             obj = getattr(module, class_name)
             if isinstance(obj, type):
                 obj = obj()
@@ -24,3 +21,9 @@ class LazyList(list):
 
 SCOPE_PROCESSORS = LazyList()
 
+path = getattr(settings, 'SITE_RELOADER', 'dockitcms.loading.base.SiteReloader')
+path, classname = path.rsplit('.', 1)
+
+SITE_RELOADER = getattr(import_module(path), classname)()
+
+SITE_RELOADER_CACHE_KEY = getattr(settings, 'SITE_RELOADER_CACHE_KEY', 'dockitcms.reloader')
