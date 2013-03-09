@@ -15,7 +15,7 @@ class CacheSiteReloader(CacheMixin, SiteReloader):
     '''
     Allows for multiple site nodes to stay in sync by using the cache
     framework. Install `CacheSiteReloaderMiddleware` into your middleware
-    to uses this.
+    to use this.
     '''
     def request_reload(self):
         key = self.get_cache_key()
