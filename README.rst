@@ -14,8 +14,8 @@ Features
 --------
 
 * Document based CMS
-* Create collections, indexes, and views in the admin
-* Integrates with the django admin
+* Create collections, indexes, and views in an admin or API
+* Integrates with hyperadmin
 * Configurable plugins (mixins)
 
 
@@ -28,7 +28,10 @@ Requirements
 
 * Python 2.6 or later
 * Django 1.3 or later
-* django-dockit: https://github.com/zbyte64/django-dockit
+* django-dockit: https://github.com/webcube/django-dockit
+* django-hyperadmin: https://github.com/webcube/django-hyperadmin
+* django-hyperadmin-dockitresource: https://github.com/webcube/django-hyperadmin-dockitresource
+* django-hyperadmin-client: https://github.com/webcube/django-hyperadmin-client
 
 
 --------
