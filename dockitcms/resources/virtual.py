@@ -24,14 +24,14 @@ class VirtualResourceSite(ResourceSite):
     
     def load_applications(self):
         for app in self.query_applications():
-            self.register_application(app.slug, resource_name=app.name)
+            self.register_application(app.slug, resource_name=app.name, base_url_name_prefix=app.slug)
     
     def load_collections(self):
         self.registry = dict()
         for collection in self.query_collections():
             object_class = collection.get_object_class()
             resource_class = collection.get_resource_class()
-            app_name = collection.application.name
+            app_name = collection.application.slug
             self.register(object_class, resource_class, collection=collection, app_name=app_name)
     
     def load_site(self):
