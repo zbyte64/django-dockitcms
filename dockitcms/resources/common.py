@@ -1,4 +1,4 @@
-from dockitresource.resources import DocumentResource
+from dockitresource.resources import DocumentResource, DotpathResource
 
 from dockitcms.signals import request_reload_site, post_init_applications
 
@@ -20,4 +20,7 @@ class ReloadCMSSiteMixin(object):
         return super(ReloadCMSSiteMixin, self).on_delete_success(item)
 
 class CMSDocumentResource(DocumentResource):
+    pass
+
+class ReloadCMSDotpathResource(ReloadCMSSiteMixin, DotpathResource):
     pass

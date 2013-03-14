@@ -1,7 +1,7 @@
 import hyperadmin
 
 from dockitcms.models import Collection, PublicResourceDefinition, DocumentDesign, Subsite, Application, Index
-from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource
+from dockitcms.resources.common import ReloadCMSSiteMixin, CMSDocumentResource, ReloadCMSDotpathResource
 
 
 app_name = 'dockitcms'
@@ -12,12 +12,13 @@ class ApplicationResource(CMSDocumentResource):
 hyperadmin.site.register(Application, ApplicationResource, app_name=app_name)
 
 class DocumentDesignResource(CMSDocumentResource):
-    pass
+    dotpath_resource_class = ReloadCMSDotpathResource
 
 hyperadmin.site.register(DocumentDesign, DocumentDesignResource, app_name=app_name)
 
 class CollectionResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['title', 'application', 'key']
+    dotpath_resource_class = ReloadCMSDotpathResource
     
     def get_manage_collection_resource_kwargs(self, item, **kwargs):
         document_class = item.instance.get_document()
@@ -36,18 +37,20 @@ class CollectionResource(ReloadCMSSiteMixin, CMSDocumentResource):
 hyperadmin.site.register(Collection, CollectionResource, app_name=app_name)
 
 class IndexResource(ReloadCMSSiteMixin, CMSDocumentResource):
-    pass
+    dotpath_resource_class = ReloadCMSDotpathResource
 
 hyperadmin.site.register(Index, IndexResource, app_name=app_name)
 
 class SubsiteResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['name', 'url', 'slug']
+    dotpath_resource_class = ReloadCMSDotpathResource
 
 hyperadmin.site.register(Subsite, SubsiteResource, app_name=app_name)
 
 #TODO this is redundant naming
 class PublicResourceDefinitionResource(ReloadCMSSiteMixin, CMSDocumentResource):
     list_display = ['name', 'subsite', 'collection', 'url']
+    dotpath_resource_class = ReloadCMSDotpathResource
     
     def get_prompt(self):
         return 'Public Resource'
