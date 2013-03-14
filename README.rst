@@ -49,3 +49,11 @@ Set the following in your settings file::
         'dockitcms.widgetblock.scope_processors.modelwidgets',
     ]
 
+
+Add the following to your urls.py after eveything else::
+
+    urlpatterns += patterns('',
+        url(r'^', include('dockitcms.urls')),
+    )
+
+
