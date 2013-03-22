@@ -2,6 +2,6 @@
 django-classy-tags
 
 mimeparse
--e git+git://github.com/webcube/django-hyperadmin.git#egg=django-hyperadmin
+-e git+git://github.com/webcube/django-hyperadmin.git@develop#egg=django-hyperadmin
 -e git+git://github.com/webcube/django-hyperadmin-dockitresource.git#egg=django-hyperadmin-dockitresource
 -e git+git://github.com/webcube/django-hyperadmin-client.git#egg=django-hyperadmin-client

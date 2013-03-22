@@ -30,9 +30,15 @@ class FieldEntry(schema.Schema):
                 kwargs[str(key)] = value
         return kwargs
     
+    def get_field_class(self):
+        return self.field_class
+    
     def create_field(self):
+        '''
+        Returns a field for the designed schema
+        '''
         kwargs = self.get_field_kwargs()
-        return self.field_class(**kwargs)
+        return self.get_field_class()(**kwargs)
     
     def get_scaffold_example(self, context, varname):
         raise NotImplementedError

@@ -99,7 +99,7 @@ class BaseViewPoint(ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
         returns a list of tuples
         [(endpoint_cls, kwargs)...]
         """
-        raise NotImplementedError
+        return []
     
     def register_view_endpoints(self, site):
         pass
@@ -165,7 +165,7 @@ class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RE
     collection = schema.ReferenceField(Collection)
     url = schema.CharField()
     name = schema.CharField()
-    view_points = schema.ListField(schema.SchemaField(ViewPoint))
+    view_points = schema.ListField(schema.SchemaField(BaseViewPoint))
     
     def get_base_url(self):
         url = self.url or ''
