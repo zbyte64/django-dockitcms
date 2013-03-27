@@ -11,27 +11,32 @@ class DocKitCMSDataTap(DocumentDataTap):
     '''
     Reads and writes from DocKitCMS
     '''
-    def __init__(self, applications=[], collections=[], indexes=[], subsites=[], publicresources=[], **kwargs):
+    def __init__(self, applications=None, collections=None, indexes=None, subsites=None, publicresources=None, **kwargs):
         collection_sources = self.order_collection_sources(applications, collections, indexes, subsites, publicresources)
-        super(DocumentDataTap, self).__init__(*collection_sources, **kwargs)
+        super(DocKitCMSDataTap, self).__init__(*collection_sources, **kwargs)
     
     def order_collection_sources(self, applications, collections, indexes, subsites, publicresources):
         #return in loading order
         result = list()
         exported_collections = list()
-        for app_slug in applications:
-            result.append(Application.objects.get(slug=app_slug))
-        for key in collections:#TODO not all collections have a key
-            collection = Collection.objects.get(key=key)
-            result.append(collection)
-            if isinstance(collection, VirtualDocumentCollection):
-                exported_collections.append(collection)
-        for name in indexes:#TODO ambigious
-            result.extend(Index.objects.filter(name=name))
-        for slug in subsites:
-            result.append(Subsite.objects.get(slug=slug))
-        for pubres_url in publicresources:#TODO ambigious
-            result.append(PublicResourceDefinition.objects.get(url=pubres_url))
+        if applications:
+            for app_slug in applications:
+                result.append(Application.objects.get(slug=app_slug))
+        if collections:
+            for key in collections:#TODO not all collections have a key
+                collection = Collection.objects.get(key=key)
+                result.append(collection)
+                if isinstance(collection, VirtualDocumentCollection):
+                    exported_collections.append(collection)
+        if indexes:
+            for name in indexes:#TODO ambigious
+                result.extend(Index.objects.filter(name=name))
+        if subsites:
+            for slug in subsites:
+                result.append(Subsite.objects.get(slug=slug))
+        if publicresources:
+            for pubres_url in publicresources:#TODO ambigious
+                result.append(PublicResourceDefinition.objects.get(url=pubres_url))
         for collection in exported_collections:
             result.append(collection.get_document())
         return result

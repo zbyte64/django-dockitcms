@@ -60,6 +60,8 @@ class Application(schema.Document):
     def __unicode__(self):
         return self.name
 
+Application.objects.index('slug').commit()
+
 class AdminOptions(schema.Schema):
     list_display = schema.ListField(schema.CharField(), blank=True)
     list_per_page = schema.IntegerField(default=100)

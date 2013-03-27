@@ -1,5 +1,5 @@
 -e git+git://github.com/zbyte64/django-datatap.git#egg=django-datatap
--e git+git://github.com/webcube/django-dockit.git@topic-datatap#egg=django-dockit
+-e git+git://github.com/zbyte64/django-dockit.git@topic-datataps#egg=django-dockit
 django-classy-tags
 
 mimeparse
