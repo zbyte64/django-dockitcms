@@ -68,8 +68,8 @@ class CollectionTest(unittest.TestCase):
     def test_collection_mixin_signals(self):
         collection = self.create_test_collection()
         document = collection.get_document()
-        admin = self.get_admin_for_document(document)
-        admin.get_excludes()
+        #admin = self.get_admin_for_document(document)
+        #admin.get_excludes()
         return #TODO
         admin.get_inline_instances()
         events = [event['event'] for event in collection.seen_events]
