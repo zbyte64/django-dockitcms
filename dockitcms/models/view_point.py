@@ -67,6 +67,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         return self.get_urls()
 
 Subsite.objects.index('sites').commit()
+Subsite.objects.index('slug').commit()
 
 class BaseViewPoint(ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
     def send_view_point_event(self, event, view, kwargs):
