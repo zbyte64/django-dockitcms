@@ -12,6 +12,14 @@ class DocKitCMSDataTap(DocumentDataTap):
     Reads and writes from DocKitCMS
     '''
     def __init__(self, applications=None, collections=None, indexes=None, subsites=None, publicresources=None, **kwargs):
+        '''
+        
+        :param applications: A list of application slugs
+        :param collections: A list of collection keys
+        :param indexes: A list of index names
+        :param subsites: A list of sugsite slugs
+        :param publicresources: A list of public resources urls
+        '''
         collection_sources = self.order_collection_sources(applications, collections, indexes, subsites, publicresources)
         super(DocKitCMSDataTap, self).__init__(*collection_sources, **kwargs)
     
@@ -23,7 +31,7 @@ class DocKitCMSDataTap(DocumentDataTap):
             for app_slug in applications:
                 result.append(Application.objects.get(slug=app_slug))
         if collections:
-            for key in collections:#TODO not all collections have a key
+            for key in collections:
                 collection = Collection.objects.get(key=key)
                 result.append(collection)
                 if isinstance(collection, VirtualDocumentCollection):
@@ -35,8 +43,8 @@ class DocKitCMSDataTap(DocumentDataTap):
             for slug in subsites:
                 result.append(Subsite.objects.get(slug=slug))
         if publicresources:
-            for pubres_url in publicresources:#TODO ambigious
-                result.append(PublicResourceDefinition.objects.get(url=pubres_url))
+            for pk in publicresources:#TODO find a better identifier, uuid?
+                result.append(PublicResourceDefinition.objects.get(pk=pk))
         for collection in exported_collections:
             result.append(collection.get_document())
         return result

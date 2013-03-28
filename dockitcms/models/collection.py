@@ -69,6 +69,7 @@ class AdminOptions(schema.Schema):
     #readonly_fields = schema.ListField(schema.CharField(), blank=True)
 
 class Collection(ManageUrlsMixin, schema.Document, EventMixin):
+    key = schema.SlugField(unique=True)
     application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
     title = None
@@ -179,8 +180,9 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
         typed_field = 'collection_type'
         verbose_name = 'collection'
 
+Collection.objects.index('key').commit()
+
 class VirtualDocumentCollection(Collection, DocumentDesign):
-    key = schema.SlugField(unique=True)
     mixins = schema.SetField(schema.CharField(), choices=VIRTUAL_COLLECTION_MIXINS.choices, blank=True)
     
     @classmethod
