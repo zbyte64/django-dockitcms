@@ -11,7 +11,7 @@ class DocKitCMSDataTap(DocumentDataTap):
     '''
     Reads and writes from DocKitCMS
     '''
-    def __init__(self, applications=None, collections=None, indexes=None, subsites=None, publicresources=None, **kwargs):
+    def __init__(self, instream=None, applications=None, collections=None, indexes=None, subsites=None, publicresources=None, **kwargs):
         '''
         
         :param applications: A list of application slugs
@@ -20,8 +20,9 @@ class DocKitCMSDataTap(DocumentDataTap):
         :param subsites: A list of sugsite slugs
         :param publicresources: A list of public resources urls
         '''
-        collection_sources = self.order_collection_sources(applications, collections, indexes, subsites, publicresources)
-        super(DocKitCMSDataTap, self).__init__(*collection_sources, **kwargs)
+        if instream is None:
+            instream = self.order_collection_sources(applications, collections, indexes, subsites, publicresources)
+        super(DocKitCMSDataTap, self).__init__(instream, **kwargs)
     
     def order_collection_sources(self, applications, collections, indexes, subsites, publicresources):
         #return in loading order
@@ -76,14 +77,5 @@ class DocKitCMSDataTap(DocumentDataTap):
             dest='publicresources',
         )
     ]
-    
-    @classmethod
-    def load_from_command_line(cls, arglist):
-        '''
-        Retuns an instantiated DataTap with the provided arguments from commandline
-        '''
-        parser = OptionParser(option_list=cls.command_option_list)
-        options, args = parser.parse_args(arglist)
-        return cls(*args, **options.__dict__)
 
 register_datatap('DocKitCMS', DocKitCMSDataTap)
