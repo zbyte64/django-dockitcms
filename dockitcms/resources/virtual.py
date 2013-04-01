@@ -33,7 +33,7 @@ class VirtualResourceSite(ResourceSite):
             resource_class = collection.get_resource_class()
             app_name = collection.application.slug
             #TODO all collections get a slug or key
-            if hasattr(collection, 'key'):
+            if getattr(collection, 'key', None):
                 self.register(object_class, resource_class, collection=collection, app_name=app_name, resource_slug=collection.key)
             else:
                 self.register(object_class, resource_class, collection=collection, app_name=app_name)
