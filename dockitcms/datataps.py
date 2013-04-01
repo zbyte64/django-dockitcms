@@ -20,13 +20,16 @@ class DocKitCMSDataTap(DocumentDataTap):
         :param subsites: A list of sugsite slugs
         :param publicresources: A list of public resources urls
         '''
-        if instream is None:
-            instream = self.order_collection_sources(applications, collections, indexes, subsites, publicresources)
+        if applications or collections or indexes or subsites or publicresources:
+            instream = self.order_collection_sources(instream, applications, collections, indexes, subsites, publicresources)
         super(DocKitCMSDataTap, self).__init__(instream, **kwargs)
     
-    def order_collection_sources(self, applications, collections, indexes, subsites, publicresources):
+    def order_collection_sources(self, instream, applications, collections, indexes, subsites, publicresources):
         #return in loading order
-        result = list()
+        if instream:
+            result = list(instream)
+        else:
+            result = list()
         exported_collections = list()
         if applications:
             for app_slug in applications:
