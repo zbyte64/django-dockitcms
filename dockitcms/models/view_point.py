@@ -40,7 +40,10 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
         subsite_api = PublicSubsite(api_endpoint=site, name=self.name, subsite=self)
         
         for resource_def in self.resource_definitions:
-            resource_def.register_collection(subsite_api)
+            try:
+                resource_def.register_collection(subsite_api)
+            except Exception as error:
+                self.get_logger().exception('Could not register public resource')
         
         return subsite_api
     

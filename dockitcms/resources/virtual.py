@@ -24,19 +24,25 @@ class VirtualResourceSite(ResourceSite):
     
     def load_applications(self):
         for app in self.query_applications():
-            self.register_application(app.slug, resource_name=app.name, base_url_name_prefix=app.slug)
+            try:
+                self.register_application(app.slug, resource_name=app.name, base_url_name_prefix=app.slug)
+            except Exception as error:
+                self.get_logger().exception('Could not register application')
     
     def load_collections(self):
         self.registry = dict()
         for collection in self.query_collections():
-            object_class = collection.get_object_class()
-            resource_class = collection.get_resource_class()
-            app_name = collection.application.slug
-            #TODO all collections get a slug or key
-            if getattr(collection, 'key', None):
-                self.register(object_class, resource_class, collection=collection, app_name=app_name, resource_slug=collection.key)
-            else:
-                self.register(object_class, resource_class, collection=collection, app_name=app_name)
+            try:
+                object_class = collection.get_object_class()
+                resource_class = collection.get_resource_class()
+                app_name = collection.application.slug
+                #TODO all collections get a slug or key
+                if getattr(collection, 'key', None):
+                    self.register(object_class, resource_class, collection=collection, app_name=app_name, resource_slug=collection.key)
+                else:
+                    self.register(object_class, resource_class, collection=collection, app_name=app_name)
+            except Exception as error:
+                self.get_logger().exception('Could not register collection')
     
     def load_site(self):
         self.load_applications()
