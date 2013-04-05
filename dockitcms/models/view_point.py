@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from dockit import schema
 
 from dockitcms.scope import ScopeList, Scope, get_site_scope
@@ -18,42 +20,42 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
     name = schema.CharField()
     slug = schema.SlugField()
     sites = schema.ModelSetField(Site, blank=True)
-    
+
     def __unicode__(self):
-        return u'%s - %s' % (self.name, self.url)
-    
+        return '%s - %s' % (self.name, self.url)
+
     def get_logger(self):
         from dockitcms.sites import logger
         return logger
-    
+
     @property
     def resource_definitions(self):
         return PublicResourceDefinition.objects.filter(subsite=self)
-    
+
     def get_site_client(self):
         """
         Returns a hyperadmin client for public consumption
         """
         from dockitcms.resources.virtual import site
         from dockitcms.resources.public import PublicSubsite
-        
+
         subsite_api = PublicSubsite(api_endpoint=site, name=self.name, subsite=self)
-        
+
         for resource_def in self.resource_definitions:
             try:
                 resource_def.register_collection(subsite_api)
             except Exception as error:
                 self.get_logger().exception('Could not register public resource')
-        
+
         return subsite_api
-    
+
     def get_urls(self):
         if not hasattr(self, '_client'):
             self._client = self.get_site_client()
         client = self._client
-        
+
         return client.get_urls()
-    
+
     @property
     def urls(self):
         #urls, app_name, namespace
@@ -64,7 +66,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
             logger.exception('Error while constructing urls')
             raise
         return self, None, self.name
-    
+
     @property
     def urlpatterns(self):
         return self.get_urls()
@@ -86,40 +88,40 @@ class BaseViewPoint(ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
             val = mixin.handle_view_point_event(event, view, kwargs)
             results.append((mixin, val))
         return results
-    
+
     def get_scopes(self):
         site_scope = get_site_scope()
-        
+
         subsite_scope = Scope('subsite', object=self.subsite)
         subsite_scope.add_data('object', self.subsite, self.subsite.get_manage_urls())
-        
+
         viewpoint_scope = Scope('viewpoint', object=self)
         viewpoint_scope.add_data('object', self, self.get_manage_urls())
-        
+
         return ScopeList([site_scope, subsite_scope, viewpoint_scope])
-    
+
     def get_view_endpoints(self):
         """
         returns a list of tuples
         [(endpoint_cls, kwargs)...]
         """
         return []
-    
+
     def register_view_endpoints(self, site):
         pass
-    
+
     def get_absolute_url(self):
         return self.reverse('index')
-    
+
     def reverse(self, name, *args, **kwargs):
         if not name.startswith('dockitcms:%s:' % self.pk):
             name = 'dockitcms:%s:%s' % (self.pk, name)
         try:
             return reverse(name, args=args, kwargs=kwargs)#, current_app=self.subsite.name)
-        except Exception, error:
+        except Exception as error:
             print error
             raise
-    
+
     class Meta:
         typed_field = 'view_type'
         verbose_name = 'View Point'
@@ -128,12 +130,12 @@ class ViewPoint(BaseViewPoint):
     url = schema.CharField(help_text='May be a regular expression that the url has to match', blank=True)
     endpoint_name = schema.CharField(blank=True)
     url_name = schema.CharField(blank=True)
-    
+
     default_endpoint_name = None
-    
+
     def get_endpoint_name(self):
         return self.endpoint_name or self.default_endpoint_name
-    
+
     def get_view_endpoint_kwargs(self, **kwargs):
         params = {
             'url_suffix': self.get_url(),
@@ -142,7 +144,7 @@ class ViewPoint(BaseViewPoint):
             params['name_suffix'] = self.url_name
         params.update(kwargs)
         return params
-    
+
     def get_url(self):
         url = self.url or ''
         if url.startswith('/'):
@@ -150,17 +152,17 @@ class ViewPoint(BaseViewPoint):
         if not url.startswith('^'):
             url = '^'+url
         return url
-        
+
     def get_url_regexp(self):
         url = self.get_url()
         return r'%s' % url
-    
+
     def __unicode__(self):
         if self.url:
             return self.url
         else:
             return self.view_type
-    
+
     class Meta:
         proxy = True
 
@@ -170,7 +172,7 @@ class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RE
     url = schema.CharField()
     name = schema.CharField()
     view_points = schema.ListField(schema.SchemaField(BaseViewPoint))
-    
+
     def get_base_url(self):
         url = self.url or ''
         if url.startswith('/'):
@@ -178,11 +180,11 @@ class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RE
         if not url.startswith('^'):
             url = '^'+url
         return url
-    
+
     @property
     def cms_resource(self):
         return self.collection.get_collection_resource()
-    
+
     def get_collection_kwargs(self, **kwargs):
         params = {
             'view_points': self.view_points,
@@ -190,7 +192,7 @@ class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RE
         }
         params.update(kwargs)
         return params
-    
+
     def register_collection(self, site):
         kwargs = self.get_collection_kwargs(site=site)
         resource = self.collection.register_public_resource(**kwargs)

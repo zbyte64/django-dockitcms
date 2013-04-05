@@ -1,13 +1,18 @@
+from __future__ import unicode_literals
+
+import uuid
+
 from dockit import schema
 from dockit.schema import get_base_document
+from dockit.schema.schema import create_document
 from dockit.schema.loading import force_register_documents
 
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
-from django.utils.datastructures import MergeDict
+from django.utils.datastructures import MergeDict, SortedDict
 from django.contrib.contenttypes.models import ContentType
 
-from dockitcms.models.design import DocumentDesign
+from dockitcms.models.design import SchemaEntry, DocumentDesign
 from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction, CollectEventFunction
 
 
@@ -18,27 +23,27 @@ class MixinDict(MergeDict):
         dictionaries = self.get_dictionaries()
         super(MixinDict, self).__init__(*dictionaries)
         self.update(data)
-    
+
     def get_dictionaries(self):
         return [self.active_dictionary] + self.substates
-    
+
     def __copy__(self):
         substates = self.get_dictionaries()
         ret = self.__class__(substates=substates)
         return ret
-    
+
     def __setitem__(self, key, value):
         self.active_dictionary[key] = value
-    
+
     def __delitem__(self, key):
         del self.active_dictionary[key]
-    
+
     def pop(self, key, default=None):
         return self.active_dictionary.pop(key, default)
-    
+
     def update(self, other_dict):
         self.active_dictionary.update(other_dict)
-    
+
     def choices(self):
         choices = list()
         for key, value in self.iteritems():
@@ -53,10 +58,10 @@ MODEL_COLLECTION_MIXINS = MixinDict(substates=[COLLECTION_MIXINS])
 class Application(schema.Document):
     name = schema.CharField()
     slug = schema.SlugField(unique=True)
-    
+
     def create_natural_key(self):
         return {'slug':self.slug}
-    
+
     def __unicode__(self):
         return self.name
 
@@ -73,9 +78,9 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
     application = schema.ReferenceField(Application)
     admin_options = schema.SchemaField(AdminOptions)
     title = None
-    
+
     mixins = schema.SetField(schema.CharField(), choices=COLLECTION_MIXINS.choices, blank=True)
-    
+
     mixin_function_events = {
         'get_document_kwargs': {
             'post': PostEventFunction(event='document_kwargs', keyword='document_kwargs'),
@@ -85,22 +90,22 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
             'post': PostEventFunction(event='view_endpoints', keyword='view_endpoints'),
         },
     }
-    
+
     @classmethod
     def register_mixin(self, key, mixin_class):
         self.get_available_mixins()[key] = mixin_class
-    
+
     @classmethod
     def get_available_mixins(self):
         return COLLECTION_MIXINS
-    
+
     def __getattribute__(self, name):
         function_events = object.__getattribute__(self, 'mixin_function_events')
         if name in function_events:
             ret = object.__getattribute__(self, name)
             return self._mixin_function(ret, function_events[name])
         return schema.Document.__getattribute__(self, name)
-    
+
     def get_active_mixins(self):
         mixins = list()
         available_mixins = self.get_available_mixins()
@@ -109,35 +114,35 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
                 mixin_cls = available_mixins[mixin_key]
                 mixins.append(mixin_cls(self))
         return mixins
-    
+
     @permalink
     def get_admin_manage_url(self):
         return self.get_resource_item().get_absolute_url()
-    
+
     def admin_manage_link(self):
         url = self.get_admin_manage_url()
-        return u'<a href="%s">%s</a>' % (url, _('Manage'))
+        return '<a href="%s">%s</a>' % (url, _('Manage'))
     admin_manage_link.short_description = _('Manage')
     admin_manage_link.allow_tags = True
-    
+
     def get_object_class(self):
         raise NotImplementedError
-    
+
     def get_resource_class(self):
         raise NotImplementedError
-    
+
     @classmethod
     def get_collection_admin_client(cls):
         #TODO this should be configurable
         from dockitcms.urls import admin_client
         return admin_client.api_endpoint
-    
+
     def get_collection_resource(self):
         admin_client = self.get_collection_admin_client()
         cls = self.get_object_class()
         try:
             return admin_client.registry[cls]
-        except Exception, error:
+        except Exception as error:
             seen = list()
             for key, resource in admin_client.registry.iteritems():
                 seen.append((resource.collection.collection_type, key, resource.collection))
@@ -146,11 +151,11 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
                 if hasattr(resource, 'collection') and resource.collection == self:
                     return resource
             assert False, str(seen)
-    
+
     def get_public_resource_class(self):
         from dockitcms.resources.public import PublicResource
         return PublicResource
-    
+
     def get_public_resource_options(self, **kwargs):
         params = {
             'collection': self,
@@ -159,23 +164,23 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
         }
         params.update(kwargs)
         return params
-    
+
     def register_public_resource(self, site, **kwargs):
         klass = self.get_public_resource_class()
         options = self.get_public_resource_options(**kwargs)
         return site.register_endpoint(klass, **options)
-    
+
     def get_view_endpoints(self):
         return []
-    
+
     def register_collection(self):
         pass
-    
+
     def save(self, *args, **kwargs):
         ret = super(Collection, self).save(*args, **kwargs)
         self.register_collection()
         return ret
-    
+
     class Meta:
         typed_field = 'collection_type'
         verbose_name = 'collection'
@@ -184,36 +189,36 @@ Collection.objects.index('key').commit()
 
 class VirtualDocumentCollection(Collection, DocumentDesign):
     mixins = schema.SetField(schema.CharField(), choices=VIRTUAL_COLLECTION_MIXINS.choices, blank=True)
-    
+
     @classmethod
     def get_available_mixins(self):
         return VIRTUAL_COLLECTION_MIXINS
-    
+
     def get_collection_name(self):
         return 'dockitcms.virtual.%s' % self.key
-    
+
     def get_document_kwargs(self, **kwargs):
         kwargs = super(VirtualDocumentCollection, self).get_document_kwargs(**kwargs)
         kwargs.setdefault('attrs', dict())
         parents = list(kwargs.get('parents', list()))
-        
+
         parents.append(VirtualManageUrlsMixin)
         if not any([issubclass(parent, schema.Document) for parent in parents]):
             parents.append(schema.Document)
-        
+
         if parents:
             kwargs['parents'] = tuple(parents)
         if self.application:
             kwargs['app_label'] = self.application.name
-        
+
         kwargs['attrs']['_collection_document'] = self
         return kwargs
-    
+
     def register_collection(self):
         doc = DocumentDesign.get_document(self, virtual=False, verbose_name=self.title, collection=self.get_collection_name())
         force_register_documents(doc._meta.app_label, doc)
         return doc
-    
+
     def get_document(self):
         key = self.get_collection_name()
         #TODO how do we know if we should recreate the document? ie what if the design was modified on another node
@@ -222,56 +227,140 @@ class VirtualDocumentCollection(Collection, DocumentDesign):
         except KeyError:
             doc = self.register_collection()
             return doc
-    
+
     def get_object_class(self):
         return self.get_document()
-    
+
     def get_resource_class(self):
         from dockitcms.resources.collection import VirtualDocumentResource
         return VirtualDocumentResource
-    
+
     def get_collection_resource(self):
         admin_client = self.get_collection_admin_client()
         cls = self.get_object_class()
         try:
             return admin_client.registry[cls]
-        except Exception, error:
+        except Exception as error:
             for key, resource in admin_client.registry.iteritems():
                 if isinstance(key, type) and issubclass(cls, key):
                     return resource
                 #TODO why do we need this?
                 if issubclass(key, schema.Document) and key._meta.collection == cls._meta.collection:
                     return resource
-    
+
     def __unicode__(self):
         if self.title:
             return self.title
         else:
             return self.__repr__()
-    
+
     class Meta:
         typed_key = 'dockitcms.virtualdocument'
 
 class ModelCollection(Collection):
     model = schema.ModelReferenceField(ContentType)
     mixins = schema.SetField(schema.CharField(), choices=MODEL_COLLECTION_MIXINS.choices, blank=True)
-    
+
     @classmethod
     def get_available_mixins(self):
         return MODEL_COLLECTION_MIXINS
-    
+
     def get_model(self):
         return self.model.model_class()
-    
+
     def get_object_class(self):
         return self.get_model()
-    
+
     def get_resource_class(self):
         from dockitcms.resources.collection import ModelResource
         return ModelResource
-    
+
     class Meta:
         typed_key = 'dockitcms.model'
 
+#the following goes into a new app
+class TemplateEntry(schema.Schema):
+    path = schema.CharField()
+    source = schema.TextField() #TODO template validator
+    #js files
+    #css files
+
+class PageDefinition(SchemaEntry):
+    unique_id = schema.CharField(default=uuid.uuid5, editable=False)
+    templates = schema.ListField(schema.SchemaField(TemplateEntry))
+
+BASE_PAGE_FIELDS = SortedDict([
+    ('parent', schema.ReferenceField('self', blank=True, null=True)),
+    ('url', schema.CharField(blank=True)),
+    ('title', schema.CharField()),
+    ('slug', schema.SlugField()),
+    #('in_navigation', schema.BooleanField()), => general meta data
+    ('published', schema.BooleanField()),
+    #('template', schema.CharField()) #=> template from page def
+    #CONSIDER: create & change times and user
+    #publication date
+    #drop date
+    #drop dates => schedule tasks or data type index
+    #SEO
+    #css files, textarea
+    #js files, textarea
+])
+
+class PageCollection(Collection):
+    title = schema.CharField()
+    page_definitions = schema.ListField(schema.SchemaField(SchemaEntry))
+
+    def get_collection_name(self):
+        return 'dockitcms.virtual.%s' % self.key
+
+    def get_schema_name(self):
+        return str(''.join([part for part in self.title.split()]))
+
+    def register_collection(self):
+        #create a base page document
+        params = {
+            'module': 'dockitcms.models.virtual',
+            'virtual': False,
+            'verbose_name': self.title,
+            'collection': self.get_collection_name(),
+            'fields': BASE_PAGE_FIELDS,
+            'name': self.get_schema_name(),
+            'attrs': SortedDict(),
+        }
+        if self.application:
+            params['app_label'] = self.application.name
+        params['attrs']['_collection_document'] = self
+
+        base_doc = create_document(**params)
+        force_register_documents(base_doc._meta.app_label, base_doc)
+
+        #loop through page_definitions and register them
+        for page_def in self.page_definitions:
+            typed_key = page_def.unique_id
+            page_def.get_document(parents=(base_doc,), virtual=True, typed_key=typed_key)
+
+        #CONSIDER: provide page defs defined in code
+        '''
+        #TODO register this if widgets is installed
+        class WidgetPage(base_doc):
+            #title
+            #widget summary
+            #widget field should have css classes
+            widgets = schema.ListField(WidgetField())
+        '''
+
+        return base_doc
+
+    def get_document(self):
+        key = self.get_collection_name()
+        #TODO how do we know if we should recreate the document? ie what if the design was modified on another node
+        try:
+            return get_base_document(key)
+        except KeyError:
+            doc = self.register_collection()
+            return doc
+
+    class Meta:
+        typed_key = 'dockitcms.page'
 #TODO add ResourceCollection which points to an existing resource
 
