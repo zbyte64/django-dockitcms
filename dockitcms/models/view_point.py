@@ -166,12 +166,11 @@ class ViewPoint(BaseViewPoint):
     class Meta:
         proxy = True
 
-class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
+class PublicResource(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
     subsite = schema.ReferenceField(Subsite)
-    collection = schema.ReferenceField(Collection)
+
     url = schema.CharField()
     name = schema.CharField()
-    view_points = schema.ListField(schema.SchemaField(BaseViewPoint))
 
     def get_base_url(self):
         url = self.url or ''
@@ -181,13 +180,8 @@ class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RE
             url = '^'+url
         return url
 
-    @property
-    def cms_resource(self):
-        return self.collection.get_collection_resource()
-
     def get_collection_kwargs(self, **kwargs):
         params = {
-            'view_points': self.view_points,
             'base_url': self.get_base_url(),
         }
         params.update(kwargs)
@@ -198,4 +192,22 @@ class PublicResourceDefinition(schema.Document, create_document_mixin(SUBSITE_RE
         resource = self.collection.register_public_resource(**kwargs)
         return resource
 
-PublicResourceDefinition.objects.index('subsite').commit()
+    class Meta:
+        typed_field = '_resource_type'
+
+PublicResource.objects.index('subsite').commit()
+
+class PublicCollectionResource(PublicResource):
+    collection = schema.ReferenceField(Collection)
+    view_points = schema.ListField(schema.SchemaField(BaseViewPoint))
+
+    @property
+    def cms_resource(self):
+        return self.collection.get_collection_resource()
+
+    def get_collection_kwargs(self, **kwargs):
+        kwargs.setdefault('view_points', self.view_points)
+        return super(PublicCollectionResource, self).get_collection_kwargs(**kwargs)
+
+    class Meta:
+        typed_key = 'collection'

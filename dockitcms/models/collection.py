@@ -1,18 +1,16 @@
 from __future__ import unicode_literals
 
-import uuid
-
 from dockit import schema
 from dockit.schema import get_base_document
-from dockit.schema.schema import create_document
+
 from dockit.schema.loading import force_register_documents
 
 from django.db.models import permalink
 from django.utils.translation import ugettext_lazy as _
-from django.utils.datastructures import MergeDict, SortedDict
+from django.utils.datastructures import MergeDict
 from django.contrib.contenttypes.models import ContentType
 
-from dockitcms.models.design import SchemaEntry, DocumentDesign
+from dockitcms.models.design import DocumentDesign
 from dockitcms.models.mixin import ManageUrlsMixin, VirtualManageUrlsMixin, EventMixin, PostEventFunction, CollectEventFunction
 
 
@@ -278,89 +276,6 @@ class ModelCollection(Collection):
     class Meta:
         typed_key = 'dockitcms.model'
 
-#the following goes into a new app
-class TemplateEntry(schema.Schema):
-    path = schema.CharField()
-    source = schema.TextField() #TODO template validator
-    #js files
-    #css files
 
-class PageDefinition(SchemaEntry):
-    unique_id = schema.CharField(default=uuid.uuid5, editable=False)
-    templates = schema.ListField(schema.SchemaField(TemplateEntry))
-
-BASE_PAGE_FIELDS = SortedDict([
-    ('parent', schema.ReferenceField('self', blank=True, null=True)),
-    ('url', schema.CharField(blank=True)),
-    ('title', schema.CharField()),
-    ('slug', schema.SlugField()),
-    #('in_navigation', schema.BooleanField()), => general meta data
-    ('published', schema.BooleanField()),
-    #('template', schema.CharField()) #=> template from page def
-    #CONSIDER: create & change times and user
-    #publication date
-    #drop date
-    #drop dates => schedule tasks or data type index
-    #SEO
-    #css files, textarea
-    #js files, textarea
-])
-
-class PageCollection(Collection):
-    title = schema.CharField()
-    page_definitions = schema.ListField(schema.SchemaField(SchemaEntry))
-
-    def get_collection_name(self):
-        return 'dockitcms.virtual.%s' % self.key
-
-    def get_schema_name(self):
-        return str(''.join([part for part in self.title.split()]))
-
-    def register_collection(self):
-        #create a base page document
-        params = {
-            'module': 'dockitcms.models.virtual',
-            'virtual': False,
-            'verbose_name': self.title,
-            'collection': self.get_collection_name(),
-            'fields': BASE_PAGE_FIELDS,
-            'name': self.get_schema_name(),
-            'attrs': SortedDict(),
-        }
-        if self.application:
-            params['app_label'] = self.application.name
-        params['attrs']['_collection_document'] = self
-
-        base_doc = create_document(**params)
-        force_register_documents(base_doc._meta.app_label, base_doc)
-
-        #loop through page_definitions and register them
-        for page_def in self.page_definitions:
-            typed_key = page_def.unique_id
-            page_def.get_document(parents=(base_doc,), virtual=True, typed_key=typed_key)
-
-        #CONSIDER: provide page defs defined in code
-        '''
-        #TODO register this if widgets is installed
-        class WidgetPage(base_doc):
-            #title
-            #widget summary
-            #widget field should have css classes
-            widgets = schema.ListField(WidgetField())
-        '''
-
-        return base_doc
-
-    def get_document(self):
-        key = self.get_collection_name()
-        #TODO how do we know if we should recreate the document? ie what if the design was modified on another node
-        try:
-            return get_base_document(key)
-        except KeyError:
-            doc = self.register_collection()
-            return doc
-
-    class Meta:
-        typed_key = 'dockitcms.page'
 #TODO add ResourceCollection which points to an existing resource
 
