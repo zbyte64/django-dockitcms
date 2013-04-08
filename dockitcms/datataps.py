@@ -2,7 +2,7 @@ from optparse import OptionParser, make_option
 
 from dockit.datataps import DocumentDataTap
 
-from dockitcms.models import Application, Collection, Index, Subsite, PublicResourceDefinition, VirtualDocumentCollection
+from dockitcms.models import Application, Collection, Index, Subsite, PublicResource, VirtualDocumentCollection
 
 from datatap.loading import register_datatap
 
@@ -13,7 +13,7 @@ class DocKitCMSDataTap(DocumentDataTap):
     '''
     def __init__(self, instream=None, applications=None, collections=None, indexes=None, subsites=None, publicresources=None, **kwargs):
         '''
-        
+
         :param applications: A list of application slugs
         :param collections: A list of collection keys
         :param indexes: A list of index names
@@ -23,7 +23,7 @@ class DocKitCMSDataTap(DocumentDataTap):
         if applications or collections or indexes or subsites or publicresources:
             instream = self.order_collection_sources(instream, applications, collections, indexes, subsites, publicresources)
         super(DocKitCMSDataTap, self).__init__(instream, **kwargs)
-    
+
     def order_collection_sources(self, instream, applications, collections, indexes, subsites, publicresources):
         #return in loading order
         if instream:
@@ -48,11 +48,11 @@ class DocKitCMSDataTap(DocumentDataTap):
                 result.append(Subsite.objects.get(slug=slug))
         if publicresources:
             for pk in publicresources:#TODO find a better identifier, uuid?
-                result.append(PublicResourceDefinition.objects.get(pk=pk))
+                result.append(PublicResource.objects.get(pk=pk))
         for collection in exported_collections:
             result.append(collection.get_document())
         return result
-    
+
     command_option_list = [
         make_option('--application',
             action='append',

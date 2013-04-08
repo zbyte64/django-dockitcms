@@ -2,7 +2,7 @@ from django.utils import unittest
 
 from datatap.datataps import MemoryDataTap
 
-from dockitcms.models import Application, Collection, Index, Subsite, PublicResourceDefinition, VirtualDocumentCollection
+from dockitcms.models import Application, Collection, Index, Subsite, PublicResource, VirtualDocumentCollection
 from dockitcms.datataps import DocKitCMSDataTap
 
 
@@ -23,11 +23,11 @@ class DocKitCMSDataTapTestCase(unittest.TestCase):
         tap.commit() #this saves said objects
         tap.close()
         self.assertEqual(Application.objects.all().count(), 1)
-    
+
     def test_get_item_stream(self):
         Application.objects.all().delete()
         Application(name='test app', slug='test-app').save()
-        
+
         tap = DocKitCMSDataTap(applications=['test-app'])
         items = list(tap)
         self.assertTrue(items)
@@ -50,12 +50,12 @@ class DocKitCMSToZipCommandIntregrationTestCase(unittest.TestCase):
         cmd = datatap.Command()
         argv = ['manage.py', 'datatap', 'DocKitCMS', '--application=test-app', '--', 'Zip', '--', 'File', filename]
         cmd.run_from_argv(argv)
-        
+
         archive = zipfile.ZipFile(filename)
         self.assertTrue('manifest.json' in archive.namelist())
         manifest = json.load(archive.open('manifest.json', 'r'))
         self.assertEqual(len(manifest), Application.objects.all().count())
-    
+
     def test_loaddatatap(self):
         Application.objects.all().delete()
         item = {
@@ -70,11 +70,11 @@ class DocKitCMSToZipCommandIntregrationTestCase(unittest.TestCase):
         archive.writestr('manifest.json', json.dumps([item]))
         archive.writestr('originator.txt', 'DocKitCMS')
         archive.close()
-        
+
         cmd = datatap.Command()
         argv = ['manage.py', 'datatap', 'File', filename, '--', 'Zip', '--', 'DocKitCMS']
         cmd.run_from_argv(argv)
-        
+
         result = Application.objects.all()
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].slug, 'test-app')

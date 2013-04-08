@@ -30,6 +30,7 @@ class PageDefinition(SchemaEntry):
 class BasePage(schema.Schema):
     parent = schema.ReferenceField('self', blank=True, null=True)
     url = schema.CharField(blank=True)
+    path = schema.CharField(editable=False)
     title = schema.CharField()
     slug = schema.SlugField()
     published = schema.BooleanField()
@@ -37,6 +38,13 @@ class BasePage(schema.Schema):
 
     inline_css = schema.TextField(blank=True)
     inline_js = schema.TextField(blank=True)
+
+    def clean_path(self):
+        if self.url:
+            return self.url
+        if self.parent:
+            return self.parent.path + self.slug + '/'
+        return self.slug + '/'
 
 class PageDefinition(schema.Schema):
     pass
@@ -104,9 +112,8 @@ class PageCollection(Collection):
         return self.get_document()
 
     def get_resource_class(self):
-        #TODO eventually we want a custom resource
-        from dockitcms.resources.collection import VirtualDocumentResource
-        return VirtualDocumentResource
+        from dockitcms.pagecollection.resources import PageCollectionResource
+        return PageCollectionResource
 
     def get_collection_resource(self):
         admin_client = self.get_collection_admin_client()
@@ -140,6 +147,7 @@ class PublicPageCollectionResource(PublicResource):
 
     def get_collection_kwargs(self, **kwargs):
         kwargs.setdefault('view_points', []) #TODO
+        #view_point.get_view_endpoints()
         return super(PublicPageCollectionResource, self).get_collection_kwargs(**kwargs)
 
     class Meta:
