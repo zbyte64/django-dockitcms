@@ -1,14 +1,24 @@
+from django.conf.urls.defaults import url, patterns
+
 from dockitcms.viewpoints.endpoints import DetailEndpoint
 from dockitcms.models import ViewPoint
 
 
+class PageDetailEndpoint(DetailEndpoint):
+    def get_url_object(self):
+        view = self.get_view()
+        urls = list()
+        pages = self.resource.resource_adaptor.objects.all()
+        orignal_name = self.get_url_name()
+        #produce a url for each page in page_resource
+        for page in pages:
+            name = page.url_name or orginal_name
+            urls.append(url(page.path, view, name=name,))
+        return patterns('', *urls)
+
 class PageViewPoint(ViewPoint):
     page_resource = None
-    view_endpoint_class = DetailEndpoint
-
-    def get_urls(self):
-        #TODO produce a url for each page in page_resource
-        return super(PageViewPoint, self).get_urls()
+    view_endpoint_class = PageDetailEndpoint
 
     def get_endpoint_name(self):
         return 'list'

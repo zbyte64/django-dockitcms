@@ -20,7 +20,7 @@ class TemplateEntry(schema.Schema):
     css_files = schema.ListField(schema.FileField(upload_to='dockitcms/u-css/'), blank=True)
 
 class PageDefinition(SchemaEntry):
-    unique_id = schema.CharField(default=uuid.uuid5, editable=False)
+    unique_id = schema.CharField(default=uuid.uuid4, editable=False)
     templates = schema.ListField(schema.SchemaField(TemplateEntry))
 
     def get_template(self, names):
@@ -76,6 +76,7 @@ class PageCollection(Collection):
             'name': self.get_schema_name(),
             'attrs': SortedDict(),
             'fields': SortedDict(),
+            'typed_field': '_page_type',
         }
         if self.application:
             params['app_label'] = self.application.name
@@ -87,16 +88,20 @@ class PageCollection(Collection):
 
         #loop through page_definitions and register them
         for page_def in self.page_definitions:
-            typed_key = page_def.unique_id
-            attrs = SortedDict([
-                ('_page_def', page_def),
-            ])
-            page_def.get_document(parents=(base_doc,), virtual=True, typed_key=typed_key, attrs=attrs)
+            params = {
+                'parents': (base_doc,),
+                'virtual': False,
+                'typed_key': page_def.unique_id,
+                'attrs': SortedDict([
+                    ('_page_def', page_def),
+                ])
+            }
+            page_def.get_document(**params)
 
         #CONSIDER: provide page defs defined in code
         for unique_id, page_schema in dict().items(): #REGISTERED_PAGE_DEFS.items()
             params = {
-                'virtual': True,
+                'virtual': False,
                 'typed_key': unique_id,
                 'parents': (page_schema, base_doc),
                 'name': '', #page_schema._meta.name,
