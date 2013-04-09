@@ -3,7 +3,12 @@ from dockitcms.models import ViewPoint
 
 
 class PageViewPoint(ViewPoint):
+    page_resource = None
     view_endpoint_class = DetailEndpoint
+
+    def get_urls(self):
+        #TODO produce a url for each page in page_resource
+        return super(PageViewPoint, self).get_urls()
 
     def get_endpoint_name(self):
         return 'list'

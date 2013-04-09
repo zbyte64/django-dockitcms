@@ -30,6 +30,7 @@ class PageDefinition(SchemaEntry):
 class BasePage(schema.Schema):
     parent = schema.ReferenceField('self', blank=True, null=True)
     url = schema.CharField(blank=True)
+    url_name = schema.SlugField(blank=True, help_text='registers the page with the url tag with this name')
     path = schema.CharField(editable=False)
     title = schema.CharField()
     slug = schema.SlugField()
@@ -154,7 +155,7 @@ class PublicPageCollectionResource(PublicResource):
     def get_collection_kwargs(self, **kwargs):
         from dockitcms.pagecollection.viewpoints import PageViewPoint
         kwargs['view_points'] = [
-            PageViewPoint()
+            PageViewPoint(page_resource=self)
         ]
         return super(PublicPageCollectionResource, self).get_collection_kwargs(**kwargs)
 
