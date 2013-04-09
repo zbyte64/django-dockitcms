@@ -21,7 +21,7 @@ def runtests():
     import django.test.utils
     runner_class = django.test.utils.get_runner(settings)
     test_runner = runner_class(verbosity=1, interactive=True)
-    failures = test_runner.run_tests(['dockitcms'])
+    failures = test_runner.run_tests(['dockitcms', 'dockitcms.widgetblock', 'dockitcms.pagecollection'])
 
     # Okay, so this is a nasty hack. If this isn't here, `setup.py test` craps out
     # when generating a coverage report via Nose. I have no idea why, or what's

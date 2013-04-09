@@ -126,6 +126,7 @@ INSTALLED_APPS = [
     # 'django.contrib.admindocs',
     'dockitcms',
     'dockitcms.widgetblock',
+    'dockitcms.pagecollection'
 ]
 
 DOCKIT_BACKENDS = {

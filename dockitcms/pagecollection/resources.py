@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 from dockitcms.resources.common import CMSDocumentResource
 from dockitcms.resources.collection import CMSCollectionMixin
+from dockitcms.viewpoints.endpoints import DetailEndpoint
 
 
 #a document resource of page entries
 class PageCollectionResource(CMSCollectionMixin, CMSDocumentResource):
-    def build_dynamic_indexes(self):
-        indexes = super(PageCollectionResource, self).build_dynamic_indexes()
-        #TODO url index?
-        #indexes['urlpath'] = URLPathIndex()
+    detail_endpoint = (DetailEndpoint, {'index_name':'urlpath'})
+    
+    def get_indexes(self):
+        indexes = super(PageCollectionResource, self).get_indexes()
+        indexes['urlpath'] = URLPathIndex('urlpath', self)
         return indexes
-
-
-#DetailView => url path index (index_name) + page definition rendering
 
 class URLPathIndex(object):
     def get_url_params(self, param_map={}):
@@ -22,3 +21,6 @@ class URLPathIndex(object):
     def get_url_params_from_item(self, item, param_map={}):
         param_map.setdefault('path', 'path')
         return {param_map['path']: item.instance.path}
+
+
+

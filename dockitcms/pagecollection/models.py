@@ -46,11 +46,11 @@ class BasePage(schema.Schema):
             return self.parent.path + self.slug + '/'
         return self.slug + '/'
 
-class PageDefinition(schema.Schema):
+class BasePageDefinition(schema.Schema):
     pass
 
 '''
-class WidgetPageDefinition(PageDefinition):
+class WidgetPageDefinition(BasePageDefinition):
     widgets = schema.ListField(WidgetField())
 '''
 
@@ -85,7 +85,10 @@ class PageCollection(Collection):
         #loop through page_definitions and register them
         for page_def in self.page_definitions:
             typed_key = page_def.unique_id
-            page_def.get_document(parents=(base_doc,), virtual=True, typed_key=typed_key)
+            attrs = SortedDict([
+                ('_page_def', page_def),
+            ])
+            page_def.get_document(parents=(base_doc,), virtual=True, typed_key=typed_key, attrs=attrs)
 
         #CONSIDER: provide page defs defined in code
         for unique_id, page_schema in dict().items(): #REGISTERED_PAGE_DEFS.items()
@@ -93,7 +96,7 @@ class PageCollection(Collection):
                 'virtual': True,
                 'typed_key': unique_id,
                 'parents': (page_schema, base_doc),
-                'name': '', #page_schema._meta.name
+                'name': '', #page_schema._meta.name,
             }
             create_document(**params)
 
@@ -146,8 +149,10 @@ class PublicPageCollectionResource(PublicResource):
         return self.collection.get_collection_resource()
 
     def get_collection_kwargs(self, **kwargs):
-        kwargs.setdefault('view_points', []) #TODO
-        #view_point.get_view_endpoints()
+        from dockitcms.pagecollection.viewpoints import PageViewPoint
+        kwargs.view_points = [
+            PageViewPoint()
+        ]
         return super(PublicPageCollectionResource, self).get_collection_kwargs(**kwargs)
 
     class Meta:
