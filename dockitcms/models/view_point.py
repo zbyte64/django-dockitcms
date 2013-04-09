@@ -8,7 +8,6 @@ from dockitcms.models.collection import Collection
 
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
-from django.conf import settings
 
 
 SUBSITE_MIXINS = {}
@@ -30,7 +29,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
 
     @property
     def resource_definitions(self):
-        return PublicResourceDefinition.objects.filter(subsite=self)
+        return PublicResource.objects.filter(subsite=self)
 
     def get_site_client(self):
         """

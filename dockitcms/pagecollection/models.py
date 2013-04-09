@@ -56,7 +56,7 @@ class WidgetPageDefinition(BasePageDefinition):
 
 class PageCollection(Collection):
     title = schema.CharField()
-    page_definitions = schema.ListField(schema.SchemaField(SchemaEntry))
+    page_definitions = schema.ListField(schema.SchemaField(PageDefinition))
 
     def get_collection_name(self):
         return 'dockitcms.virtual.%s' % self.key
@@ -74,6 +74,7 @@ class PageCollection(Collection):
             'parents': (BasePage, schema.Document),
             'name': self.get_schema_name(),
             'attrs': SortedDict(),
+            'fields': SortedDict(),
         }
         if self.application:
             params['app_label'] = self.application.name
@@ -81,6 +82,7 @@ class PageCollection(Collection):
 
         base_doc = create_document(**params)
         force_register_documents(base_doc._meta.app_label, base_doc)
+        base_doc.objects.index('path').commit()
 
         #loop through page_definitions and register them
         for page_def in self.page_definitions:
@@ -97,6 +99,7 @@ class PageCollection(Collection):
                 'typed_key': unique_id,
                 'parents': (page_schema, base_doc),
                 'name': '', #page_schema._meta.name,
+                'fields': SortedDict(),
             }
             create_document(**params)
 
@@ -150,10 +153,10 @@ class PublicPageCollectionResource(PublicResource):
 
     def get_collection_kwargs(self, **kwargs):
         from dockitcms.pagecollection.viewpoints import PageViewPoint
-        kwargs.view_points = [
+        kwargs['view_points'] = [
             PageViewPoint()
         ]
         return super(PublicPageCollectionResource, self).get_collection_kwargs(**kwargs)
 
     class Meta:
-        typed_key = 'collection'
+        typed_key = 'pagecollection'
