@@ -17,7 +17,6 @@ from django.conf.urls.defaults import patterns, url, include
 
 class ChainedAPIRequest(DEFAULT_API_REQUEST_CLASS):
     def __init__(self, inner_site, **kwargs):
-        print 'yay'
         super(ChainedAPIRequest, self).__init__(**kwargs)
         params = {
             'site': inner_site,

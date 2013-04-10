@@ -2,6 +2,7 @@
 import uuid
 
 from django.utils.datastructures import SortedDict
+from django.template import Template
 
 from dockit import schema
 from dockit.schema import get_base_document
@@ -19,12 +20,18 @@ class TemplateEntry(schema.Schema):
     js_files = schema.ListField(schema.FileField(upload_to='dockitcms/u-js/'), blank=True)
     css_files = schema.ListField(schema.FileField(upload_to='dockitcms/u-css/'), blank=True)
 
+    def get_template_object(self):
+        return Template(self.source)
+
 class PageDefinition(SchemaEntry):
     unique_id = schema.CharField(default=uuid.uuid4, editable=False)
     templates = schema.ListField(schema.SchemaField(TemplateEntry))
 
-    def get_template(self, names):
-        #TODO return from templates if any match else use system level call
+    def get_template(self, name):
+        for candidate in self.templates:
+            if candidate.path == name:
+                return candidate.get_template_object()
+        #CONSIDER: perhaps a page definition should have a default template
         return None
 
 class BasePage(schema.Schema):

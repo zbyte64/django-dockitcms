@@ -26,13 +26,11 @@ class PageDetailEndpoint(DetailEndpoint):
         #return urls
         return patterns('', *urls)
 
-    '''
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urls = [endpoint.get_url_object() for endpoint in self.get_children_endpoints()]
-        urlpatterns += patterns('', *urls)
-        return urlpatterns
-    '''
+    def get_template_names(self):
+        instance = self.state.item.instance.instance
+        if instance.template:
+            ret = instance._page_def.get_template(instance.template)
+            return ret
 
 class PageViewPoint(ViewPoint):
     page_resource = None
@@ -48,7 +46,7 @@ class PageViewPoint(ViewPoint):
         return self.view_endpoint_class
 
     def get_view_endpoint_kwargs(self, **kwargs):
-        params = {'view_point':self,}
+        params = {'view_point': self, }
         params.update(kwargs)
         return params
 
