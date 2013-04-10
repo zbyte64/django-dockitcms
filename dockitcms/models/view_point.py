@@ -14,6 +14,7 @@ SUBSITE_MIXINS = {}
 SUBSITE_RESOURCE_MIXINS = {}
 VIEW_POINT_MIXINS = {}
 
+
 class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MIXINS)):
     url = schema.CharField()
     name = schema.CharField()
@@ -42,7 +43,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
 
         for resource_def in self.resource_definitions:
             try:
-                resource_def.register_collection(subsite_api)
+                resource_def.register_public_resource(subsite_api)
             except Exception as error:
                 self.get_logger().exception('Could not register public resource')
 
@@ -72,6 +73,7 @@ class Subsite(schema.Document, ManageUrlsMixin, create_document_mixin(SUBSITE_MI
 
 Subsite.objects.index('sites').commit()
 Subsite.objects.index('slug').commit()
+
 
 class BaseViewPoint(ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
     def send_view_point_event(self, event, view, kwargs):
@@ -125,6 +127,7 @@ class BaseViewPoint(ManageUrlsMixin, create_document_mixin(VIEW_POINT_MIXINS)):
         typed_field = 'view_type'
         verbose_name = 'View Point'
 
+
 class ViewPoint(BaseViewPoint):
     url = schema.CharField(help_text='May be a regular expression that the url has to match', blank=True)
     endpoint_name = schema.CharField(blank=True)
@@ -149,7 +152,7 @@ class ViewPoint(BaseViewPoint):
         if url.startswith('/'):
             url = url[1:]
         if not url.startswith('^'):
-            url = '^'+url
+            url = '^' + url
         return url
 
     def get_url_regexp(self):
@@ -165,6 +168,7 @@ class ViewPoint(BaseViewPoint):
     class Meta:
         proxy = True
 
+
 class PublicResource(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIXINS)):
     subsite = schema.ReferenceField(Subsite)
 
@@ -176,25 +180,35 @@ class PublicResource(schema.Document, create_document_mixin(SUBSITE_RESOURCE_MIX
         if url.startswith('/'):
             url = url[1:]
         if not url.startswith('^'):
-            url = '^'+url
+            url = '^' + url
         return url
 
-    def get_collection_kwargs(self, **kwargs):
+    def get_public_resource_class(self):
+        from dockitcms.resources.public import PublicResource
+        return PublicResource
+
+    def get_public_resource_kwargs(self, **kwargs):
+        collection = self.collection
         params = {
+            'collection': collection,
             'base_url': self.get_base_url(),
+            'app_name': collection.application.slug,
+            'resource_adaptor': collection.get_collection_resource().resource_adaptor,
+            'view_points':[],
         }
         params.update(kwargs)
         return params
 
-    def register_collection(self, site):
-        kwargs = self.get_collection_kwargs(site=site)
-        resource = self.collection.register_public_resource(**kwargs)
-        return resource
+    def register_public_resource(self, site):
+        klass = self.get_public_resource_class()
+        kwargs = self.get_public_resource_kwargs(site=site)
+        return site.register_endpoint(klass, **kwargs)
 
     class Meta:
         typed_field = '_resource_type'
 
 PublicResource.objects.index('subsite').commit()
+
 
 class PublicCollectionResource(PublicResource):
     collection = schema.ReferenceField(Collection)
@@ -204,9 +218,9 @@ class PublicCollectionResource(PublicResource):
     def cms_resource(self):
         return self.collection.get_collection_resource()
 
-    def get_collection_kwargs(self, **kwargs):
+    def get_public_resource_kwargs(self, **kwargs):
         kwargs.setdefault('view_points', self.view_points)
-        return super(PublicCollectionResource, self).get_collection_kwargs(**kwargs)
+        return super(PublicCollectionResource, self).get_public_resource_kwargs(**kwargs)
 
     class Meta:
         typed_key = 'collection'

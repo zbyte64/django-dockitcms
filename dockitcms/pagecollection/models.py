@@ -157,13 +157,13 @@ class PublicPageCollectionResource(PublicResource):
     def cms_resource(self):
         return self.collection.get_collection_resource()
 
-    def get_collection_kwargs(self, **kwargs):
-        print 'get_collection_kwargs'
+    def get_public_resource_kwargs(self, **kwargs):
+        #print 'get_collection_kwargs'
         from dockitcms.pagecollection.viewpoints import PageViewPoint
         kwargs['view_points'] = [
             PageViewPoint(page_resource=self)
         ]
-        return super(PublicPageCollectionResource, self).get_collection_kwargs(**kwargs)
+        return super(PublicPageCollectionResource, self).get_public_resource_kwargs(**kwargs)
 
     class Meta:
         typed_key = 'pagecollection'

@@ -83,10 +83,10 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
         'get_document_kwargs': {
             'post': PostEventFunction(event='document_kwargs', keyword='document_kwargs'),
         },
-        'get_view_endpoints': {
-            'collect': CollectEventFunction(event='view_endpoints', extend_function='extends'),
-            'post': PostEventFunction(event='view_endpoints', keyword='view_endpoints'),
-        },
+        #'get_view_endpoints': {
+            #'collect': CollectEventFunction(event='view_endpoints', extend_function='extends'),
+            #'post': PostEventFunction(event='view_endpoints', keyword='view_endpoints'),
+        #},
     }
 
     @classmethod
@@ -149,27 +149,6 @@ class Collection(ManageUrlsMixin, schema.Document, EventMixin):
                 if hasattr(resource, 'collection') and resource.collection == self:
                     return resource
             assert False, str(seen)
-
-    def get_public_resource_class(self):
-        from dockitcms.resources.public import PublicResource
-        return PublicResource
-
-    def get_public_resource_options(self, **kwargs):
-        params = {
-            'collection': self,
-            'app_name': self.application.slug,
-            'resource_adaptor': self.get_collection_resource().resource_adaptor
-        }
-        params.update(kwargs)
-        return params
-
-    def register_public_resource(self, site, **kwargs):
-        klass = self.get_public_resource_class()
-        options = self.get_public_resource_options(**kwargs)
-        return site.register_endpoint(klass, **options)
-
-    def get_view_endpoints(self):
-        return []
 
     def register_collection(self):
         pass
