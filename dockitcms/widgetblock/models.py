@@ -1,12 +1,15 @@
 from dockit import schema
+from dockit.schema.schema import create_schema
 
 from django.utils.translation import ugettext_lazy as _
+from django.utils.datastructures import SortedDict
 from django.template import Template, Context
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 from django.contrib.contenttypes.models import ContentType
 
 from dockitcms.widgetblock.common import ExpandedSchemas
+from dockitcms.models.design import SchemaEntry
 
 
 class Widget(schema.Schema):
@@ -16,10 +19,10 @@ class Widget(schema.Schema):
     def render(self, context):
         raise NotImplementedError
 
-    @classmethod
-    def get_admin_class(cls):
-        from admin import WidgetAdmin
-        return WidgetAdmin
+    #@classmethod
+    #def get_admin_class(cls):
+        #from admin import WidgetAdmin
+        #return WidgetAdmin
 
 block_widget_schemas = ExpandedSchemas(None, Widget._meta.fields['widget_type'].schemas)
 
@@ -105,4 +108,53 @@ class ReusableWidget(schema.Document):
 
 reusable_widget_schemas.base_schema = ReusableWidget
 
-#TODO ConfigurableWidget(schema.Document, SchemaDesign) => new widgets
+
+class ConfiguredWidget(Widget):
+    def get_template(self):
+        return self._configurable_widget.get_template()
+
+    def get_context(self, context):
+        subcontext = Context(context)
+        subcontext['widget'] = self
+        return subcontext
+
+    def render(self, context):
+        template = self.get_template()
+        context = self.get_context(context)
+        return mark_safe(template.render(context))
+
+
+class ConfigurableWidget(SchemaEntry, schema.Document):
+    '''
+    Allows for a widget class to be dynamically defined
+    '''
+    template_source = schema.CharField(choices=TEMPLATE_SOURCE_CHOICES, default='name')
+    template_name = schema.CharField(blank=True)
+    template_html = schema.TextField(blank=True)
+
+    def get_template(self):
+        if self.template_source == 'name':
+            return get_template(self.template_name)
+        else:
+            return Template(self.template_html)
+
+    def get_schema_name(self):
+        return str(''.join([part for part in self.title.split()]))
+
+    def register_widget(self):
+        #presumably this would be called on save or site load
+        params = {
+            'module': 'dockitcms.widgetblock.models.virtual',
+            'virtual': False,
+            'verbose_name': self.title,
+            #'collection': self.get_collection_name(),
+            'parents': (ConfiguredWidget,),
+            'name': self.get_schema_name(),
+            'attrs': SortedDict(),
+            'fields': self.get_fields(),
+            'typed_key': 'configured.%s' % self.get_schema_name(),
+        }
+        params['attrs']['_configurable_widget'] = self
+
+        return create_schema(**params)
+        #TODO ensure this is in Widget._meta.fields['widget_type'].schemas
