@@ -12,7 +12,7 @@ class IndexTest(unittest.TestCase):
         app = Application(name='test', slug='test')
         app.save()
         self.application = app
-    
+
     def create_test_collection(self, **kwargs):
         active_mixins = kwargs.pop('active_mixins', [])
         params = {'application':self.application,
@@ -24,13 +24,13 @@ class IndexTest(unittest.TestCase):
         params.update(kwargs)
         collection = VirtualDocumentCollection(**params)
         collection.save()
-        
+
         document = collection.get_document()
         document = collection.register_collection()
         assert 'published' in document._meta.fields, str(document._meta.fields.keys()) + str(collection.fields)
-        
+
         return collection
-    
+
     def create_model_collection(self, **kwargs):
         params = {'model': ContentType.objects.get_for_model(User),
                   'application':self.application,}
@@ -38,7 +38,7 @@ class IndexTest(unittest.TestCase):
         collection = ModelCollection(**params)
         collection.save()
         return collection
-    
+
     def test_filtered_collection_index(self):
         collection = self.create_test_collection()
         index = FilteredVirtualDocumentIndex(collection=collection,
@@ -47,23 +47,23 @@ class IndexTest(unittest.TestCase):
                                         exclusions=[CollectionFilter(key='published', value='false', operation='exact', value_type='boolean')],
                                         parameters=[CollectionParam(key='title', operation='exact')],)
         index.save()
-        query_hash = index.get_index_query()._index_hash()
+        query_hash = index.get_index_query().global_hash()
         collection_name = collection.get_document()._meta.collection
-        
+
         #assert the backend was notified of the index
         self.assertTrue(query_hash in backends.INDEX_ROUTER.registered_querysets[collection_name], str(backends.INDEX_ROUTER.registered_querysets[collection_name]))
-        
+
         document = collection.get_document()
         document.objects.all().delete() #why did i get 2?
-        
+
         doc = document(title='foo', published=True, featured=True)
         doc.save()
         self.assertEqual(document.objects.all().count(), 1)
-        
+
         query = index.get_index_query()
         msg = str(query.queryset.query.queryset.query)
         self.assertEqual(query.count(), 1, msg)
-    
+
     def test_filtered_model_index(self):
         coll = self.create_model_collection()
         index = FilteredModelIndex(collection=coll,
