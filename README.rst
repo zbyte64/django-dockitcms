@@ -28,6 +28,7 @@ Requirements
 
 * Python 2.6 or later
 * Django 1.3 or later
+* django-datatap: https://github.com/zbyte64/django-datatap
 * django-dockit: https://github.com/webcube/django-dockit
 * django-hyperadmin: https://github.com/webcube/django-hyperadmin
 * django-hyperadmin-dockitresource: https://github.com/webcube/django-hyperadmin-dockitresource
