@@ -1,17 +1,20 @@
 #!/usr/bin/env python
-
+import os
 try:
     from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup, find_packages
 
 VERSION = '0.0.11'
-LONG_DESC = """\
-"""
+PATH = os.path.dirname(os.path.abspath(__file__))
+try:
+    LONG_DESC = '\n===='+open(os.path.join(PATH, 'README.rst'), 'r').read().split('====', 1)[-1]
+except IOError: #happens when using tox
+    LONG_DESC = ''
 
 setup(name='django-dockitcms',
       version=VERSION,
-      description="",
+      description="CMS written using django-dockit",
       long_description=LONG_DESC,
       classifiers=[
           'Programming Language :: Python',
@@ -21,7 +24,7 @@ setup(name='django-dockitcms',
           'Intended Audience :: Developers',
           'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
       ],
-      keywords='django',
+      keywords='django CMS',
       maintainer = 'Jason Kraus',
       maintainer_email = 'zbyte64@gmail.com',
       url='http://github.com/webcube/django-dockitcms',

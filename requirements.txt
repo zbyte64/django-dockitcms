@@ -1,8 +1,8 @@
--e git+git://github.com/zbyte64/django-datatap.git#egg=django-datatap
--e git+git://github.com/zbyte64/django-dockit.git@topic-datataps#egg=django-dockit
+django-datatap
+django-dockit==0.0.13
 django-classy-tags
 
 mimeparse
--e git+git://github.com/webcube/django-hyperadmin.git@develop#egg=django-hyperadmin
+django-hyperadmin==0.10.0
 -e git+git://github.com/webcube/django-hyperadmin-dockitresource.git#egg=django-hyperadmin-dockitresource
 -e git+git://github.com/webcube/django-hyperadmin-client.git#egg=django-hyperadmin-client
