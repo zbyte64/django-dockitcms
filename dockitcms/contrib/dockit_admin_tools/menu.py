@@ -58,12 +58,13 @@ class ApplicationList(MenuItem):
                     item.children.append(self.create_menu_item_for_collection(collection))
             self.children.append(item)
         self._init = True
-    
+
     def create_menu_item_for_collection(self, collection):
         title = capfirst(collection.title)
-        url = collection.get_admin_manage_url()
+        #url = collection.get_admin_manage_url()
+        url = '/admin/dockitcms/collection/%s/manage/' % collection.key
         return MenuItem(title=title, url=url)
-    
+
     def is_empty(self):
         return len(self.children) == 0
 
